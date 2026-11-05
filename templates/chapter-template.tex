@@ -1,0 +1,60 @@
+% 将本文件复制到 chapters/，替换标题、标签和样例，
+% 再在 main.tex 的 \mainmatter 区域添加 \input。
+\chapter{函数输入与返回值}
+\label{ch:new-chapter}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[book mindmap]
+    \node[text=white] {本章主题}
+      child[grow=163,level distance=42mm,concept color=DeepBlue] {
+        node[text=white] {核心概念}
+      }
+      child[grow=17,level distance=42mm,concept color=PythonYellow] {
+        node {动手练习}
+      }
+      child[grow=-90,level distance=30mm,concept color=DeepBlue!20!white] {
+        node {错误排查}
+      };
+  \end{tikzpicture}
+  \caption{函数接口、动手调用与错误排查的关系。}
+  \label{fig:new-chapter-map}
+\end{figure}
+
+\section{核心概念与输入输出}
+\begin{myunderstanding}
+将函数想成工作台上的小工具。把输入递进去，接住返回值，
+就能把这个结果交给下一件工具继续处理。
+\end{myunderstanding}
+
+\section{动手跑一个例子}
+\begin{lstlisting}[title={\ttfamily double.py}]
+def double(value: int) -> int:
+    # 把结果交还给调用方。
+    return value * 2
+
+
+print(double(4))
+\end{lstlisting}
+
+\begin{pycharmpractice}
+在 \code{return} 所在行加断点，调试运行后检查 \code{value} 的实际值。
+\end{pycharmpractice}
+
+\begin{pitfall}
+将 \code{double(4)} 改成 \code{double("4")} 时会得到字符串 \code{"44"}。
+可回到输入处，核对传给函数的值是否已经转为整数。
+\end{pitfall}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=8mm]
+    \node[python flow step] (a) {输入 4};
+    \node[python flow step,right=of a] (b) {double 函数};
+    \node[python flow step,right=of b] (c) {返回 8};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+  \end{tikzpicture}
+  \caption{输入整数 4 经乘法运算后返回 8。}
+  \label{fig:new-chapter-screenshot}
+\end{figure}

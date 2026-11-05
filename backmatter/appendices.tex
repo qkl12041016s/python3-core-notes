@@ -1,0 +1,1387 @@
+\chapter{第三方库安装与国内镜像加速配置}
+
+安装软件包前，先确认实际使用的解释器。终端能用的库，未必在 PyCharm 选定的解释器里。
+所以安装之前，先看路径，再看版本，最后才看下载来源。
+这几个动作看似慢半步，却能省下很多“装过了为什么还是找不到”的来回。
+
+\section{先确认安装位置}
+
+下面的诊断脚本只读取信息。运行后，将解释器路径和 pip 显示的路径放在一起比较。
+如果两边属于不同环境，就用目标解释器的完整路径执行安装命令。
+\begin{lstlisting}[title={\code{inspect_install.py}}]
+import importlib.util
+import sys
+
+# 先找解释器，再看当前环境能否定位包。
+print("Python:", sys.executable)
+print("Version:", sys.version.split()[0])
+spec = importlib.util.find_spec("requests")
+print("requests:", None if spec is None else spec.origin)
+\end{lstlisting}
+
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 用本次运行的解释器调用 pip。
+python -m pip --version
+# 已安装包的版本和位置。
+python -m pip show requests
+# 检查当前依赖关系。
+python -m pip check
+\end{lstlisting}
+
+安装问题应区分为两类。找不到模块时查解释器和安装位置，
+导入时提示依赖版本冲突则查依赖关系。
+\code{pip check} 通过后，还要跑项目自己的最小例子，确认实际行为也符合约定。
+
+\section{新环境从一份小清单开始}
+
+为练习建立 \code{.venv}，把自己的代码留在环境目录外。
+在 Windows PowerShell 中可以直接调用环境里的解释器，
+让命令指向哪里一目了然。下面命令在项目目录执行。
+\begin{lstlisting}[language={},title={\texttt{PowerShell}}]
+# 创建隔离环境。
+python -m venv .venv
+# 核对环境里的 Python 和 pip。
+.\.venv\Scripts\python.exe --version
+.\.venv\Scripts\python.exe -m pip --version
+# 安装本书示例需要的库。
+.\.venv\Scripts\python.exe -m pip install -r requirements-demo.txt
+\end{lstlisting}
+
+macOS 与 Linux 的环境解释器通常在 \code{.venv/bin/python}。
+环境激活以后可以简写为 \code{python}，仍应用第一节的脚本核对一次。
+换机器或目录时，按依赖重新建立环境，项目代码与输入文件随项目一起迁移。
+具体环境结构可查
+\href{https://docs.python.org/3/library/venv.html}{venv 官方文档}。
+
+\section{下载来源要写清楚}
+
+需要临时换用镜像时，将来源写在这一次命令里。
+下面地址按清华镜像站的实际使用说明填写，执行前可以再打开链接核对。
+命令在终端中作为一行执行，书页内的视觉折行不增加新命令。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 只给本次安装指定来源。
+python -m pip install requests --index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+\end{lstlisting}
+
+想把设置留在当前环境里，先查配置来源，再决定写入范围。
+可记录改动前的值，随后用 \code{pip config debug} 查实际读取了哪些文件。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 查看读取的配置文件和当前配置。
+python -m pip config debug
+python -m pip config list -v
+# 当前虚拟环境的配置位置由 --site 明确指定。
+python -m pip config --site set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+\end{lstlisting}
+
+镜像解决的是下载来源问题。Python 版本不受某个 wheel 支持、构建依赖缺失、
+或代码导入了同名本地文件，都还要沿各自路径排查。
+命令和配置规则分别见
+\href{https://mirrors.tuna.tsinghua.edu.cn/help/pypi/}{清华镜像站说明}与
+\href{https://pip.pypa.io/en/stable/topics/configuration/}{pip 配置文档}。
+
+\section{把一次安装变成能重建的记录}
+
+\begin{itemize}
+  \item \code{requirements-demo.txt} 保存本书示例使用的依赖。
+  \item \code{RUN_EXAMPLES.md} 记录运行入口与示例环境。
+  \item 第 17 章的项目配置说明包的元数据、运行依赖与构建约定。
+\end{itemize}
+
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 记录本次环境的实际安装结果。
+python -m pip freeze > requirements-tested.txt
+# 在另一个干净环境重装并核对。
+python -m pip install -r requirements-tested.txt
+python -m pip check
+\end{lstlisting}
+
+从全局环境导出时，可能把这次项目没用到的库一起带进去。
+因此可在专门的练习环境里保存清单。
+最后离开源码目录，再运行安装好的入口，检查导入的是哪一份包。
+
+\begin{pycharmpractice}
+先在项目设置里核对 Python Interpreter，再打开运行配置，检查脚本、解释器、
+参数和 Working directory。终端安装完成后，还要从 IDE 运行一次诊断脚本，
+把结果写进同一张环境记录。
+\end{pycharmpractice}
+
+\section{安装失败时的短路线}
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{看到的现象} & \textbf{排查动作}\\
+\midrule
+\code{No module named ...} & 核对解释器，再用同一个解释器执行 pip show。\\
+\code{No matching distribution} & 查看包名、Python 版本、平台与该库支持范围。\\
+构建 wheel 失败 & 读最早出现的构建错误，核对编译工具和构建依赖。\\
+下载超时或连接失败 & 核对实际使用的索引、网络与代理，再确认服务可达。\\
+\code{pip check} 报冲突 & 读出冲突的两端约束，回到干净环境复现依赖组合。\\
+安装成功仍导入错误 & 检查本地同名文件、工作目录与模块的实际来源。\\
+\bottomrule
+\end{tabularx}\par
+
+给每次安装问题保留三项记录，完整命令、最早的错误信息，以及解释器路径。
+再次求助时，这些比“安装失败了”的一句话更能让人接得上手。
+
+
+\section{资料与章节对照}
+
+下表按章节说明参考资料与内容的对应关系，便于查阅基础语法、容器机制及数据处理的延伸材料。
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.36\textwidth}
+                               >{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{资料} & \textbf{放进书稿的位置} \\
+  \midrule
+  《Python 编程：从入门到实践》（第 3 版） &
+    第 1 至 5 章对照变量、容器、条件、函数与类，第 7 章对照测试示例的组织方式。 \\[4pt]
+  《流畅的 Python》 &
+    第 2 章补名字绑定、序列、字典和集合，以及推导式与专用容器。
+    第 4 至 6 章对照作用域、装饰器和迭代协议。 \\[4pt]
+  《Python 高性能编程》 &
+    第 2 章用字典和集合一章核对查找思路，第 6 章补生成器的按需计算。
+    第 8、12 章分别对照性能分析与并发案例。 \\[4pt]
+  《Python 高手进阶之路》（套装全 10 册） &
+    使用套装中《Python 编程：从入门到实践》的字典、函数、类和测试内容，
+    对应第 2、4、5、7 章。 \\[4pt]
+  《Python 数据科学手册》 &
+    第 16 章从 NumPy 的数据类型过渡到 Pandas 的缺失值、聚合与分组，
+    再接 Matplotlib 出图。 \\[4pt]
+  《pandas+Numpy+matplotlib》笔记 &
+    第 16 章用于对照 NumPy 数组创建、形状和数据类型的入门顺序。 \\[4pt]
+  《matplotlib 数据可视化实战》 &
+    第 16.2 节对照子图、Figure 与 Axes 的写法，以及轴标签、图例和条形图设计。 \\
+  \bottomrule
+\end{tabularx}\par
+
+\section*{菜鸟教程与语义核对}
+
+\begin{itemize}
+  \item 从 \href{https://www.runoob.com/python3}{菜鸟教程 Python 3 入口}查语法。
+    第 2 章使用其\href{https://www.runoob.com/python3/python3-data-structure.html}{数据结构}
+    和\href{https://www.runoob.com/python3/python-comprehensions.html}{推导式}页面。
+    专用容器的细节对照\href{https://docs.python.org/3/library/collections.html}{Python 的 collections 文档}。
+  \item 第 3、6 章对照菜鸟教程的\href{https://www.runoob.com/python3/python3-errors-execptions.html}{错误和异常}、
+    \href{https://www.runoob.com/python3/python3-iterator-generator.html}{迭代器与生成器}
+    和\href{https://www.runoob.com/python3/python-decorators.html}{装饰器}。
+  \item 第 12、13 章分别对照菜鸟教程的
+    \href{https://www.runoob.com/python3/python-asyncio.html}{asyncio}
+    与\href{https://www.runoob.com/python3/python-requests.html}{requests}。
+    GIL 的语境见\href{https://docs.python.org/3/howto/free-threading-python.html}{Python 的自由线程说明}。
+  \item 第 17 章构建步骤对照
+    \href{https://packaging.python.org/en/latest/tutorials/packaging-projects/}{Python 打包用户指南}。
+\end{itemize}
+
+\section*{本版新增练习的核对资料}
+参数、异常、迭代与资源清理可对照
+\href{https://docs.python.org/3/tutorial/}{Python 官方教程}与
+\href{https://docs.python.org/3/library/}{标准库文档}。
+测试操作对照 \href{https://docs.pytest.org/en/stable/}{pytest 文档}，
+ORM 对照 \href{https://docs.sqlalchemy.org/}{SQLAlchemy 文档}。
+数据出图与工作簿操作分别对照
+\href{https://matplotlib.org/stable/}{Matplotlib 文档}、
+\href{https://openpyxl.readthedocs.io/}{openpyxl 文档}。
+接口测试对照 \href{https://fastapi.tiangolo.com/tutorial/testing/}{FastAPI 测试教程}。
+
+
+\chapter{PyCharm 高阶技巧}
+
+断点像一盏能挪动的灯，照亮的是程序走到这里时的现场。
+先选择能观察状态变化的断点，再确定需要检查的变量。
+同一段代码反复停在正确的地方，许多原本靠猜的行为就会自己显出来。
+
+\section{运行配置是一份可复现的说明}
+
+给常用脚本保存独立的运行配置，写清脚本路径、参数、工作目录和解释器。
+拿第 11 章举例，脚本是 \code{scan_log.py}，参数是
+\code{--input sample.log}，工作目录放在样例所在目录。
+环境变量也在配置中记录，重新运行时才能接回同一组条件。
+
+如果界面里选了正确解释器，但运行结果仍不对，可检查当前选中的配置是否属于另一个脚本。
+最终以 \code{sys.executable}、\code{Path.cwd()} 和实际参数为准。
+静态推断与运行时变量的区别见图~\ref{fig:appendix-ide}。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{type-info}{\linewidth}
+  \caption{编辑器提示反映静态推断，调试面板显示本次运行的类型与值。}
+  \label{fig:appendix-ide}
+\end{figure}
+
+\section{先找改变值的那一行}
+
+下面脚本只有三条输入。将断点放在相加之前，先看旧值，再单步执行，
+最后核对新值。这样很容易区分“即将执行的行”和“已经执行完的行”。
+\begin{lstlisting}[title={\code{debug_total.py}}]
+total = 0
+for value in [2, 3, 5]:
+    # 断点停在这里时，total 还是本次相加前的值。
+    total += value
+    print(value, total)
+
+# 输出应依次为 2 2、3 5、5 10。
+print("最终", total)
+\end{lstlisting}
+
+Step Over 适合先看当前函数的步骤，Step Into 用来进入自己想查看的调用，
+Step Out 执行到当前函数返回，再停回调用方。
+多层调用时，可在 Frames 中选中对应栈帧，再看那一层的参数和局部变量。
+
+\section{条件断点和监视表达式}
+
+循环次数较多时，可在断点属性中设置条件，避免每轮都暂停，
+例如只在 \code{value == 5} 时暂停。条件本身也会求值，表达式应保持简单，避免改变状态。
+监视表达式适合持续观察关键状态，例如 \code{len(tasks)} 或某个字段值。
+
+求值窗口适合核对一个表达式。读列表长度通常不会改变现场，
+调用 \code{pop()} 却会取走元素。遇到带副作用的方法，先确认是否真要执行，
+再决定放到脚本中复现还是在现场求值。
+操作细节可对照
+\href{https://www.jetbrains.com/help/pycharm/examining-suspended-program.html}{JetBrains 的运行现场检查说明}。
+
+\section{常用动作速查}
+
+下面列的是 Windows 默认键位中的常见绑定。读者可以在 Keymap 中按动作名称搜索，
+以当前方案为准。动作名称记住以后，换一套键位也能找回来。
+
+\begin{longtable}{@{}p{0.28\textwidth}p{0.26\textwidth}p{0.39\textwidth}@{}}
+\toprule
+\textbf{动作} & \textbf{常见绑定} & \textbf{用途}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{动作} & \textbf{常见绑定} & \textbf{用途}\\
+\midrule
+\endhead
+查找动作 & \code{Ctrl+Shift+A} & 直接按动作名找入口。\\
+全局搜索 & 双击 \code{Shift} & 找文件、设置和符号。\\
+查看类型 & \code{Ctrl+Shift+P} & 看表达式的推断类型。\\
+快速文档 & \code{Ctrl+Q} & 看签名、说明和定义信息。\\
+跳到声明 & \code{Ctrl+B} & 沿调用找到定义。\\
+查找用法 & \code{Alt+F7} & 看修改会影响哪些调用处。\\
+上下文操作 & \code{Alt+Enter} & 查看可用修复与意图操作。\\
+格式化 & \code{Ctrl+Alt+L} & 按项目代码样式整理。\\
+重命名 & \code{Shift+F6} & 让相关引用一起改名。\\
+切换断点 & \code{Ctrl+F8} & 在当前行设置或取消断点。\\
+查看断点 & \code{Ctrl+Shift+F8} & 查条件、异常断点和启用状态。\\
+Step Over & \code{F8} & 看当前函数的下一步。\\
+Step Into & \code{F7} & 进入选定的调用。\\
+Step Out & \code{Shift+F8} & 返回调用方继续观察。\\
+Evaluate Expression & \code{Alt+F8} & 核对当前栈帧中的表达式。\\
+Resume & \code{F9} & 继续到下一个暂停位置。\\
+\bottomrule
+\end{longtable}
+
+\section{异常断点把灯移到失败源头}
+
+错误在很深的调用里才被捕获时，可加一个指定类型的 Python 异常断点。
+第一次先停在异常抛出的位置，看看原始输入，再沿 Frames 回到自己的调用处。
+排查完就调整或关闭它，避免每次正常处理一个预期异常也被打断。
+
+断点始终不停时，检查四处，是否选了 Debug、断点有没有静音、
+运行配置是否指向这份文件，以及运行的代码是不是刚才编辑的版本。
+第 13 章的客户端还有超时，服务端在断点处停太久，会改变客户端看到的结果，
+所以也可把这件事记进复现步骤。
+
+\section{问题记录的必要信息}
+
+可保存一段最小输入、一张有当前栈帧与变量值的截图，
+再写一句“停在此行之前，值是什么”。截图可以删去与问题无关的目录和窗口，
+但保留代码行号、异常末行与必要的环境信息。
+读者和未来的自己，才有机会沿着同一条路走到这里。
+
+
+\chapter{常见报错字典}
+
+回溯记录了异常类型、调用路径及出错位置。先阅读末行，确认失败类型；再沿文件名和行号定位到项目代码，结合当时的输入缩小排查范围。
+
+这里的条目按现场分组。每条都有现象、原因、排查、修复和复验。
+“错误入口”是刻意保留的失败代码，旁边的修复版可以单独运行。
+源码分别在 \code{examples/appendixC}，错误入口用 \code{.py.txt} 保存，
+避免和正常脚本一起被误收集执行。
+
+\section{先把回溯读成路线图}
+
+先记住异常末行，再向上找最近一处属于自己项目的文件。
+如果异常经过包装，继续查看因果链里最初失败的位置。
+有时检测到错误的位置在下一行，语法问题还要向前核对括号、引号和缩进。
+
+如图~\ref{fig:appendix-diagnosis}，将问题先分到代码与数据、文件与环境、
+外部服务三层，再选具体动作。修复以后，原来失败的输入和原先正常的输入都要重跑。
+\begin{figure}[htbp]
+\centering
+\BookImage{diagnosis}{\linewidth}
+\caption{错误按代码与数据、文件与环境、外部服务三层定位。}
+\label{fig:appendix-diagnosis}
+\end{figure}
+
+\section*{排查记录清单}
+
+\begin{tabularx}{\textwidth}{@{}p{0.25\textwidth}X@{}}
+\toprule
+\textbf{记录项} & \textbf{写到什么程度}\\
+\midrule
+运行入口 & 脚本或命令、参数、工作目录与解释器路径。\\
+最小输入 & 能触发问题的最少记录，敏感数据换成同结构样本。\\
+完整回溯 & 保留异常类型、因果链以及自己代码的文件与行号。\\
+预期与实际 & 写出本来应该得到什么，以及现在真正出现什么。\\
+修复与复验 & 只改一个原因，再跑原输入和正常变体。\\
+\bottomrule
+\end{tabularx}\par
+
+\section{语法与名字}
+
+\Needspace{6\baselineskip}
+\subsection*{C01\enspace SyntaxError｜解释器还没开始运行}
+
+\CaseStep{现象}{把带提示符的交互代码整行粘进脚本，保存后立刻报语法错误。}
+
+\CaseStep{原因}{解析阶段无法把提示符当成合法语句。括号、引号或冒号缺失也会走到这里。}
+
+\CaseStep{排查}{先读文件名、行号和指示位置，再向前检查同一逻辑行。解析器标出的是发现问题的位置，根源可能在前一行。}
+
+\CaseStep{修复}{把交互提示符留在书页里，脚本只保存真正的语句。补齐结构后再运行。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_01_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+>>> print(2 + 3)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_01.py}}]
+# 修复后仍要核对原始需求。
+print(2 + 3)
+\end{lstlisting}
+
+\CaseStep{复验}{脚本应打印 5。原先的语法错误消失，程序才会进入实际执行。}
+
+\Needspace{6\baselineskip}
+\subsection*{C02\enspace IndentationError｜缩进层级没有接上}
+
+\CaseStep{现象}{函数定义下一行没有缩进，解释器提示需要一个缩进块。}
+
+\CaseStep{原因}{冒号开启了一个代码块，后面必须有属于它的语句。空行和注释不能单独承担这个块。}
+
+\CaseStep{排查}{打开编辑器的空白显示，检查四空格缩进和 Tab 是否混用，再看当前行应该属于哪个块。}
+
+\CaseStep{修复}{让函数体缩进到同一层。临时空实现可以写 pass，正式逻辑仍要补清楚。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_02_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+def add(a, b):
+return a + b
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_02.py}}]
+# 修复后仍要核对原始需求。
+def add(a, b):
+    # 函数体保持同一层四空格缩进。
+    return a + b
+
+print(add(2, 3))
+\end{lstlisting}
+
+\CaseStep{复验}{函数调用后输出 5。再改一个参数，确认返回语句仍在函数内部。}
+
+\Needspace{6\baselineskip}
+\subsection*{C03\enspace NameError｜这个名字还没有绑定}
+
+\CaseStep{现象}{打印 count 时，解释器说这个名字没有定义。}
+
+\CaseStep{原因}{名字拼错、赋值分支没有执行，或者使用位置早于赋值，都可能使当前作用域找不到它。}
+
+\CaseStep{排查}{回到赋值处，检查拼写、大小写与条件分支。断点里确认运行到当前行之前有没有建立绑定。}
+
+\CaseStep{修复}{先给本次流程需要的名字赋值，再使用。所有分支都要交代后续所需的值。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_03_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+print(book_count_missing)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_03.py}}]
+# 修复后仍要核对原始需求。
+# 先建立绑定，再交给后续语句。
+count = 3
+print(count)
+\end{lstlisting}
+
+\CaseStep{复验}{用正常输入和空输入各跑一次，保证两条路径都有可解释的结果。}
+
+\Needspace{6\baselineskip}
+\subsection*{C04\enspace UnboundLocalError｜函数里有同名赋值}
+
+\CaseStep{现象}{函数中想读模块里的 count，结果在赋值之前就报局部变量错误。}
+
+\CaseStep{原因}{函数里出现对这个名字的绑定，会让它按局部名字处理。读取发生在这次局部赋值之前。}
+
+\CaseStep{排查}{看整个函数里是否出现同名赋值。别只盯着报错的读取行。}
+
+\CaseStep{修复}{优先把值作为参数传入并返回新结果。确实要重新绑定外层变量时，再明确用 nonlocal 或 global。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_04_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+count = 3
+def broken():
+    print(count)
+    count = 4
+broken()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_04.py}}]
+# 修复后仍要核对原始需求。
+def increment(value):
+    # 状态通过参数与返回值流动。
+    return value + 1
+
+count = increment(3)
+print(count)
+\end{lstlisting}
+
+\CaseStep{复验}{同样的输入调用两次，核对结果和外部状态，确认变化由谁负责。}
+
+\section{类型与容器}
+
+\Needspace{6\baselineskip}
+\subsection*{C05\enspace TypeError｜文本和整数直接相加}
+
+\CaseStep{现象}{从输入框得到 3，与整数 1 相加时失败。}
+
+\CaseStep{原因}{输入返回的是字符串。加号看到的两个对象不支持这组加法。}
+
+\CaseStep{排查}{打印 type 或在变量面板查看对象。检查转换应该发生在输入边界还是业务函数里。}
+
+\CaseStep{修复}{业务需要数值时，先转换并处理转换失败。业务需要文字时，则明确构造字符串。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_05_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+"3" + 1
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_05.py}}]
+# 修复后仍要核对原始需求。
+# 把输入转换为业务需要的整数。
+raw = "3"
+print(int(raw) + 1)
+\end{lstlisting}
+
+\CaseStep{复验}{输入 3 应得到 4。再用无效输入确认转换错误有清楚反馈。}
+
+\Needspace{6\baselineskip}
+\subsection*{C06\enspace TypeError｜字符串不能按下标改写}
+
+\CaseStep{现象}{把 hello 的第一个字符换成 H，赋值这一行失败。}
+
+\CaseStep{原因}{字符串对象不可变。下标能读取字符，不能把某个位置换成新字符。}
+
+\CaseStep{排查}{确认对象实际是 str。检查需求是替换首字符、全量替换，还是需要可变的字符集合。}
+
+\CaseStep{修复}{构造新字符串，再让名字绑定过去。保留旧绑定可以核对原对象没有被改写。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_06_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+s = "hello"
+s[0] = "H"
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_06.py}}]
+# 修复后仍要核对原始需求。
+# 拼成新字符串，原值留作对照。
+s = "hello"
+original = s
+s = "H" + s[1:]
+print(s, original)
+\end{lstlisting}
+
+\CaseStep{复验}{新名字对应 Hello，原来的引用仍读到 hello。}
+
+\Needspace{6\baselineskip}
+\subsection*{C07\enspace TypeError｜列表不能作为字典键}
+
+\CaseStep{现象}{把主机和端口装进列表，再用它做键，创建字典时就失败。}
+
+\CaseStep{原因}{字典键必须可哈希。列表内容可以变化，内置列表不提供这种哈希约定。}
+
+\CaseStep{排查}{检查键中每一层。外面套了元组，里面仍有列表时，也不能因此变成可哈希键。}
+
+\CaseStep{修复}{用本身可哈希的字段组成元组，或选择稳定的业务标识。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_07_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+{["backup.local", 443]: "ok"}
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_07.py}}]
+# 修复后仍要核对原始需求。
+# 键中的字符串和整数都可哈希。
+target = ("backup.local", 443)
+records = {target: "ok"}
+print(records[target])
+\end{lstlisting}
+
+\CaseStep{复验}{按同样的主机与端口重新查询，应取到同一条记录。}
+
+\Needspace{6\baselineskip}
+\subsection*{C08\enspace ValueError｜形状对了，内容仍不合法}
+
+\CaseStep{现象}{用 int 转换 3.5 这段文本时失败。}
+
+\CaseStep{原因}{对象类型可以交给转换函数，但文本内容不是它接受的整数写法。}
+
+\CaseStep{排查}{先看原始输入的 repr，确认小数点、空白和单位。再问业务需要整数还是允许小数。}
+
+\CaseStep{修复}{允许小数时选择 float 或适当的十进制定点工具。要求整数时就拒绝小数，并给出输入规则。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_08_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+int("3.5")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_08.py}}]
+# 修复后仍要核对原始需求。
+# 业务允许小数，所以按小数解析。
+raw = "3.5"
+print(float(raw))
+\end{lstlisting}
+
+\CaseStep{复验}{修复例应得到 3.5。若业务只收整数，应改测明确的拒绝分支。}
+
+\Needspace{6\baselineskip}
+\subsection*{C09\enspace IndexError｜要取的位置不存在}
+
+\CaseStep{现象}{空列表取第一项，或把长度当作最后一个下标时出错。}
+
+\CaseStep{原因}{下标从零开始，合法范围由本次容器长度决定。空列表没有任何合法元素下标。}
+
+\CaseStep{排查}{核对 len、实际内容和下标来源。循环中修改容器时，也要检查下标是否已经失效。}
+
+\CaseStep{修复}{按业务处理空集合，或在遍历中直接取得元素。不要用统一的默认值掩盖上游漏数据。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_09_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+[][0]
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_09.py}}]
+# 修复后仍要核对原始需求。
+# 空输入在这里有独立的业务分支。
+files = []
+print(files[0] if files else "没有待处理文件")
+\end{lstlisting}
+
+\CaseStep{复验}{空清单应走空分支，有元素时再取第一项。}
+
+\Needspace{6\baselineskip}
+\subsection*{C10\enspace KeyError｜字段没有出现在这份记录里}
+
+\CaseStep{现象}{读 status 字段时，某条数据只有 name，按键访问失败。}
+
+\CaseStep{原因}{字典里没有这个键。也可能是大小写、空格或上游字段约定发生变化。}
+
+\CaseStep{排查}{打印 keys 与这条原始记录，核对字段名。区分必填字段缺失和允许省略的可选字段。}
+
+\CaseStep{修复}{可选字段用 get 给出业务默认值。必填字段应在输入校验处明确拒绝。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_10_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+{"name": "notes.md"}["status"]
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_10.py}}]
+# 修复后仍要核对原始需求。
+# status 在这个例子里是可选字段。
+record = {"name": "notes.md"}
+print(record.get("status", "unknown"))
+\end{lstlisting}
+
+\CaseStep{复验}{例子的缺失状态应显示 unknown。必填字段的测试另测拒绝结果。}
+
+\Needspace{6\baselineskip}
+\subsection*{C11\enspace AttributeError｜方法属于另一种对象}
+
+\CaseStep{现象}{拿到列表后调用 strip，解释器说没有这个属性。}
+
+\CaseStep{原因}{代码预期的是字符串，实际对象却是列表。返回值形状与调用处的理解没有对上。}
+
+\CaseStep{排查}{查看 type、产生这个对象的函数签名和实际返回值。确认要处理整个集合，还是集合中的每一项。}
+
+\CaseStep{修复}{逐项处理文本，或者修改上游返回值与调用约定。把真实形状写进测试。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_11_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+[" notes.md "].strip()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_11.py}}]
+# 修复后仍要核对原始需求。
+# 每条字符串各自清理，结果仍是一张列表。
+files = [" notes.md ", " todo.md "]
+print([name.strip() for name in files])
+\end{lstlisting}
+
+\CaseStep{复验}{两项文本都去掉首尾空白，列表结构仍保留。}
+
+\Needspace{6\baselineskip}
+\subsection*{C12\enspace ZeroDivisionError｜分母为零}
+
+\CaseStep{现象}{算平均耗时时，记录数为零，除法失败。}
+
+\CaseStep{原因}{空输入、筛选后无有效记录，或上游计数漏更新，都可能让分母变成零。}
+
+\CaseStep{排查}{先核对有效值数量，再看平均值的业务定义。总行数和有效耗时条数可能不同。}
+
+\CaseStep{修复}{无有效数据时明确返回缺失状态，或者按业务规则拒绝。不要凭空补一个看似正常的平均值。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_12_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+1 / 0
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_12.py}}]
+# 修复后仍要核对原始需求。
+# 空输入对应没有平均值这一状态。
+values = []
+average = sum(values) / len(values) if values else None
+print(average)
+\end{lstlisting}
+
+\CaseStep{复验}{空输入应显示 None，有两条有效记录时再核对平均值。}
+
+\section{文件、编码与环境}
+
+\Needspace{6\baselineskip}
+\subsection*{C13\enspace ModuleNotFoundError｜包装在另一个环境}
+
+\CaseStep{现象}{终端装包成功，项目运行时仍说找不到模块。}
+
+\CaseStep{原因}{当前解释器的搜索路径里没有目标模块。另一个环境的安装结果不会自动出现在这里。}
+
+\CaseStep{排查}{核对 sys.executable、pip --version 和模块来源，再看导入名与安装包名是否一致。}
+
+\CaseStep{修复}{用实际运行的解释器执行安装。下面用标准库代替一个刻意不存在的模块，先核对导入机制。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_13_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import book_missing_module_for_demo
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_13.py}}]
+# 修复后仍要核对原始需求。
+# 使用实际存在的标准库模块核对导入。
+import math
+print(math.sqrt(25))
+\end{lstlisting}
+
+\CaseStep{复验}{最小示例应打印 5.0。第三方包则还要查 spec.origin，确认导入位置。}
+
+\Needspace{6\baselineskip}
+\subsection*{C14\enspace ImportError｜模块找到了，名字没有}
+
+\CaseStep{现象}{从 math 导入一个不存在的名字，模块路径存在却仍导入失败。}
+
+\CaseStep{原因}{指定名称没有由该模块提供。真实项目也可能遇到版本差异或循环导入尚未完成初始化。}
+
+\CaseStep{排查}{看完整导入链和实际模块路径，查当前版本的公开接口。检查是否有同名本地文件遮住了真正模块。}
+
+\CaseStep{修复}{改用真实接口。循环导入则先梳理依赖，把共同定义移到能独立导入的位置。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_14_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+from math import book_missing_function
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_14.py}}]
+# 修复后仍要核对原始需求。
+# 核对公开接口名称，避免凭印象拼写。
+from math import sqrt
+print(sqrt(25))
+\end{lstlisting}
+
+\CaseStep{复验}{例子导入 sqrt 后应得到 5.0，且 traceback 中的模块路径符合预期。}
+
+\Needspace{6\baselineskip}
+\subsection*{C15\enspace FileNotFoundError｜相对地址从哪里出发}
+
+\CaseStep{现象}{同一脚本在终端能读文件，换到 IDE 就找不到。}
+
+\CaseStep{原因}{相对路径以当前工作目录解释。运行配置的工作目录与脚本文件目录可能不同。}
+
+\CaseStep{排查}{打印 Path.cwd() 与目标路径的绝对位置，再核对实际文件名、大小写和扩展名。}
+
+\CaseStep{修复}{明确路径基准，或把输入路径做成参数。下面先在临时目录创建自己需要的输入。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_15_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+with TemporaryDirectory() as folder:
+    (Path(folder) / "missing.txt").read_text()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_15.py}}]
+# 修复后仍要核对原始需求。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+# 输入在明确的目录创建，再从同一路径读取。
+with TemporaryDirectory() as folder:
+    path = Path(folder) / "note.txt"
+    path.write_text("ready", encoding="utf-8")
+    print(path.read_text(encoding="utf-8"))
+\end{lstlisting}
+
+\CaseStep{复验}{脚本应读到 ready。真实输入路径也要从实际运行入口再测一次。}
+
+\Needspace{6\baselineskip}
+\subsection*{C16\enspace PermissionError 与目录误读}
+
+\CaseStep{现象}{把文件夹当文件读取，或写入没有权限的位置时失败。}
+
+\CaseStep{原因}{目标可能不是普通文件，也可能被其他进程占用或受权限控制。具体异常子类和错误码依系统而异。}
+
+\CaseStep{排查}{核对路径对象的类型、父目录与完整 OSError 信息，再检查占用进程和实际权限。}
+
+\CaseStep{修复}{先确认读的是文件，写入到明确可写的工作目录。目录内容通过遍历取得。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_16_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+with TemporaryDirectory() as folder:
+    Path(folder).read_bytes()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_16.py}}]
+# 修复后仍要核对原始需求。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory() as folder:
+    path = Path(folder)
+    # 先按目标类型选择处理方式。
+    print("这是目录" if path.is_dir() else "这是文件")
+\end{lstlisting}
+
+\CaseStep{复验}{目录分支应显示目录提示，实际文件再走文件读取分支。}
+
+\Needspace{6\baselineskip}
+\subsection*{C17\enspace UnicodeDecodeError｜字节按错了编码解释}
+
+\CaseStep{现象}{读取一段字节时，解码器指出某个字节无法按 UTF-8 解释。}
+
+\CaseStep{原因}{这份数据不符合所选编码，或原始内容已经损坏。单纯改成忽略错误可能丢掉重要内容。}
+
+\CaseStep{排查}{先保留原始字节，查文件或接口的来源约定，再在小样本上核对编码。}
+
+\CaseStep{修复}{按真实编码解码。示例明确把样本定义为 Latin-1，实际项目不能靠试出不报错来认定编码。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_17_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+b"\xff".decode("utf-8")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_17.py}}]
+# 修复后仍要核对原始需求。
+# 样本的来源约定为 Latin-1。
+raw = b"\xff"
+text = raw.decode("latin-1")
+print(text)
+assert text.encode("latin-1") == raw
+\end{lstlisting}
+
+\CaseStep{复验}{应得到字符 ÿ。重新按原编码编码，应与原字节完全相同。}
+
+\Needspace{6\baselineskip}
+\subsection*{C18\enspace UnicodeEncodeError｜输出编码装不下这个字符}
+
+\CaseStep{现象}{中文输出到只收 ASCII 的目标时失败。}
+
+\CaseStep{原因}{字符串本身有效，但目标编码无法表示其中字符。控制台、文件和管道的编码也可能不同。}
+
+\CaseStep{排查}{看错误发生在 encode、写文件还是子进程管道，再核对输出端的编码约定。}
+
+\CaseStep{修复}{选能表示内容且接收方同意的编码。文件读写两端一起明确 UTF-8。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_18_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+"雪".encode("ascii")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_18.py}}]
+# 修复后仍要核对原始需求。
+# 两端约定 UTF-8，检查一次往返。
+text = "雪"
+print(text.encode("utf-8").decode("utf-8"))
+\end{lstlisting}
+
+\CaseStep{复验}{编码再解码后应得到原来的文字，不能只看错误是否消失。}
+
+\Needspace{6\baselineskip}
+\subsection*{C19\enspace JSONDecodeError｜内容不是合法 JSON}
+
+\CaseStep{现象}{文件后缀是 json，读入时却报解析错误。}
+
+\CaseStep{原因}{后缀不保证内容合法。单引号、尾随逗号、半截写入和空响应都可能导致解析失败。}
+
+\CaseStep{排查}{查看解析器的行列信息，保留原内容，再核对写入是否完整、网络状态与响应体是否符合约定。}
+
+\CaseStep{修复}{用 json 模块生成 JSON，在完整写好后再发布文件。读入失败时把原文件留给排查。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_19_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import json
+json.loads("{broken")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_19.py}}]
+# 修复后仍要核对原始需求。
+import json
+
+# 由序列化函数生成完整 JSON，再读回来。
+encoded = json.dumps({"name": "notes.md"})
+print(json.loads(encoded)["name"])
+\end{lstlisting}
+
+\CaseStep{复验}{往返后应取到 notes.md，损坏输入仍应走失败分支。}
+
+\section{数据与外部服务}
+
+\Needspace{6\baselineskip}
+\subsection*{C20\enspace sqlite3.OperationalError｜表没有建立}
+
+\CaseStep{现象}{连接数据库成功，查询时提示 no such table。}
+
+\CaseStep{原因}{当前连接指向的数据库里没有这张表。路径选错、初始化未执行或连了新的内存库，都可能造成这个结果。}
+
+\CaseStep{排查}{核对数据库路径和初始化步骤，再查询元数据。内存数据库的生命周期与连接有关。}
+
+\CaseStep{修复}{在约定的位置完成建表或迁移，然后使用同一业务数据库查询。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_20_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import sqlite3
+from contextlib import closing
+with closing(sqlite3.connect(":memory:")) as db:
+    db.execute("SELECT * FROM notes")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_20.py}}]
+# 修复后仍要核对原始需求。
+import sqlite3
+from contextlib import closing
+
+with closing(sqlite3.connect(":memory:")) as db:
+    # 初始化后再读取同一数据库。
+    db.execute("CREATE TABLE notes (name TEXT)")
+    print(db.execute("SELECT count(*) FROM notes").fetchone()[0])
+\end{lstlisting}
+
+\CaseStep{复验}{空表应返回零条记录。重新打开持久化数据库时也要核对表仍在。}
+
+\Needspace{6\baselineskip}
+\subsection*{C21\enspace sqlite3.IntegrityError｜违反了数据约束}
+
+\CaseStep{现象}{重复插入唯一字段时失败。}
+
+\CaseStep{原因}{数据库在保护唯一性、非空或关联约束。先查后插也可能在并发时遇到同样冲突。}
+
+\CaseStep{排查}{看具体约束和本次输入，再决定重复是用户错误、可接受的重试，还是应更新已有记录。}
+
+\CaseStep{修复}{按业务定义处理冲突。示例把相同键视为幂等重试，真实项目还须核对已有内容是否一致。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_21_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import sqlite3
+from contextlib import closing
+with closing(sqlite3.connect(":memory:")) as db:
+    db.execute("CREATE TABLE notes (name TEXT UNIQUE)")
+    db.execute("INSERT INTO notes VALUES (?)", ("notes.md",))
+    db.execute("INSERT INTO notes VALUES (?)", ("notes.md",))
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_21.py}}]
+# 修复后仍要核对原始需求。
+import sqlite3
+from contextlib import closing
+
+with closing(sqlite3.connect(":memory:")) as db, db:
+    db.execute("CREATE TABLE notes (name TEXT UNIQUE)")
+    # 本例约定同名重试保留原记录。
+    for _ in range(2):
+        db.execute("INSERT OR IGNORE INTO notes VALUES (?)", ("notes.md",))
+    print(db.execute("SELECT count(*) FROM notes").fetchone()[0])
+\end{lstlisting}
+
+\CaseStep{复验}{连续两次登记后仍只有一条。若内容不一致，应另测明确的冲突反馈。}
+
+\Needspace{6\baselineskip}
+\subsection*{C22\enspace HTTPError｜收到了失败状态}
+
+\CaseStep{现象}{请求有响应，调用 \code{raise_for_status} 时抛出 HTTPError。}
+
+\CaseStep{原因}{网络通信完成不代表业务成功。4xx 与 5xx 需要结合接口约定和响应内容解释。}
+
+\CaseStep{排查}{记录状态码、请求目标和必要的响应信息，敏感字段不进入日志。再判断输入、权限、路径或服务端是否有问题。}
+
+\CaseStep{修复}{修正对应原因。下面离线构造成功和失败响应，只演练状态检查这一层。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_22_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import requests
+reply = requests.Response()
+reply.status_code = 404
+reply.url = "https://example.invalid/notes"
+reply.raise_for_status()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_22.py}}]
+# 修复后仍要核对原始需求。
+import requests
+
+# 离线构造响应，观察状态检查的行为。
+reply = requests.Response()
+reply.status_code = 200
+reply.raise_for_status()
+print(reply.status_code)
+\end{lstlisting}
+
+\CaseStep{复验}{成功响应应通过检查并显示 200，失败响应仍能被识别。}
+
+\Needspace{6\baselineskip}
+\subsection*{C23\enspace Timeout｜等不到约定时间内的响应}
+
+\CaseStep{现象}{客户端在连接或读取阶段等待超时。}
+
+\CaseStep{原因}{目标不可达、服务处理慢、代理异常或读数据迟迟不返回，都可能导致不同阶段的超时。}
+
+\CaseStep{排查}{区分连接等待与读取等待，记录目标、超时设置和服务端日志。调试断点也可能人为拉长等待。}
+
+\CaseStep{修复}{给请求明确超时，并把失败交给上层决定是否重试。重试还要看请求能否安全重复。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_23_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import socket
+import requests
+with socket.socket() as listener, requests.Session() as session:
+    session.trust_env = False
+    listener.bind(("127.0.0.1", 0))
+    listener.listen()
+    port = listener.getsockname()[1]
+    session.get(f"http://127.0.0.1:{port}/", timeout=0.05)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_23.py}}]
+# 修复后仍要核对原始需求。
+import socket
+import requests
+
+# 本机监听但不返回 HTTP，用来演练读取超时。
+with socket.socket() as listener, requests.Session() as session:
+    session.trust_env = False
+    listener.bind(("127.0.0.1", 0))
+    listener.listen()
+    port = listener.getsockname()[1]
+    try:
+        session.get(f"http://127.0.0.1:{port}/", timeout=0.05)
+    except requests.Timeout:
+        print("记录超时，交给上层处理")
+\end{lstlisting}
+
+\CaseStep{复验}{示例用只监听但不响应的本机端口复现读取等待，随后记录超时。}
+
+\Needspace{6\baselineskip}
+\subsection*{C24\enspace OSError｜服务端口已被占用}
+
+\CaseStep{现象}{本机服务启动时提示地址正在使用，常见错误码因系统不同而变化。}
+
+\CaseStep{原因}{同一个监听地址与端口已经被其他进程或上一次运行占用。}
+
+\CaseStep{排查}{先确认地址和进程身份，再看服务是否仍需要运行。不要只凭一个端口号结束不相关进程。}
+
+\CaseStep{修复}{停止自己已经确认的旧服务，或为本次测试分配可用端口。临时测试可以让操作系统分配端口。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_24_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import socket
+with socket.socket() as first, socket.socket() as second:
+    first.bind(("127.0.0.1", 0))
+    first.listen()
+    second.bind(first.getsockname())
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_24.py}}]
+# 修复后仍要核对原始需求。
+import socket
+
+# 端口 0 交给操作系统分配可用的临时端口。
+with socket.socket() as listener:
+    listener.bind(("127.0.0.1", 0))
+    print(listener.getsockname()[1] > 0)
+\end{lstlisting}
+
+\CaseStep{复验}{新监听端口应大于零，退出上下文后资源会关闭。}
+
+\section{迭代、递归与异步}
+
+\Needspace{6\baselineskip}
+\subsection*{C25\enspace StopIteration｜迭代器已经用完}
+
+\CaseStep{现象}{手动调用 next，取完所有元素后再次读取就抛出 StopIteration。}
+
+\CaseStep{原因}{这是迭代协议中的结束信号。生成器或迭代器已经消费完，不会自动回到开头。}
+
+\CaseStep{排查}{核对谁已经消费过它。调试求值、list 转换和循环都可能把一次性迭代器推进到末尾。}
+
+\CaseStep{修复}{正常遍历交给 for 处理结束信号，手动读取时可以给 next 一个符合业务的默认值。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_25_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+iterator = iter(["notes.md"])
+next(iterator)
+next(iterator)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_25.py}}]
+# 修复后仍要核对原始需求。
+# 用默认值明确表示这次已经读到结尾。
+iterator = iter(["notes.md"])
+print(next(iterator, "结束"))
+print(next(iterator, "结束"))
+\end{lstlisting}
+
+\CaseStep{复验}{先取到 notes.md，第二次读取显示结束。}
+
+\Needspace{6\baselineskip}
+\subsection*{C26\enspace RecursionError｜调用一层层长下去}
+
+\CaseStep{现象}{递归函数不断调用自己，最终超过解释器的递归深度限制。}
+
+\CaseStep{原因}{递归终止条件缺失、条件永远达不到，或输入深度超出这套实现的承受范围。}
+
+\CaseStep{排查}{先画出最小输入的调用链，确认每次递归怎样接近终点。别先把递归上限调大。}
+
+\CaseStep{修复}{修正终止条件，深链问题可改用显式栈或循环。下面用循环保留同样的累加意图。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_26_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+def broken():
+    return broken()
+broken()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_26.py}}]
+# 修复后仍要核对原始需求。
+# 循环让进度和结束范围一眼可见。
+total = 0
+for value in range(1, 5):
+    total += value
+print(total)
+\end{lstlisting}
+
+\CaseStep{复验}{输入 4 应得到 10，再测 0，确认终止边界。}
+
+\Needspace{6\baselineskip}
+\subsection*{C27\enspace RuntimeError｜事件循环里又调用 asyncio.run}
+
+\CaseStep{现象}{在已经运行的协程里，再用 asyncio.run 启一个循环时失败。}
+
+\CaseStep{原因}{当前线程已经有运行中的事件循环。交互环境或异步框架也可能已经负责这个循环。}
+
+\CaseStep{排查}{确认调用发生在脚本最外层、协程内部，还是由框架托管的入口。查看完整调用栈。}
+
+\CaseStep{修复}{协程内部 await 子协程，脚本最外层才由 asyncio.run 启动一次。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_27_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import asyncio
+async def broken():
+    task = asyncio.sleep(0)
+    try:
+        asyncio.run(task)
+    finally:
+        task.close()
+asyncio.run(broken())
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_27.py}}]
+# 修复后仍要核对原始需求。
+import asyncio
+
+async def main():
+    # 在当前循环内等待，不另开一个循环。
+    await asyncio.sleep(0)
+    print("ready")
+
+asyncio.run(main())
+\end{lstlisting}
+
+\CaseStep{复验}{修复版应打印 ready，且没有未等待协程的提示。}
+
+\section{没有异常，结果却不对}
+
+\Needspace{6\baselineskip}
+\subsection*{C28\enspace 赋值以后，备份也跟着变}
+
+\CaseStep{现象}{给 original 起一个新名字，修改原列表后备份也多了一项。}
+
+\CaseStep{原因}{两个名字绑定同一个列表，赋值本身没有复制对象。}
+
+\CaseStep{排查}{比较两边的 is 结果，再看改动发生在外层列表还是嵌套的内层对象。}
+
+\CaseStep{修复}{平面列表可以复制外层。嵌套容器要逐层判断哪些状态需要独立，不能只看外面的新列表。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_28_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+original = ["notes.md"]
+backup = original
+original.append("todo.md")
+print(len(backup))
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_28.py}}]
+# 修复后仍要核对原始需求。
+# 本例元素为字符串，复制外层足够保留名单。
+original = ["notes.md"]
+backup = original.copy()
+original.append("todo.md")
+print(len(original), len(backup))
+\end{lstlisting}
+
+\CaseStep{复验}{修复版原列表长度为 2，备份长度为 1。}
+
+\Needspace{6\baselineskip}
+\subsection*{C29\enspace 单元素元组少了一个逗号}
+
+\CaseStep{现象}{以为圆括号已经装出元组，结果拿到的还是字符串。}
+
+\CaseStep{原因}{圆括号也负责表达式分组。形成单元素元组的是逗号。}
+
+\CaseStep{排查}{看 type，尤其是把单个配置值交给需要序列的接口时，确认它没有被逐字符处理。}
+
+\CaseStep{修复}{保留尾随逗号，明确写成一个元素的元组。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_29_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+value = ("notes.md")
+print(type(value).__name__)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_29.py}}]
+# 修复后仍要核对原始需求。
+# 逗号使它成为一个元素的元组。
+value = ("notes.md",)
+print(type(value).__name__, len(value))
+\end{lstlisting}
+
+\CaseStep{复验}{类型名应为 tuple，长度应为 1。}
+
+\Needspace{6\baselineskip}
+\subsection*{C30\enspace 空花括号建出了字典}
+
+\CaseStep{现象}{准备一个空集合，却发现后续对象类型是 dict。}
+
+\CaseStep{原因}{空花括号属于空字典写法。非空集合可以用花括号列元素，空集合要调用 set。}
+
+\CaseStep{排查}{在初始化处检查 type，再看后续使用的是集合方法还是映射方法。}
+
+\CaseStep{修复}{用 set() 建空集合，再按业务添加成员。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_30_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+seen = {}
+print(type(seen).__name__)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_30.py}}]
+# 修复后仍要核对原始需求。
+# 空集合显式调用 set 创建。
+seen = set()
+seen.add("notes.md")
+print(type(seen).__name__, "notes.md" in seen)
+\end{lstlisting}
+
+\CaseStep{复验}{类型名为 set，添加后能找到成员。}
+
+\Needspace{6\baselineskip}
+\subsection*{C31\enspace sort 的返回值成了 None}
+
+\CaseStep{现象}{排序后把返回值赋给另一个名字，后续发现结果是 None。}
+
+\CaseStep{原因}{list.sort 原地修改列表并返回 None。返回值不是排序后的新列表。}
+
+\CaseStep{排查}{看原列表是否已变化，再查所用方法的返回约定。append 等原地修改方法也有类似边界。}
+
+\CaseStep{修复}{要新列表就用 sorted。要原地修改就单独调用 sort，然后继续使用原列表。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_31_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+files = ["todo.md", "notes.md"]
+result = files.sort()
+print(result)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_31.py}}]
+# 修复后仍要核对原始需求。
+# sorted 返回新列表，原输入可留作核对。
+files = ["todo.md", "notes.md"]
+result = sorted(files)
+print(result)
+print(files)
+\end{lstlisting}
+
+\CaseStep{复验}{新列表按名字排序，原列表仍保留原先顺序。}
+
+
+\section{把一次修复留成自己的记录}
+
+以字符串索引赋值为例：原输入是 \code{"hello"}，预期得到首字母大写的文本，
+实际在下标赋值处抛了 TypeError。查到字符串不可变以后，改为构造新字符串，
+再用旧引用核对原值仍在。
+
+每份修复记录应明确一个原因及对应改动。遇到相似错误时，
+先核对实际类型，再决定能否原地修改。附录里每一条记录，都可以照这个办法往自己的项目里生根。
+
+\begin{pythonictip}
+复验时可保留三类输入。第一类是原来失败的那一条，第二类是一直正常的样本，
+第三类是与修复有关的边界，比如空值、重复项或不存在的路径。
+三类都能解释清楚，修复才算有了可以交接的证据。
+\end{pythonictip}
+\subsection*{把运行现场附到勘误里}
+
+最小复现还应附上解释器版本、解释器路径和工作目录：
+可在使用说明的诊断脚本中核对，遇到只在另一台机器出现的问题时，再把两边并排比较。
+
+\begin{tabularx}{\textwidth}{@{}p{0.30\textwidth}X@{}}
+\toprule
+\textbf{要留下什么} & \textbf{从哪里看}\\
+\midrule
+Python 版本 & \code{platform.python_version()}\\
+解释器位置 & \code{sys.executable}\\
+工作目录 & \code{Path.cwd()}\\
+\bottomrule
+\end{tabularx}\par
+
+修复记录最后再写一行，改动的是哪一处，复验用了哪些输入。
+再次遇到相同问题时，可依据这份记录复现输入并验证修复。

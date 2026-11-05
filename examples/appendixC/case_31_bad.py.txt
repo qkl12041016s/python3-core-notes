@@ -1,0 +1,4 @@
+# 故意失败的入口。
+files = ["todo.md", "notes.md"]
+result = files.sort()
+print(result)

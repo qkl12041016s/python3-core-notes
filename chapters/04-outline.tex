@@ -1,0 +1,175 @@
+\chapter{函数与作用域}
+\label{ch:04-outline}
+
+函数将一项操作封装为有名字的接口。参数约定输入，返回值约定结果；边界清楚以后，拆分模块、编写测试和复用代码都有了依据。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 4 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {参数传递}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {高阶函数}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {作用域与闭包}
+      };
+  \end{tikzpicture}
+  \caption*{参数传递、返回值与闭包作用域。}
+\end{figure}
+
+
+\section{函数定义与参数}
+
+将函数当成一台榨汁机。调用方递材料进去，函数按约定交出结果。
+参数名写清楚以后，调用方就能选按位置传值，或按名字指定。默认值是在函数定义时准备好的，
+因此带状态的列表要特别留意下面的连续调用。
+
+\code{*args} 收集额外的位置实参，\code{**kwargs} 收集额外的关键字实参。
+星号后面的普通参数只能按名字传，这样阅读调用处就能看懂开关的用途。
+在小例子里把它们摊开打印一次，随后把真实参数尽量写具体。
+
+
+\begin{lstlisting}[title={\code{call_options.py}}]
+def describe(name, *tags, enabled=True, **options):
+    # args 收成元组，kwargs 收成字典。
+    return name, tags, enabled, options.get("retries", 0)
+
+
+result = describe(
+    "sync", "daily", "local", enabled=False, retries=2
+)
+print(result)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+('sync', ('daily', 'local'), False, 2)
+\end{lstlisting}
+
+\par
+
+\subsection*{动手｜用连续两次调用检查默认值}
+
+默认参数类似预先放在柜台上的工具。函数定义执行时就把默认值放好了，之后的调用会重复拿到它。连续调用两次，可观察默认列表中的旧元素如何保留到下一次调用。
+
+\begin{lstlisting}[title={\code{task_defaults.py}}]
+# 复现两次调用共用同一个默认列表。
+def add_shared(name, tasks=[]):
+    tasks.append(name)
+    return tasks
+
+
+# 省略清单时，每次调用都创建一份。
+def add_task(name, tasks=None):
+    if tasks is None:
+        tasks = []
+    tasks.append(name)
+    return tasks
+
+
+first = add_shared("notes.md")
+second = add_shared("todo.md")
+print(first, second)
+print(add_task("notes.md"), add_task("todo.md"))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 第一行会打印两份相同的列表。修正后两次调用各拿到一份新清单。若调用方主动传入自己的列表，函数会把新任务追加到这份列表。
+
+\section{高阶函数与 Lambda}
+
+高阶函数像一个能换刀头的工具。处理流程由高阶函数组织，将“怎样比较”或“怎样转换”
+作为函数交进去。\code{sorted()} 返回新列表，\code{key} 决定每项拿什么来比较。
+\code{lambda} 适合在眼前写清的一小段表达式。
+
+\code{map()} 和 \code{filter()} 在 Python 3 里按需给结果。若要查看完整内容，
+会显式转成列表。规则一旦需要多步校验和解释，就给它写一个有名字的函数，
+调试时也容易设断点。
+
+
+\begin{lstlisting}[title={\code{rank_tasks.py}}]
+# 同一批任务先筛选，再排序和提取名称。
+tasks = [("notes.md", 2), ("todo.md", 1), ("draft.md", 2)]
+selected = filter(lambda task: task[1] >= 2, tasks)
+ordered = sorted(selected, key=lambda task: task[0])
+names = list(map(lambda task: task[0], ordered))
+print(names)
+print(tasks[0])  # 原列表中的顺序没有被改动。
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+['draft.md', 'notes.md']
+('notes.md', 2)
+\end{lstlisting}
+
+\par
+
+
+\section{命名空间与类型注解}
+
+名字的查找像沿抽屉上的地址找人。函数里先查局部，再查包住它的函数，
+接着查模块全局，最后查内置名字。闭包让内层函数在外层调用结束后仍能使用那份外层绑定。
+要在内层重新绑定外层名字，用 \code{nonlocal} 明确交代。
+
+类型注解把输入和输出约定放在签名旁边，运行时照常执行。
+在 PyCharm 查看类型，再用终端运行 \code{python -m mypy} 加文件名做静态检查。
+检查器的报错用来追到调用处，程序运行的断点则核对实际对象。
+
+
+\begin{lstlisting}[title={\code{make_counter.py}}]
+def make_counter(start: int):
+    count = start
+
+    def advance() -> int:
+        # 重新绑定外层 count，要明确写 nonlocal。
+        nonlocal count
+        count += 1
+        return count
+
+    return advance
+
+
+counter = make_counter(10)
+print(counter())
+print(counter())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+11
+12
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+参数传递会让形参绑定到实参对象。改对象内容与让形参重新绑定，是两种不同的动作。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+光标放在函数名上查看签名，再在调用处设断点。进入函数后逐个核对形参，尤其看默认值何时被使用。
+\end{pycharmpractice}
+
+\begin{pitfall}
+默认列表在函数定义时创建。连续两次调用都看结果，往往比只跑一遍更容易发现状态被共用。
+\end{pitfall}
+
+\subsection*{进阶边界演练}
+循环里临时建立回调时，应检查回调读取的是哪份外层绑定。闭包保存绑定关系（图~\ref{fig:visual-ch4}），若每个回调都该记住当时那个值，可以用工厂函数或明确的默认参数固定。把回调逐个调用一次，是最短的核对路线。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{scope}{\linewidth}
+\caption{普通函数的 LEGB 名称查找顺序：局部、外层函数、模块与内置作用域。}
+\label{fig:visual-ch4}
+\end{figure}

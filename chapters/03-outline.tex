@@ -1,0 +1,197 @@
+\chapter{流程控制与异常处理}
+\label{ch:03-outline}
+
+流程控制决定一条输入经过哪些步骤，异常处理则保留步骤失败时的原因。把正常路径与失败路径分别写清，才能解释结果，也便于定位错误。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 3 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {条件判断}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {循环遍历}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {异常与日志}
+      };
+  \end{tikzpicture}
+  \caption*{条件决定分支，循环处理记录，异常与日志保留失败线索。}
+\end{figure}
+
+
+\section{条件与循环}
+
+将条件判断当成进门前的分流牌。先问这一条记录该不该处理，再决定走哪条路。
+\code{if} 只执行条件为真的分支。空列表、空字符串、零和 \code{None} 在条件里都算假，
+写条件表达式之前，先明确空值在这段业务里究竟代表什么。
+
+循环则把同一套规则交给每条记录。遇到当前这条不合格，用 \code{continue}；
+已经找到要找的对象，才用 \code{break} 提前结束。下面先生成一张新清单，
+保留原清单用于对照。
+
+
+\begin{lstlisting}[title={\code{filter_tasks.py}}]
+# 逐条筛选，输出清单和原清单分别保留。
+files = ["notes.md", "cache.tmp", "draft.tmp", "todo.md"]
+kept = []
+for name in files:
+    if name.endswith(".tmp"):
+        continue
+    kept.append(name)
+
+print(kept)
+print(len(files))  # 原清单仍有四项。
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+['notes.md', 'todo.md']
+4
+\end{lstlisting}
+
+\par
+
+
+\section{异常处理}
+
+将异常处理想成安全气囊，碰到可预期的失误时接住它，再决定交给谁处理。
+\code{try} 里只放可能失败的那一小段。\code{except} 按异常类型处理，
+没有抛出异常时才执行 \code{else}。离开这组语句前，\code{finally} 负责收尾。
+
+输入能转成整数，还不代表它符合任务要求。在业务边界用 \code{raise} 写清约束，
+把失败交给上层。调用方若要重试，就有了明确的信号。
+第一个例子把失败和收尾顺序摆出来，随后再把同样的处理用到一组输入。
+
+
+\begin{lstlisting}[title={\code{exception_path.py}}]
+def read_retries(raw):
+    # 转换失败和超出范围，都是输入无效。
+    value = int(raw)
+    if value < 0:
+        raise ValueError("重试次数不能小于零")
+    return value
+
+
+try:
+    count = read_retries("-1")
+except ValueError as error:
+    print(error)
+else:
+    print("重试次数", count)
+finally:
+    # 即使转入 except，这一行也会执行。
+    print("输入检查结束")
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+重试次数不能小于零
+输入检查结束
+\end{lstlisting}
+
+\par
+
+\subsection*{动手｜先处理一条坏输入}
+
+给同步任务加一道入口检查。拿到字符串后先转成整数，坏数据就在转换这一小段报错。成功转换的记录还要过一次大小判断。这样可以从日志里认出坏输入，也能看到剩下哪些任务继续往下走。
+
+\begin{lstlisting}[title={\code{scan_sizes.py}}]
+import logging
+
+# 坏记录写日志，合格的大小另存。
+logging.basicConfig(level=logging.WARNING, format="%(message)s")
+sizes = []
+for raw in ["12", "bad", "0", "8"]:
+    try:
+        size = int(raw)
+    except ValueError:
+        logging.warning("忽略无效大小 %r", raw)
+        continue
+
+    if size > 0:
+        sizes.append(size)
+
+print(sizes)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 脚本应记录一条警告，并输出 [12, 8]。将 bad 改成 5 再跑，警告消失，结果里多出 5。这里只捕获 ValueError，其他错误会保留原来的异常栈。
+
+\section{异常记录的最佳实践}
+
+用日志留下“当时发生了什么”。调试时看数值可以临时打印，任务交给别人运行以后，
+日志还得带上级别和失败上下文。\code{logging.exception()} 在异常处理分支里记录消息，
+并附上正在处理的异常栈，后续排查才能找到原来的代码行。
+
+下面把日志写进内存，便于自动核对。正式脚本可在入口配置文件或控制台处理器，
+业务模块只拿自己的 logger。异常跨过一层就记录一遍，会把同一条失败写成很多条，
+通常在决定处理或终止任务的那一层记录。
+
+
+\begin{lstlisting}[title={\code{capture_error.py}}]
+import io
+import logging
+
+# 演示专用日志对象，避免重复挂接处理器。
+stream = io.StringIO()
+logger = logging.getLogger("capture-demo")
+logger.handlers.clear()
+logger.propagate = False
+logger.setLevel(logging.ERROR)
+logger.addHandler(logging.StreamHandler(stream))
+
+try:
+    int("broken")
+except ValueError:
+    logger.exception("输入转换失败")
+
+# 核对消息和异常栈都进入了日志。
+print("输入转换失败" in stream.getvalue())
+print("ValueError" in stream.getvalue())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+True
+True
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+先分清状态分支和失败信号。条件判断决定往哪走，异常把当前步骤的失败交给能处理它的调用层。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在 except 内设置断点，先看原始输入，再看捕获到的异常对象。Step Over 能看见 finally 何时执行。
+\end{pycharmpractice}
+
+\begin{pitfall}
+遍历时删除当前列表会改变后续位置。先生成新清单，或者遍历副本，再明确修改目标。
+\end{pitfall}
+图~\ref{fig:chapter-3-flow} 把输入检查拆开，先核对转换，再决定怎样记录本条结果。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {读入记录};
+    \node[python flow step,text width=25mm,right=of a] (b) {尝试转换};
+    \node[python flow step,text width=25mm,right=of b] (c) {选择成功或失败};
+    \node[python flow step,text width=25mm,right=of c] (d) {记录结果};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{转换成功后继续校验，转换失败时记录输入并进入异常处理分支。}
+  \label{fig:chapter-3-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+把异常换成更贴合业务的类型时，可用 raise from 保留原始原因。只看最终那一句话有时会漏掉最早的失败，回溯里的因果链值得从头走一遍。附录 C 留了从错误入口到复验的完整记录。

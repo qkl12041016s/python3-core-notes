@@ -1,0 +1,52 @@
+\chapter{致谢与参考}
+
+{\color{PyBlue}\rule{\textwidth}{0.9pt}}
+
+\begingroup
+\ctexset{section={format=\raggedright\sffamily\bfseries\Large\color{PyBlue},
+                  beforeskip=12pt,afterskip=6pt}}
+
+\section*{致谢}
+
+一本编程笔记的来路，常藏在许多人的耐心里：作者铺开问题，译者澄清术语，维护者修补工具，社区成员将失败整理成可复现的例子。那些写清输入、原因与修复过程的记录，让后来的读者少一些无从下手，多一条能够亲自走通的路。
+
+感谢 Python 开源社区、参考资料的作者与译者，也感谢认真运行示例、提出勘误的读者。若书中结果与实际运行不符，请附上输入、报错与环境信息。每一份具体的反馈，都是下一次修订得以落笔的依据。
+
+\section*{参考文献与延伸阅读}
+
+\setlength{\columnsep}{9mm}
+\setlength{\multicolsep}{3pt}
+\begin{multicols}{2}
+  \small
+  \raggedright
+  \setlength{\leftmargini}{1.9em}
+  \renewcommand{\labelenumi}{\textcolor{PyBlue}{[\arabic{enumi}]}}
+  \begin{enumerate}
+    \setlength{\itemsep}{3pt}
+    \setlength{\parsep}{0pt}
+    \item Eric Matthes，《Python 编程：从入门到实践》第 3 版。
+    \item Luciano Ramalho，《流畅的 Python》。
+    \item Micha Gorelick、Ian Ozsvald，《Python 高性能编程》。
+    \item 图灵程序设计丛书《Python 高手进阶之路》，套装全 10 册。
+    \item Jake VanderPlas，《Python 数据科学手册》。
+    \item 《pandas+Numpy+matplotlib》学习笔记。
+    \item 《matplotlib 数据可视化实战》。
+    \item \href{https://docs.python.org/zh-cn/3/}{Python 3 官方文档}、
+      \href{https://peps.python.org/pep-0008/}{PEP 8} 与
+      \href{https://docs.python.org/zh-cn/3/tutorial/venv.html}{虚拟环境教程}。
+    \item JetBrains 的
+      \href{https://www.jetbrains.com/help/pycharm/quick-start-guide.html}{PyCharm 快速入门}与
+      \href{https://www.jetbrains.com/help/pycharm/mastering-keyboard-shortcuts.html}{快捷键文档}。
+    \item \href{https://www.runoob.com/python3}{菜鸟教程 Python 3}。
+    \item \href{https://packaging.python.org/en/latest/tutorials/packaging-projects/}{Python 打包用户指南}。
+  \end{enumerate}
+\end{multicols}
+
+\section*{勘误}
+
+\begin{tcolorbox}[colframe=CodeLine,colback=CodeBg,boxrule=0.5pt,arc=1.5mm,
+                  left=7pt,right=7pt,top=4pt,bottom=4pt]
+  \textbf{作者}\enspace \BookAuthor\par
+  \textbf{勘误时请附}\enspace 书稿版本、章节或页码、代码行、运行环境和最小复现。
+\end{tcolorbox}
+\endgroup

@@ -1,0 +1,210 @@
+\chapter[数据处理与可视化初探]{数据处理与可视化初探（边界限定）}
+\label{ch:16-outline}
+
+图表应当能追溯到输入数据。清洗、分组与导出时，持续核对行数、缺失值、标签和单位，确保表格与图形表达同一套统计口径。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 16 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {数组与表格}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {图表与导出}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {Excel 自动化}
+      };
+  \end{tikzpicture}
+  \caption*{数组与表格处理、图表生成及工作簿导出。}
+\end{figure}
+
+
+\section{Pandas 与 NumPy 极简入门}
+
+NumPy 数组像摆好形状的格盘，shape 说明格子怎样排列，dtype 约定存放的数值类型。
+Pandas 在列和索引上增加名字，适合从 CSV 走到按组汇总。
+先检查表头和行数，再决定哪些列转换、哪些缺失值保留。
+
+空白和零在业务上可能含义不同。\code{size} 数记录，\code{count} 只数有值的项，
+求和前先说明缺失值的处理口径。下面用三行数据把这几个数字对上，
+再把汇总表交给图表和办公自动化。
+
+\subsection*{先看数组的形状}
+
+先给 NumPy 一张两行两列的小表，指定整数类型。
+shape 留下形状，沿指定轴求和得到每列的结果。
+基础切片可能共享底层数据，需要独立修改时，应明确调用 copy（图~\ref{fig:visual-ch16}）。
+
+
+\begin{lstlisting}[title={\code{array_shape.py}}]
+import numpy as np
+
+# shape 说明两行两列，axis=0 沿行方向汇总。
+values = np.array([[1, 2], [3, 4]], dtype=np.int64)
+print(values.shape)
+print(values.sum(axis=0).tolist())
+
+# 基础切片共享数据，复制后再独立修改。
+selected = values[:, :1].copy()
+selected[0, 0] = 9
+print(values[0, 0])
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 三行输出应为 \code{(2, 2)}、
+\code{[4, 6]} 和 \code{1}。副本的修改没有写回原数组。
+
+\subsection*{动手｜从 CSV 样本得到可核对的汇总}
+
+先给报表准备一份只有三行的样本。缺失耗时留在表里，只有有效耗时参与求和。统计时同时看记录数和有效值数量，这样一眼就能发现某组还有没填的数据。
+
+\begin{lstlisting}[title={\code{sync_summary.py}}]
+from io import StringIO
+
+import pandas as pd
+
+# 用带缺失值的小表核对统计口径。
+sample = StringIO("team,seconds\nteam-a,2\nteam-a,\nteam-b,3\n")
+table = pd.read_csv(sample)
+
+# size 算行数，count 算有值的记录数。
+summary = table.groupby("team", as_index=False).agg(
+    rows=("seconds", "size"),
+    valid=("seconds", "count"),
+    total=("seconds", "sum"),
+)
+row = summary.loc[summary["team"] == "team-a"].iloc[0]
+print(len(table), row["rows"], row["valid"], row["total"])
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 运行前安装 pandas。输入是三行，输出中 team-a 有两条记录、一个有效耗时，耗时和为 2.0。图表章节和项目三可以复用这张汇总表。
+
+\section{图表生成}
+
+Figure 像整张画布，Axes 是画布上负责一个坐标系的区域。
+先用 \code{subplots()} 拿到它们，再通过 Axes 设置曲线、坐标轴和图例。
+同一份汇总表用折线图看变化，用柱状图看分组比较。
+
+导出时保留清楚的轴标签和单位。PDF 可保存矢量图形，位图内容仍受自身分辨率影响。
+下面在无界面的后端生成一页两图，输出位置就在脚本运行目录。
+
+
+\begin{lstlisting}[title={\code{draw_report.py}}]
+from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")  # 自动生成报表时使用无界面后端。
+import matplotlib.pyplot as plt
+
+days = [1, 2, 3]
+counts = [2, 4, 3]
+figure, axes = plt.subplots(1, 2, figsize=(7, 3), layout="constrained")
+axes[0].plot(days, counts, marker="o", label="synced")
+axes[0].set(xlabel="Day", ylabel="Files")
+axes[0].legend()
+axes[1].bar(["A", "B"], [5, 4])
+axes[1].set(xlabel="Team", ylabel="Files")
+figure.savefig("report.pdf")
+plt.close(figure)  # 批量生成时及时释放画布。
+print(Path("report.pdf").is_file())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+True
+\end{lstlisting}
+
+\par
+
+
+\section{办公自动化}
+
+工作簿像一个文件夹，工作表是里面的表格页。openpyxl 可以读写单元格和样式，
+先约定表头，再逐行追加汇总结果，保存后重新打开核对。
+
+公式单元格的计算依赖表格软件，openpyxl 本身不计算公式。
+需要在 Python 端核对的统计，先算出数值再写入。
+下面把固定的两组汇总写进临时工作簿，读回来验证总行数和最后一个值。
+
+
+\begin{lstlisting}[title={\code{write_workbook.py}}]
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from openpyxl import Workbook, load_workbook
+
+with TemporaryDirectory() as folder:
+    path = Path(folder) / "report.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Summary"
+    sheet.append(["team", "files"])
+    sheet.append(["A", 5])
+    sheet.append(["B", 4])
+    workbook.save(path)
+    workbook.close()
+
+    # 重新读文件，核对表头后的两行。
+    restored = load_workbook(path, read_only=True)
+    print(restored["Summary"].max_row, restored["Summary"]["B3"].value)
+    restored.close()
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+3 4
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+先明确缺失值、重复项和分组口径，再生成图表。图好不好看之前，先把表里的数对清楚；项目三样本的行数与有效值计数见图~\ref{fig:visual-quality}。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在导出前设置断点，核对 DataFrame 的 shape、列名和几行样本，再打开导出的工作簿查看结果。
+\end{pycharmpractice}
+
+\begin{pitfall}
+字符串列里的空白、真正缺失值和零可能有不同含义。清洗前保留原始输入，规则写在可重复执行的函数里。
+\end{pitfall}
+图~\ref{fig:chapter-16-flow} 串起报表步骤，后一步使用前一步核对过的结果。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {读入样本};
+    \node[python flow step,text width=25mm,right=of a] (b) {清洗并核对};
+    \node[python flow step,text width=25mm,right=of b] (c) {按组汇总};
+    \node[python flow step,text width=25mm,right=of c] (d) {出图与导出};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{每步核对行数和统计口径，图表使用最终汇总表作为输入。}
+  \label{fig:chapter-16-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+分组前先核对索引与列。给 DataFrame 赋值时，可明确用 loc 指定目标，避免链式赋值让修改意图变得模糊。求和之前还要决定全缺失组怎样表达，表中的缺失与图上的显示要能互相说明。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{array}{\linewidth}
+\caption{基础切片可共享底层数据，复制后修改不影响原数组。}
+\label{fig:visual-ch16}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\BookImage{quality}{\linewidth}
+\caption{四行输入按事件编号去重后剩三条，其中两条具有有效耗时。}
+\label{fig:visual-quality}
+\end{figure}

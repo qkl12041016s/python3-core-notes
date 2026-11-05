@@ -1,0 +1,183 @@
+\chapter*{项目一 本地通讯录管理系统}
+\addcontentsline{toc}{chapter}{\protect\numberline{}项目一 本地通讯录管理系统}
+
+\textbf{阶段一｜巩固基础（CLI + 函数 + 文件）}
+
+从能添加、查询、修改和删除联系人开始。数据用 JSON 持久化，命令行只收参数和显示结果，
+联系人规则与文件存储各放一处。核心代码分成命令入口、联系人操作和 JSON 读写三段。
+
+验收时，添加一条联系人后退出程序，再次启动仍能查到它。还应用损坏的 JSON
+复现一次读入错误，并检查程序给出的提示。扩展练习留给按姓名检索与导出。
+
+\section*{验收清单}
+用三个动作做首轮验收。先新增一条记录并核对 JSON，再重启应用核对查询，
+最后在副本中放入损坏的 JSON，确认程序报出可定位的错误，文件内容也能留给排查。
+
+\section*{从需求落到文件}
+该项目按单用户命令行工具设计。联系人以姓名为键，电话作为文本保存。
+同名添加先报错，删除不存在的联系人也给出明确反馈。
+入口解析参数，读写函数负责 JSON，更新操作先在内存里完成，再写到同目录的临时文件。
+完整内容写好后用替换操作发布，读入失败时原文件留给排查。
+
+源码在 \code{projects/01-contacts/contacts.py}。依次运行下面的命令，
+可检查新增、更新电话、重新读取和删除。演示电话只是测试字段。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 创建演示记录。
+python contacts.py --file demo.json add Xiaoxue 0000
+# 修改已有联系人的电话。
+python contacts.py --file demo.json update Xiaoxue 1234
+# 再次启动，从 JSON 里读取。
+python contacts.py --file demo.json list
+# 删除并保存。
+python contacts.py --file demo.json remove Xiaoxue
+\end{lstlisting}
+\Needspace{17\baselineskip}
+\section*{核心代码}
+\begin{lstlisting}[title={\code{contacts.py 中的读取}}]
+def read_contacts(path):
+    # 文件不存在时按首次运行处理。
+    if not path.exists():
+        return {}
+    records = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(records, dict) or not all(
+        isinstance(name, str) and isinstance(phone, str)
+        for name, phone in records.items()
+    ):
+        raise ValueError("通讯录必须是姓名到电话的字典")
+    return records
+\end{lstlisting}
+对同名联系人再次执行添加，程序应以非零状态结束，JSON 中的原记录仍在。
+接着把文件副本写成坏 JSON，核对错误消息与文件内容，确认错误现场还保留着。
+
+\chapter*{项目二 多线程网页图片/表格批量下载器}
+\addcontentsline{toc}{chapter}{\protect\numberline{}项目二 多线程网页图片/表格批量下载器}
+
+\textbf{阶段二｜系统与并发（Pathlib + Threading）}
+
+先准备一组获准下载的资源地址。入口把任务放进 \code{queue}，
+工作线程用 \code{requests} 请求资源，再用 \code{Path} 整理输出路径。
+核心代码按任务、下载、写入和日志拆开。
+
+验收用受控地址各复现一次成功、超时与失败。运行结束后，对照保存文件和日志，
+确认每项任务都有结果。扩展练习是调整工作线程数并观察同一输入下的表现。
+
+\section*{验收清单}
+用本机测试服务验收下载流程，分别准备正常响应、延迟响应和失败状态码。
+每项任务都要有可追溯的记录，失败文件不能出现在成功清单里。
+
+\section*{从清单到工作线程}
+将明确给定的资源地址写进一行一个 URL 的文本文件。
+主线程给每项编号并入队，每个工作线程使用自己的 Session。
+响应检查通过后，内容先写入 \code{.part} 临时文件，完整下载再改为最终文件名。
+失败记录带着编号回到结果队列，主线程按编号汇总。
+
+源码在 \code{projects/02-downloader/download.py}。在资源地址已确认可下载的前提下运行
+\par\noindent\code{python download.py --urls urls.txt --output downloads}\par 
+返回 JSON 中每项包含编号、成功与否，以及保存名或错误消息。
+目标文件已经存在时，这一项会报告失败，便于核对重跑的影响。
+
+\section*{核心代码}
+\begin{lstlisting}[title={\code{download.py 中的任务收尾}}]
+from queue import Queue
+
+tasks = Queue()
+tasks.put("notes.md")
+item = tasks.get()
+try:
+    # 先用一条任务核对确认完成的路径。
+    print("处理", item)
+finally:
+    tasks.task_done()
+tasks.join()
+\end{lstlisting}
+上面的单任务演练输出「处理 notes.md」。多线程下载过程在项目源码中。
+用本机测试服务分别返回成功和失败状态，确认成功文件内容能读回，
+失败项有记录，临时文件清理后不会被算作成功产物。
+
+\chapter*{项目三 Excel/CSV 自动化数据清洗与报表生成}
+\addcontentsline{toc}{chapter}{\protect\numberline{}项目三 Excel/CSV 自动化数据清洗与报表生成}
+
+\textbf{阶段三｜数据与报表（Pandas + 自动化）}
+
+读入 Excel 或 CSV，处理缺失值和重复行，再做分组汇总。图表使用同一份汇总表。
+
+\section*{验收清单}
+用含缺失值与重复行的样本，核对读入行数、去重后的行数和各组统计。
+
+\section*{先写清洗规则，再写报表}
+将输入约定成事件表，每条有 \code{event_id}、\code{team} 和 \code{seconds}。
+同一事件编号重复时留首条，无法转换的耗时保留为缺失，
+负耗时则报错。分组表同时输出事件数、有效耗时条数和耗时总和，
+整组都缺失时总和继续保留缺失。
+
+在 \code{projects/03-report} 下运行命令，输出目录应为新目录。
+传入 \code{.xlsx} 时读取第一张工作表。所有产物写完后才发布结果目录。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 一份样本生成清洗表、工作簿和图。
+python report.py --input sample.csv --output result
+\end{lstlisting}
+
+\section*{核心代码}
+\begin{lstlisting}[title={\code{report.py 中的汇总}}]
+# 只让同一事件参与一次统计。
+cleaned = table.drop_duplicates("event_id").copy()
+cleaned["seconds"] = pd.to_numeric(cleaned["seconds"], errors="coerce")
+summary = cleaned.groupby("team", as_index=False).agg(
+    events=("event_id", "size"),
+    valid=("seconds", "count"),
+    total=("seconds", lambda values: values.sum(min_count=1)),
+)
+\end{lstlisting}
+样本四行应清洗成三行。A 组有两个事件、一个有效耗时，总和为 2。
+核对工作簿与 PDF 柱状图，再添加一组耗时全缺失的记录，比较表中的缺失值和图上的显示。
+
+\chapter*{综合挑战（二选一）}
+\addcontentsline{toc}{chapter}{\protect\numberline{}综合挑战}
+
+\textbf{阶段四｜综合挑战}
+
+\section*{路线 A（本地应用） PyQt 个人学习资料管理器}
+\addcontentsline{toc}{section}{\protect\numberline{}路线 A PyQt 资料管理器}
+
+用 PyQt 搭界面，SQLite 存资料索引，文件操作放进可单独调用的函数。
+核心代码分为界面事件、资料服务与存储。验收时新增一条资料、搜索它、重启后再查一次，
+再用 \code{pytest} 测试业务函数。扩展练习是为资料加标签。
+
+\section*{路线 B（网络服务） FastAPI 本地 API 服务}
+\addcontentsline{toc}{section}{\protect\numberline{}路线 B FastAPI 本地服务}
+
+让 FastAPI 接收 JSON，在本地 SQLite 保存数据。核心代码分为接口、校验和存储，
+用接口测试检查一次创建、一次查询和一次无效输入。扩展练习留给分页查询。
+
+\section*{验收清单}
+路线 A 的验收从纯业务函数开始，随后检查界面事件和重启后的数据库记录。
+路线 B 用同一份样本检查接口返回、无效输入和重新启动后的读取。两条路线都要记录运行命令与预期输出。
+
+\section*{共享一层业务存储}
+两条路线共用 \code{projects/04-library/storage.py}，SQLite 只保存标题和资料路径。
+每次操作各开连接，写入在事务中完成，离开后关闭。
+资料路径设为唯一，同一文件再次登记会得到明确的重复反馈。
+
+路线 A 的界面在 \code{gui.py}。安装 PyQt6 后运行 \code{python gui.py}，
+选择资料文件，输入标题关键字筛选。按钮回调只负责读取选择结果、调用存储和刷新列表。
+业务层可以脱离界面测试，界面本身仍需在桌面环境中检查输入与反馈。
+
+路线 B 的接口在 \code{api.py}。安装 FastAPI 与 Uvicorn 后，在该目录运行
+\par\noindent\code{python -m uvicorn api:create_app --factory}\par 
+启动后在本地服务的 \code{/docs} 页面发送请求。
+创建成功返回 201，重复路径返回 409，缺失记录返回 404，
+字段无效由模型校验给出 422。
+
+\section*{核心代码}
+\begin{lstlisting}[title={\code{api.py 中的查询}}]
+@app.get("/notes/{note_id}")
+def get_note(note_id: int):
+    # 接口层把存储层的缺失结果转成 HTTP 状态。
+    note = library.get(note_id)
+    if note is None:
+        raise HTTPException(404, "资料不存在")
+    return note
+\end{lstlisting}
+用同一条资料先新增、再查询，再重建业务对象读取，核对持久化。
+接口测试额外检查空白输入与重复路径。
+扩展练习从标签字段开始，先定迁移与查询规则，再把它接进界面或 API。

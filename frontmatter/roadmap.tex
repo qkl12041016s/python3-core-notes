@@ -1,0 +1,37 @@
+\chapter{全书路线图}
+
+{\sffamily\bfseries\color{Ink}\BookTitle}\par
+{\small\color{Muted}\BookSubtitle}\par
+
+全书按照语言、工程工具、系统交互、并发网络、扩展生态和项目交付组织。可沿主线学习，也可根据当前任务返回对应分支。
+
+六篇的主题与衔接关系见图~\ref{fig:book-mindmap}。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=26mm,text width=20mm}
+  ]
+    \node[text=white] {Python 3\\核心编程}
+      child[grow=120,level distance=44mm,concept color=DeepBlue] {
+        node[text=white] {01\\语言基石}
+      }
+      child[grow=60,level distance=44mm,concept color=PythonYellow] {
+        node {02\\进阶核心与\\工程化}
+      }
+      child[grow=0,level distance=49mm,concept color=PythonBlue] {
+        node[text=white] {03\\文件、数据与\\系统交互}
+      }
+      child[grow=-60,level distance=44mm,concept color=PythonYellow] {
+        node {04\\并发、网络与\\基础爬虫}
+      }
+      child[grow=-120,level distance=44mm,concept color=DeepBlue] {
+        node[text=white] {05\\扩展生态与\\工程化收束}
+      }
+      child[grow=180,level distance=49mm,concept color=PythonYellow] {
+        node {06\\项目实战}
+      };
+  \end{tikzpicture}
+  \caption{全书六篇的主题与四阶段项目交付路线。}
+  \label{fig:book-mindmap}
+\end{figure}

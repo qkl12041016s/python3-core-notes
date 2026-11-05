@@ -1,0 +1,592 @@
+\usepackage[a4paper,top=25mm,bottom=25mm,left=27mm,right=27mm,
+            headheight=17pt,headsep=8mm,footskip=12mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{mindmap,arrows.meta,positioning}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage{booktabs,tabularx,longtable}
+\usepackage{multicol}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage{needspace}
+\usepackage[unicode,bookmarksopen=true]{hyperref}
+
+\newcommand{\BookTitlePrefix}{Python 3}
+\newcommand{\BookTitleText}{核心编程与实战笔记}
+\newcommand{\BookTitle}{\BookTitlePrefix\space\BookTitleText}
+\newcommand{\BookSubtitle}{基于 PyCharm 与现代工程化实践}
+% 封面与 PDF 作者字段共用以下设置。
+\newcommand{\BookAuthor}{雪落长安无声}
+\newcommand{\BookVersion}{v1.0}
+% 默认使用编译日期。出版时可在这里填写固定日期。
+\newcommand{\BookDate}{\today}
+
+\definecolor{PythonBlue}{HTML}{3776AB}
+\colorlet{PyBlue}{PythonBlue}
+\definecolor{PythonYellow}{HTML}{FFD43B}
+\definecolor{Ink}{HTML}{172B40}
+\definecolor{Muted}{HTML}{4C6278}
+\definecolor{DeepBlue}{HTML}{254E70}
+\definecolor{CoverDark}{HTML}{122236}
+\definecolor{EditorDark}{HTML}{1A3048}
+\definecolor{EditorLine}{HTML}{35536E}
+\definecolor{CodeBg}{HTML}{F1F6FB}
+\definecolor{CodeLine}{HTML}{AFC6DB}
+\definecolor{CodeKeyword}{HTML}{245B8A}
+\definecolor{CodeString}{HTML}{75388B}
+\definecolor{CodeComment}{HTML}{35685E}
+\definecolor{PitfallRed}{HTML}{B43B49}
+
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{lmmono10-regular.otf}[
+  BoldFont=lmmonolt10-bold.otf,
+  ItalicFont=lmmono10-italic.otf,
+  BoldItalicFont=lmmonolt10-boldoblique.otf,
+  Scale=MatchLowercase
+]
+\defaultCJKfontfeatures{}
+\setCJKmainfont{FandolHei-Regular.otf}[
+  BoldFont=FandolHei-Bold.otf,ItalicFont=FandolKai-Regular.otf
+]
+\setCJKsansfont{FandolHei-Regular.otf}[
+  BoldFont=FandolHei-Bold.otf,ItalicFont=FandolKai-Regular.otf
+]
+\setCJKmonofont{FandolFang-Regular.otf}[
+  BoldFont=FandolHei-Bold.otf,ItalicFont=FandolKai-Regular.otf
+]
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.65em plus 0.15em minus 0.1em}
+\linespread{1.16}
+\raggedbottom
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+
+\ctexset{
+  part={
+    name={第,篇},
+    number=\chinese{part},
+    format=\centering\Huge\bfseries\sffamily\color{PyBlue},
+    hang=false,
+    beforeskip=92pt,
+    afterskip=64pt,
+    aftername={\par\nobreak\vspace{14pt}},
+    aftertitle={\par\nobreak\vspace{12pt}{\color{PythonYellow}\rule{32mm}{2pt}}},
+    pagestyle=empty
+  },
+  chapter={
+    name={第\enspace,\enspace 章},
+    number=\arabic{chapter},
+    format=\raggedright\sffamily\bfseries\Huge\color{PythonBlue},
+    aftername=\hspace{0.8em},
+    beforeskip=24pt,
+    afterskip=18pt
+  },
+  section={
+    format=\raggedright\sffamily\bfseries\Large\color{Ink},
+    beforeskip=18pt,
+    afterskip=8pt
+  }
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\ttfamily\color{PythonBlue}>>> \BookTitlePrefix}
+\fancyhead[R]{\small\color{Muted}\BookTitleText}
+\fancyfoot[C]{\small\ttfamily\color{Muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{%
+  {\color{CodeLine}\hrule width\headwidth height\headrulewidth}%
+}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\ttfamily\color{Muted}\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+\hypersetup{
+  pdftitle={\BookTitle},
+  pdfauthor={\BookAuthor},
+  pdfsubject={\BookSubtitle},
+  colorlinks=true,
+  linkcolor=DeepBlue,
+  urlcolor=CodeKeyword
+}
+% 目录沿用自动生成的页码与链接，章号只显示阿拉伯数字。
+\ctexset{
+  chapter/tocline={
+    \CTEXifname{\protect\numberline{\thechapter}}{\protect\numberline{}}#2
+  }
+}
+
+\makeatletter
+% 将篇标题和它下面的第一章一起换栏。
+\newbox\BookPartTocBox
+\let\BookChapterTocEntry\l@chapter
+\renewcommand*{\l@part}[2]{%
+  \box\BookPartTocBox
+  \global\setbox\BookPartTocBox=\vbox{%
+    \begingroup
+      \hypersetup{linkcolor=PyBlue}%
+      \color{PyBlue}%
+      \parindent\z@
+      \rightskip\@pnumwidth
+      \parfillskip-\@pnumwidth
+      \large\bfseries
+      \noindent #1\nobreak\hfill
+      \hb@xt@\@pnumwidth{\hss#2}\par
+    \endgroup
+  }%
+}
+\renewcommand*{\l@chapter}[2]{%
+  \ifvoid\BookPartTocBox
+    \BookChapterTocEntry{#1}{#2}%
+  \else
+    \addpenalty{-\@highpenalty}%
+    \addvspace{1.3em}%
+    \vbox{\box\BookPartTocBox\BookChapterTocEntry{#1}{#2}}%
+    \global\setbox\BookPartTocBox=\box\voidb@x
+  \fi
+}
+\renewcommand{\tableofcontents}{%
+  \begingroup
+    \ctexset{chapter={%
+      format=\centering\sffamily\mdseries\Huge\color{PythonBlue},
+      beforeskip=0pt,
+      afterskip=26pt
+    }}%
+    \chapter*{\contentsname}%
+    \@mkboth{\contentsname}{\contentsname}%
+    \hypersetup{linkcolor=Ink}%
+    \setlength{\columnsep}{11mm}%
+    \setlength{\multicolsep}{0pt}%
+    \setlength{\parskip}{0pt}%
+    \renewcommand{\@pnumwidth}{2.1em}%
+    \renewcommand{\@tocrmarg}{2.65em}%
+    \renewcommand*{\l@section}{\addvspace{0.25em}\@dottedtocline{1}{0.75em}{2.45em}}%
+    \begin{multicols}{2}
+      \@starttoc{toc}%
+      \box\BookPartTocBox
+      \global\setbox\BookPartTocBox=\box\voidb@x
+    \end{multicols}%
+  \endgroup
+}
+\makeatother
+
+\urlstyle{same}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+
+% 代码块默认使用 Python 样式。ctex 在 XeLaTeX 下为 listings 接入中文支持。
+\lstdefinestyle{python}{
+  language=Python,
+  basicstyle=\small\ttfamily\color{Ink},
+  keywordstyle=\bfseries\color{CodeKeyword},
+  stringstyle=\color{CodeString},
+  commentstyle=\itshape\color{CodeComment},
+  deletekeywords={print,exec},
+  morekeywords={async,await,nonlocal},
+  emph={print,len,range,enumerate,zip,open,int,str,list,dict,set,tuple},
+  emphstyle=\color{DeepBlue},
+  numbers=left,
+  numberstyle=\scriptsize\ttfamily\color{Muted},
+  stepnumber=1,
+  numbersep=10pt,
+  frame=single,
+  rulecolor=\color{CodeLine},
+  backgroundcolor=\color{CodeBg},
+  framesep=8pt,
+  framexleftmargin=22pt,
+  xleftmargin=30pt,
+  xrightmargin=9pt,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=4,
+  breaklines=true,
+  upquote=true,
+  aboveskip=12pt,
+  belowskip=12pt
+}
+\lstset{style=python}
+
+% 提示框均可跨页。
+\newcommand{\NoteSquare}[1]{\textcolor{#1}{\rule{0.75em}{0.75em}}}
+\tcbset{
+  python note/.style={
+    breakable,
+    coltitle=Ink,
+    coltext=Ink,
+    fonttitle=\sffamily\bfseries,
+    boxrule=0.85pt,
+    arc=2mm,
+    left=10pt,
+    right=10pt,
+    top=7pt,
+    bottom=7pt,
+    before skip=12pt,
+    after skip=12pt
+  }
+}
+\newtcolorbox{myunderstanding}{
+  python note,
+  title={\NoteSquare{PythonBlue}\enspace 核心直觉},
+  colframe=PythonBlue,
+  colback=PythonBlue!8!white,
+  colbacktitle=PythonBlue!17!white
+}
+\newtcolorbox{pycharmpractice}{
+  python note,
+  title={\NoteSquare{PythonYellow}\enspace PyCharm 实战},
+  colframe=PythonYellow,
+  colback=PythonYellow!7!white,
+  colbacktitle=PythonYellow!25!white
+}
+\newtcolorbox{pitfall}{
+  python note,
+  title={\NoteSquare{PitfallRed}\enspace 踩坑记录},
+  colframe=PitfallRed,
+  colback=PitfallRed!5!white,
+  colbacktitle=PitfallRed!12!white
+}
+
+% 提示框图标使用 TikZ 矢量路径。
+\newcommand{\SnakeIcon}{%
+  \tikz[baseline=-0.55ex,x=1em,y=1em,line cap=round]{%
+    \draw[line width=1.15pt]
+      (0.12,0.18) -- (0.60,0.18)
+      arc[start angle=-90,end angle=90,radius=0.15]
+      -- (0.30,0.48) arc[start angle=-90,end angle=-270,radius=0.14]
+      -- (0.72,0.76);
+    \fill (0.73,0.76) circle[radius=0.10];
+    \fill[PythonYellow!28!white] (0.75,0.80) circle[radius=0.023];
+  }%
+}
+\newcommand{\BulbIcon}{%
+  \tikz[baseline=-0.55ex,x=1em,y=1em,line cap=round,line join=round]{%
+    \draw[line width=0.75pt]
+      (0.29,0.29) -- (0.29,0.41)
+      .. controls (0.02,0.64) and (0.21,0.89) .. (0.43,0.89)
+      .. controls (0.65,0.89) and (0.84,0.64) .. (0.57,0.41)
+      -- (0.57,0.29) -- cycle;
+    \draw[line width=0.75pt] (0.34,0.14) -- (0.52,0.14);
+  }%
+}
+\newcommand{\BugIcon}{%
+  \tikz[baseline=-0.55ex,x=1em,y=1em,line cap=round]{%
+    \draw[line width=0.75pt] (0.44,0.40) ellipse[x radius=0.22,y radius=0.28];
+    \draw[line width=0.75pt]
+      (0.44,0.64) -- (0.44,0.13)
+      (0.32,0.65) -- (0.23,0.83) (0.56,0.65) -- (0.65,0.83)
+      (0.25,0.52) -- (0.06,0.60) (0.63,0.52) -- (0.82,0.60)
+      (0.22,0.38) -- (0.04,0.38) (0.66,0.38) -- (0.84,0.38)
+      (0.26,0.25) -- (0.10,0.17) (0.62,0.25) -- (0.78,0.17);
+  }%
+}
+
+\newtcolorbox{pycharmtip}{
+  python note,
+  title={\SnakeIcon\enspace PyCharm 快捷键},
+  colframe=PythonYellow,
+  colback=PythonYellow!7!white,
+  colbacktitle=PythonYellow!28!white
+}
+\newtcolorbox{pythonictip}{
+  python note,
+  title={\BulbIcon\enspace Pythonic 写法},
+  colframe=PythonBlue,
+  colback=PythonBlue!10!white,
+  colbacktitle=PythonBlue!22!white
+}
+\newtcolorbox{pybug}{
+  python note,
+  title={\BugIcon\enspace 常见报错与避坑},
+  colframe=PitfallRed,
+  colback=PitfallRed!5!white,
+  colbacktitle=PitfallRed!13!white
+}
+
+% 思维导图样式可用于总览和章首。每张图可单独指定分支角度与距离。
+\tikzset{
+  book mindmap/.style={
+    root concept/.style={
+      minimum size=30mm,text width=24mm,font=\sffamily\bfseries\large
+    },
+    level 1 concept/.style={
+      minimum size=23mm,text width=17mm,font=\sffamily\bfseries\small,
+      level distance=38mm,sibling angle=72
+    },
+    level 2 concept/.style={
+      minimum size=19mm,text width=16mm,font=\sffamily\footnotesize,
+      level distance=27mm,sibling angle=52
+    },
+    mindmap,
+    every node/.style={concept,align=center,text=Ink,inner sep=1mm},
+    concept color=PythonBlue
+  },
+  python flow step/.style={
+    rectangle,rounded corners=2mm,draw=PythonBlue,fill=CodeBg,
+    text=Ink,align=center,font=\sffamily\small,
+    minimum height=9mm,inner sep=5pt
+  },
+  python flow arrow/.style={-{Stealth[length=2.4mm]},draw=PythonBlue,thick}
+}
+
+\DeclareCaptionFont{captionink}{\color{Muted}}
+\captionsetup[figure]{font={small,captionink},labelfont=bf,
+                      justification=centering,singlelinecheck=false,position=bottom,
+                      skip=9pt}
+
+% 图像使用完整项目中的矢量 PDF。缺少图文件时使用同主题 TikZ 简图。
+\newcommand{\BookImage}[2]{%
+  \IfFileExists{figures/#1.pdf}{%
+    \includegraphics[width=#2]{figures/#1.pdf}%
+  }{%
+    \resizebox{#2}{!}{\csname BookFallback#1\endcsname}%
+  }%
+}
+\newcommand{\CaseStep}[2]{\par\smallskip{\bfseries\color{Muted}#1}\enspace #2\par}
+\ctexset{
+  part={
+    break={\clearpage},
+    format=\raggedright\Huge\bfseries\sffamily\color{PyBlue},
+    fixskip=true,beforeskip=0pt,afterskip=8pt,hang=true,
+    aftername=\hspace{0.65em},
+    aftertitle={\par\nobreak{\color{PythonYellow}\rule{\linewidth}{1.5pt}}},
+    pagestyle=plain
+  },
+  chapter={
+    break={\clearpage},
+    format=\raggedright\sffamily\bfseries\LARGE\color{PyBlue},
+    fixskip=true,beforeskip=0pt,afterskip=9pt,pagestyle=plain
+  },
+  section={beforeskip=13pt,afterskip=6pt}
+}
+\newcommand{\BookPartIntro}{\vfill}
+% 在篇页内排导读，并用弹性间距将寄语推至版心底部。
+\newcommand{\BookPart}[4]{%
+  \begingroup
+  \renewcommand{\BookPartIntro}{%
+    \vspace{14mm}%
+    {\large\bfseries\sffamily\color{PyBlue}本篇导读\par}%
+    \smallskip
+    {\large\color{Ink}#2\par}%
+    \medskip
+    #3\par
+    \vfill
+    {\centering\large\sffamily\color{PyBlue}#4\par}%
+    \vspace{5mm}%
+  }%
+  \part{#1}%
+  \endgroup
+}
+\makeatletter
+\renewcommand{\@endpart}{\par\BookPartIntro\clearpage}
+\renewcommand{\backmatter}{\clearpage\@mainmatterfalse}
+\makeatother
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.85}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{9pt plus 2pt minus 2pt}
+\setlength{\LTpre}{6pt}
+\setlength{\LTpost}{6pt}
+
+\expandafter\def\csname BookFallbackinterpreter\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {项目设置};
+\node[python flow step,text width=29mm,right=of a] (b) {运行配置};
+\node[python flow step,text width=29mm,right=of b] (c) {终端路径};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {解释器核对};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackreferences\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {名字};
+\node[python flow step,text width=29mm,right=of a] (b) {外层容器};
+\node[python flow step,text width=29mm,right=of b] (c) {共享的内层对象};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {对象引用};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacktype-info\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {编辑器推断};
+\node[python flow step,text width=29mm,right=of a] (b) {断点现场};
+\node[python flow step,text width=29mm,right=of b] (c) {运行时类型};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {两层观察};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacktraceback\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {异常末行};
+\node[python flow step,text width=29mm,right=of a] (b) {文件和行号};
+\node[python flow step,text width=29mm,right=of b] (c) {最小复现};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {读回溯};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacklist-preview\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原列表};
+\node[python flow step,text width=29mm,right=of a] (b) {切片新列表};
+\node[python flow step,text width=29mm,right=of b] (c) {独立追加};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {列表预览};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackset-difference\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {请求名单};
+\node[python flow step,text width=29mm,right=of a] (b) {已有名单};
+\node[python flow step,text width=29mm,right=of b] (c) {待同步差集};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {集合比较};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackgrouping\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原始事件};
+\node[python flow step,text width=29mm,right=of a] (b) {状态计数};
+\node[python flow step,text width=29mm,right=of b] (c) {按状态分组};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {同源日志};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackscope\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {当前函数};
+\node[python flow step,text width=29mm,right=of a] (b) {外层和模块};
+\node[python flow step,text width=29mm,right=of b] (c) {内置名字};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {名字查找};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackdecorator\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {定义原函数};
+\node[python flow step,text width=29mm,right=of a] (b) {完成包装};
+\node[python flow step,text width=29mm,right=of b] (c) {调用时执行};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {装饰器};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacktransaction\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {开始与执行};
+\node[python flow step,text width=29mm,right=of a] (b) {成功提交};
+\node[python flow step,text width=29mm,right=of b] (c) {异常回滚};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {事务};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackconcurrency\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {启动任务};
+\node[python flow step,text width=29mm,right=of a] (b) {等待与协作};
+\node[python flow step,text width=29mm,right=of b] (c) {恢复处理};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {任务交接};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackhttp\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {方法与路径};
+\node[python flow step,text width=29mm,right=of a] (b) {服务处理};
+\node[python flow step,text width=29mm,right=of b] (c) {状态与内容};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {HTTP 往返};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackarchitecture\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {窗口或接口};
+\node[python flow step,text width=29mm,right=of a] (b) {业务规则};
+\node[python flow step,text width=29mm,right=of b] (c) {数据存储};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {业务分层};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackarray\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原数组};
+\node[python flow step,text width=29mm,right=of a] (b) {共享视图};
+\node[python flow step,text width=29mm,right=of b] (c) {独立副本};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {数组与切片};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackquality\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原始四行};
+\node[python flow step,text width=29mm,right=of a] (b) {去重三行};
+\node[python flow step,text width=29mm,right=of b] (c) {有效两项};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {数据核对};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackpackage\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {源码与配置};
+\node[python flow step,text width=29mm,right=of a] (b) {构建 wheel};
+\node[python flow step,text width=29mm,right=of b] (c) {新环境运行};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {交付链路};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackdiagnosis\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {代码与数据};
+\node[python flow step,text width=29mm,right=of a] (b) {文件与环境};
+\node[python flow step,text width=29mm,right=of b] (c) {外部服务};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {排错路线};
+\end{tikzpicture}
+}
+
+% 图与表的题注均放在内容下方，长题注也按居中方式排版。
+\captionsetup*[table]{font={small,captionink},labelfont=bf,
+  justification=centering,singlelinecheck=false,position=bottom,skip=9pt}

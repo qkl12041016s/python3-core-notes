@@ -1,0 +1,173 @@
+\chapter{数据库交互实战}
+\label{ch:14-outline}
+
+数据库连接成功并不等于数据写入正确。事务、约束和读回结果共同构成验收依据；异常时还应保证回滚和资源释放。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 14 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {数据库连接}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {对象与表}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {安全与连接池}
+      };
+  \end{tikzpicture}
+  \caption*{连接、查询、事务及资源释放。}
+\end{figure}
+
+
+\section{MySQL 与 MongoDB 基础}
+
+数据库连接像办一张带权限的借阅卡。连接参数确定连到哪里、用谁的身份，
+查询再限定取哪份记录。关系库把记录放在约定的表中，MongoDB 用文档组织字段。
+
+将地址和凭据交给环境变量，库名和集合名在演示环境里先准备好。
+下面列出两种客户端的连接入口。运行前安装 PyMySQL 与 PyMongo，并配置实际测试库。
+连接能够建立只是第一步，业务查询还要核对字段、索引和超时。
+
+
+\begin{lstlisting}[title={\code{external_databases.py}}]
+import os
+
+import pymongo
+import pymysql
+
+# 凭据从当前运行环境读取。
+with pymysql.connect(
+    host=os.environ["MYSQL_HOST"],
+    user=os.environ["MYSQL_USER"],
+    password=os.environ["MYSQL_PASSWORD"],
+    database=os.environ["MYSQL_DATABASE"],
+    connect_timeout=5,
+) as connection:
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT 1")
+        print(cursor.fetchone()[0])
+
+# 客户端退出上下文时关闭连接资源。
+with pymongo.MongoClient(
+    os.environ["MONGO_URI"], serverSelectionTimeoutMS=5000
+) as client:
+    print(client.admin.command("ping")["ok"])
+\end{lstlisting}
+
+\textbf{运行条件}\enspace 需要运行中的测试数据库及已配置的环境变量。本次完成代码语法检查，连接结果须在测试库中复核。
+
+
+\section[SQLAlchemy思想]{SQLAlchemy（ORM）思想}
+
+ORM 像在表和对象之间放一位翻译。类描述字段，实例代表一条记录，
+Session 组织操作与事务。翻译仍然要按 SQL 和数据库约束工作，
+遇到复杂查询时，可把生成的 SQL 也拿出来看。
+
+下面用 SQLite 跑同一套 ORM 思路，不需要额外服务。
+\code{Session.begin()} 成功离开时提交，失败时回滚，
+重新开会话再读一次，就能核对数据已经保存。
+
+
+\begin{lstlisting}[title={\code{orm_note.py}}]
+from sqlalchemy import String, create_engine, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Note(Base):
+    __tablename__ = "notes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String, unique=True)
+
+
+engine = create_engine("sqlite+pysqlite:///:memory:")
+Base.metadata.create_all(engine)
+# 提交后换一个会话读取。
+with Session(engine) as session, session.begin():
+    session.add(Note(name="notes.md"))
+with Session(engine) as session:
+    note = session.scalar(select(Note).where(Note.name == "notes.md"))
+    print(note.name)
+engine.dispose()
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+notes.md
+\end{lstlisting}
+
+\par
+
+
+\section{安全与连接池}
+
+连接池像门口可轮借的钥匙，使用完就及时归还。
+让连接、游标和事务各有清楚的退出路径，错误时回滚，
+避免下一段代码接着处理一份未结束的事务。
+
+用户输入通过驱动参数传入。表名、列名这类 SQL 结构要由程序的允许列表决定，
+不能用字段值占位符代替。下面继续用 SQLite 核对带引号的输入，
+同样的思路再迁移到其他驱动对应的参数写法。
+
+\subsection*{动手｜用带引号的输入检验参数绑定}
+
+采用第 10 章的 SQLite 做一个本地演练。文件名里带撇号时，最容易看出字符串拼接会把数据搅进语句。参数绑定把 SQL 和输入分开，数据库只按字段值比较。
+
+\begin{lstlisting}[title={\code{bind_query.py}}]
+from contextlib import closing
+import sqlite3
+
+with closing(sqlite3.connect(":memory:")) as db:
+    # 用带撇号的文件名核对绑定行为。
+    name = "O'Brien.md"
+    db.execute("CREATE TABLE files (name TEXT)")
+    db.execute("INSERT INTO files VALUES (?)", (name,))
+
+    # 语句结构和用户输入分别交给驱动。
+    row = db.execute(
+        "SELECT name FROM files WHERE name = ?", (name,)
+    ).fetchone()
+    print(row[0])
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 脚本应取回 O'Brien.md。这里的问号占位符是 sqlite3 的写法，换数据库驱动时按它的文档选择参数样式。
+
+\begin{myunderstanding}
+连接负责通信，事务负责一组改动的成败，ORM 负责对象与表的映射。每层都有自己的退出路径。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+先在参数绑定处停下看输入，再检查查询结果。连接测试只验证服务可达，业务查询还要看数据和事务。
+\end{pycharmpractice}
+
+\begin{pitfall}
+参数占位符用于字段值，表名和列名要由程序控制。换数据库驱动时按其文档选择参数样式。
+\end{pitfall}
+图~\ref{fig:chapter-14-flow} 标出事务的分界，异常路径要回到清楚的回滚位置。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {取得连接};
+    \node[python flow step,text width=25mm,right=of a] (b) {开始事务};
+    \node[python flow step,text width=25mm,right=of b] (c) {执行 SQL};
+    \node[python flow step,text width=25mm,right=of c] (d) {提交或回滚};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{一组改动成功时提交，异常路径负责回滚并归还连接。}
+  \label{fig:chapter-14-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+可把唯一约束当成最后一层核对。先查询再插入仍可能遇到并发冲突，冲突后该重试、读取已有记录还是报错，要由业务语义决定。参数化保护字段值，表名和列名则由程序自己的允许范围来选。

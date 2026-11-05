@@ -1,0 +1,98 @@
+\chapter{Python 特色符号表}
+
+本表可用于对照代码中的符号与上下文。符号本身很短，含义却常由它站的位置决定。
+星号出现在函数定义、调用和表达式里，会分别承担收集、展开或运算。
+先看上下文，再看这一行怎样把值交给下一步，读代码就有了方向。
+
+\begingroup\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}
+                   >{\raggedright\arraybackslash}p{0.30\textwidth}
+                   >{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
+\toprule
+\textbf{符号或名字} & \textbf{所在语境} & \textbf{核对要点}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{符号或名字} & \textbf{所在语境} & \textbf{核对要点}\\
+\midrule
+\endhead
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 名字与对象}\\[3pt]
+\code{=} & 把名字绑定到右侧得到的对象。 & \code{count = 3}。再次赋值可以改绑。\\[3pt]
+\code{:} & 在变量或参数后引出类型注解。 & \code{count: int = 3}。运行时仍按实际对象执行。\\[3pt]
+\code{->} & 在函数签名中标注返回值类型。 & \code{def size() -> int}。它不是返回语句。\\[3pt]
+\code{is / is not} & 比较是否为同一个对象。 & 判断缺失哨兵常写 \code{value is None}。\\[3pt]
+\code{== / !=} & 比较值是否相等。 & \code{name == "notes.md"}，具体比较行为由类型实现。\\[3pt]
+\code{None} & 表达这里没有一个实际值。 & 与 \code{0}、空字符串分开判断其业务含义。\\[3pt]
+\code{del} & 删除名字绑定或容器中的位置。 & \code{del items[0]}。是否回收对象还取决于其他引用。\\[3pt]
+\code{id() / type()} & 分别观察对象标识与实际类型。 & \code{type(value).__name__} 可用于临时诊断。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 序列、映射与集合}\\[3pt]
+\code{[]} & 列表字面量，也用于下标访问。 & \code{files[0]} 是第一项。列表可以增删位置。\\[3pt]
+\code{()} & 分组表达式或调用参数，也常用于元组。 & 单元素元组写 \code{("notes.md",)}，逗号不能省。\\[3pt]
+\code{{}} & 空字典，或非空字典与集合的字面量。 & 空集合用 \code{set()}，非空集合如 \code{1, 2} 放在花括号内。\\[3pt]
+\code{key: value} & 在字典字面量中连接键和值。 & \code{status["notes.md"]} 按键读取。键须可哈希。\\[3pt]
+\code{[start:stop]} & 取切片，停止位置不包含在结果中。 & \code{files[:2]} 取前两项。复制深度要按类型核对。\\[3pt]
+\code{[a:b:c]} & 切片的第三项控制步长。 & \code{items[::2]} 隔一项取一个，步长不能为零。\\[3pt]
+\code{[-1]} & 从末尾取最后一项。 & 容器为空时仍会抛 \code{IndexError}。\\[3pt]
+\code{in / not in} & 检查成员关系。 & 对字典默认检查键，对字符串检查子串。\\[3pt]
+\code{| / & / -} & 集合的并集、交集与差集。 & 字典中的 \code{|} 则表示合并，须看操作数类型。\\[3pt]
+\code{.get()} & 按键读取，缺失时使用默认值。 & \code{data.get("state", "unknown")} 不会补写这个键。\\[3pt]
+\code{.items()} & 取字典的键值对视图。 & \code{for key, value in data.items()}。\\[3pt]
+\code{enumerate()} & 遍历时同时得到序号和值。 & \code{start=1} 可让显示编号从 1 开始。\\[3pt]
+\code{zip()} & 按位置将几个可迭代对象配对。 & 默认按最短一列结束，必要时检查长度或使用 strict。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 参数、解包与表达式}\\[3pt]
+\code{*args} & 在函数定义中收集额外位置实参。 & 结果是元组。名称 args 是惯例。\\[3pt]
+\code{**kwargs} & 在函数定义中收集额外关键字实参。 & 结果是字典。关键字参数名必须是字符串。\\[3pt]
+\code{*values} & 在调用或容器中展开可迭代对象。 & \code{func(*values)} 与形参收集要区分上下文。\\[3pt]
+\code{**mapping} & 在调用或字典中展开映射。 & 函数调用中出现重复关键字会报错。\\[3pt]
+\code{/} & 在签名中分隔仅限位置参数。 & \code{def f(value, /)}。普通表达式中 / 表示除法。\\[3pt]
+\code{*} & 签名中的单独星号引出仅限关键字参数。 & \code{def f(*, enabled=True)}。\\[3pt]
+\code{lambda} & 构造只有一个表达式的匿名函数。 & 常见于 \code{sorted(names, key=len)} 的短规则。\\[3pt]
+\code{for / in} & 按迭代协议逐项消费对象。 & 可用于循环，也可出现在推导式里。\\[3pt]
+\code{if / else} & 根据条件选出一个表达式结果。 & 表达式要让读者容易看清每条分支。\\[3pt]
+\code{:=} & 赋值表达式，在表达式中绑定名字。 & 复杂条件里先考虑拆成普通赋值是否更清楚。\\[3pt]
+\code{and / or / not} & 按真值短路计算。 & and 和 or 可能返回操作数本身，未必是 bool。\\[3pt]
+\texttt{// / \char37 / **} & 分别是整除、取余和乘方。 & 负数整除向下取整，浮点数精度仍要留意。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 字符串与源码约定}\\[3pt]
+\code{'...' / "..."} & 用单引号或双引号写字符串。 & 外层引号与内容里的引号配合使用。\\[3pt]
+\code{三引号} & 写跨行字符串，也常写文档字符串。 & 三引号中的缩进和换行都可能进入实际内容。\\[3pt]
+\code{f 前缀} & 让花括号里的表达式参与字符串构造。 & \code{f"{count} files"}。要显示花括号需双写。\\[3pt]
+\code{r 前缀} & 减少反斜杠转义的原始字符串写法。 & 常见于正则。仍须遵守字符串结束引号的规则。\\[3pt]
+\code{b 前缀} & 写 bytes 字面量。 & bytes 与 str 之间要用确定的编码转换。\\[3pt]
+\code{换行转义} & 源码中的反斜杠与 n 表示换行字符。 & 终端换行与实际文件中的换行可用 \code{repr()} 核对。\\[3pt]
+\code{#} & 从当前位置开始写单行注释。 & 字符串里的井号属于字符串内容。\\[3pt]
+\code{!r / :.2f} & f-string 中的表示转换与格式规范。 & \code{!r} 使用 repr，\code{.2f} 控制显示两位小数。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 函数、对象与执行边界}\\[3pt]
+\code{return} & 结束函数并交回结果。 & 没有显式返回值的函数交回 None。\\[3pt]
+\code{yield} & 产出一项并暂停生成器。 & 下一次取值从暂停处继续，用完的生成器会结束。\\[3pt]
+\code{@decorator} & 把函数或类交给装饰器并重新绑定名字。 & 包装发生在定义阶段，调用逻辑由返回的对象决定。\\[3pt]
+\code{with / as} & 进入上下文，按约定取得绑定值并收尾。 & 是否抑制异常由上下文管理器的退出行为决定。\\[3pt]
+\code{try / except} & 围住可能失败的操作并按类型处理异常。 & 捕获范围尽量围住确实会失败的步骤。\\[3pt]
+\code{else / finally} & 分别用于成功路径和退出时的收尾。 & finally 中的 return 可能盖住原来的结果或异常。\\[3pt]
+\code{raise / from} & 抛出异常，或明确写出异常因果。 & \code{raise ValueError('bad') from error} 保留来路。\\[3pt]
+\code{assert} & 检查程序员写下的内部或测试约定。 & 优化模式可跳过断言，用户输入校验要用正常代码。\\[3pt]
+\code{async / await} & 定义协程与等待可等待对象。 & await 能让出执行权，具体操作仍须配合异步接口。\\[3pt]
+\code{self / super()} & 当前实例的惯用形参名与协作调用入口。 & super 按方法解析顺序寻找后续实现。\\[3pt]
+\code{__init__} & 在对象创建后初始化实例状态。 & 实例自己的可变属性通常在这里创建。\\[3pt]
+\code{__str__ / __repr__} & 日常显示与调试表示的约定方法。 & 打印对象和查看容器中的对象时可能走不同入口。\\[3pt]
+\code{__name__} & 模块在当前执行方式下的名字。 & 与 \code{"__main__"} 比较，常用来控制脚本入口。\\[3pt]
+\code{__file__} & 模块源文件的路径信息。 & 交互环境中可能不存在，不能拿它代替当前目录。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 工具与路径}\\[3pt]
+\code{pip} & 安装、查询和核对 Python 软件包。 & 常用 \code{python -m pip} 明确所用解释器。\\[3pt]
+\code{venv / .venv} & 创建隔离环境的模块与常用目录名。 & 先选解释器，再把依赖装进该环境。\\[3pt]
+\code{Path.cwd()} & 当前进程的工作目录。 & 相对路径从这里解释，PyCharm 运行配置会影响它。\\[3pt]
+\code{__main__ 入口} & 用守卫区分直接运行与导入。 & 子进程启动也要核对这个入口边界。\\[3pt]
+\addlinespace[4pt]
+\bottomrule
+\end{longtable}
+\endgroup
+
+\begin{myunderstanding}
+将符号当路标。看到冒号，先分清它在引出代码块、标注类型，还是连接字典的键和值。
+看到方括号，再问它是在建列表、取元素，还是做切片。名字与上下文一起看，
+比背下一串互不相连的定义更容易用到真实代码里。
+\end{myunderstanding}

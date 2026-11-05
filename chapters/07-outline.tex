@@ -1,0 +1,152 @@
+\chapter{模块、包与测试入门}
+\label{ch:07-outline}
+
+模块组织可复用定义，入口控制程序何时启动，测试固定输入与预期结果。三者配合，可以在调整代码结构时持续验证行为。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 7 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {导入与入口}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {断言与参数化}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {外部依赖隔离}
+      };
+  \end{tikzpicture}
+  \caption*{模块导入、参数化测试与外部接口替身。}
+\end{figure}
+
+
+\section{模块导入机制}
+
+模块是一个可导入的代码文件，包把相关模块组织到同一条导入路径下。
+将复用函数放进模块，把启动动作收进 \code{main()}。
+直接运行文件时，\code{__name__} 是 \code{"__main__"}；
+导入时则是模块名，入口守卫便能控制启动动作。
+
+先在本目录准备 \code{calc.py}，再由 \code{use_calc.py} 导入。
+导入会执行模块顶层语句，因此连接服务和读命令参数都要找好位置。
+两个模块互相导入时，先把共同使用的定义搬到独立模块，再梳理调用方向。
+
+
+\begin{lstlisting}[title={\code{use_calc.py}}]
+from calc import add
+
+# 导入后只使用函数，由当前入口负责显示。
+print(add(2, 3))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+5
+\end{lstlisting}
+
+\par
+
+
+\section[自动化测试基础]{自动化测试基础（pytest）}
+
+测试像给工具量尺寸。输入、预期结果和失败位置都写在代码里，
+改完实现再跑一次，就能看到原来的约定是否还成立。
+\code{assert} 写在测试中描述预期，用户输入校验仍用正常的分支和异常。
+
+用 \code{pytest.mark.parametrize} 指定多组输入与预期值。
+
+在本目录运行 \code{python -m pytest -q}，三个参数组合应各跑一次。
+PyCharm 可以从测试函数旁运行，也可以在测试窗口重跑失败项。
+
+
+\begin{lstlisting}[title={\code{test_add_cases.py}}]
+import pytest
+
+
+def add(left, right):
+    # 被测函数保持明确的输入与输出。
+    return left + right
+
+
+@pytest.mark.parametrize(
+    "left,right,expected",
+    [(2, 3, 5), (-2, 3, 1), (0, 0, 0)],
+)
+def test_add(left, right, expected):
+    assert add(left, right) == expected
+\end{lstlisting}
+
+
+\section{Mock 与外部依赖隔离}
+
+将 Mock 想成排练时的对手演员。外部接口回什么，由测试先约定好，
+被测代码按正常结构处理它。这样能反复演练成功、超时和无效响应。
+
+替换要发生在被测代码实际查找依赖的位置。示例把依赖作为参数传进去，
+测试里可以核对返回值，也可以核对调用参数。
+真服务的协议是否匹配，还要留给使用测试环境的集成验证。
+
+\subsection*{动手｜把网络依赖换成可核对的替身}
+
+测试状态查询时，只需核对自己的代码有没有拿对键、传对文件名。将请求函数当参数递进去，在测试里用 Mock 回一份可预期的数据，实际网络请求留给集成测试。
+
+\begin{lstlisting}[title={\code{test_lookup.py}}]
+from unittest.mock import Mock
+
+
+def lookup_status(fetch, filename):
+    # fetch 由调用方提供，结果仍按正常业务结构读取。
+    return fetch(filename)["status"]
+
+
+def test_lookup():
+    fetch = Mock(return_value={"status": "done"})
+    assert lookup_status(fetch, "notes.md") == "done"
+    fetch.assert_called_once_with("notes.md")
+
+
+# 当作脚本运行时，可以直接核对这条测试。
+if __name__ == "__main__":
+    test_lookup()
+    print("test_lookup passed")
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 直接运行本文件应打印 \code{test_lookup passed}。把业务函数里的状态键拼错会报 KeyError。保留 \code{test_} 函数命名后，也能交给 pytest 收集。
+
+\begin{myunderstanding}
+模块入口、可复用函数与外部依赖各有调用位置。先把边界画清，测试就能在合适的位置换掉依赖。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+从测试旁的运行按钮执行一条参数化测试，再从测试窗口重跑失败项，核对输入与预期值。
+\end{pycharmpractice}
+
+\begin{pitfall}
+脚本命名成 json.py 或 requests.py 可能遮住要导入的库。报导入错误时，先看 traceback 指向哪个文件。
+\end{pitfall}
+
+\subsection*{把两个导入入口分开跑}
+\code{calc.py} 与 \code{use_calc.py} 放在同目录。分别运行这两个文件，
+前者显示入口消息，后者只显示计算结果。
+
+
+\begin{lstlisting}[title={\code{calc.py}}]
+def add(left, right):
+    # 复用逻辑位于模块顶层，启动动作位于入口守卫。
+    return left + right
+
+
+if __name__ == "__main__":
+    print("从 calc.py 入口运行", add(2, 3))
+\end{lstlisting}
+
+\par
+
+\subsection*{进阶边界演练}
+给导入问题留三项信息，模块来源、入口文件和工作目录。导入会使用模块缓存，修改文件后若结果像没更新，先确认进程是否重新启动，再看是否读到了另一份同名模块。

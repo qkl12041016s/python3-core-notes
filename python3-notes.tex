@@ -1,0 +1,5732 @@
+% !TeX program = xelatex
+% !TeX encoding = UTF-8
+\documentclass[UTF8,a4paper,oneside,openany,fontset=none,11pt]{ctexbook}
+
+% ===== preamble.tex =====
+\usepackage[a4paper,top=25mm,bottom=25mm,left=27mm,right=27mm,
+            headheight=17pt,headsep=8mm,footskip=12mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{mindmap,arrows.meta,positioning}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage{booktabs,tabularx,longtable}
+\usepackage{multicol}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage{needspace}
+\usepackage[unicode,bookmarksopen=true]{hyperref}
+
+\newcommand{\BookTitlePrefix}{Python 3}
+\newcommand{\BookTitleText}{核心编程与实战笔记}
+\newcommand{\BookTitle}{\BookTitlePrefix\space\BookTitleText}
+\newcommand{\BookSubtitle}{基于 PyCharm 与现代工程化实践}
+% 封面与 PDF 作者字段共用以下设置。
+\newcommand{\BookAuthor}{雪落长安无声}
+\newcommand{\BookVersion}{v1.0}
+% 默认使用编译日期。出版时可在这里填写固定日期。
+\newcommand{\BookDate}{\today}
+
+\definecolor{PythonBlue}{HTML}{3776AB}
+\colorlet{PyBlue}{PythonBlue}
+\definecolor{PythonYellow}{HTML}{FFD43B}
+\definecolor{Ink}{HTML}{172B40}
+\definecolor{Muted}{HTML}{4C6278}
+\definecolor{DeepBlue}{HTML}{254E70}
+\definecolor{CoverDark}{HTML}{122236}
+\definecolor{EditorDark}{HTML}{1A3048}
+\definecolor{EditorLine}{HTML}{35536E}
+\definecolor{CodeBg}{HTML}{F1F6FB}
+\definecolor{CodeLine}{HTML}{AFC6DB}
+\definecolor{CodeKeyword}{HTML}{245B8A}
+\definecolor{CodeString}{HTML}{75388B}
+\definecolor{CodeComment}{HTML}{35685E}
+\definecolor{PitfallRed}{HTML}{B43B49}
+
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{lmmono10-regular.otf}[
+  BoldFont=lmmonolt10-bold.otf,
+  ItalicFont=lmmono10-italic.otf,
+  BoldItalicFont=lmmonolt10-boldoblique.otf,
+  Scale=MatchLowercase
+]
+\defaultCJKfontfeatures{}
+\setCJKmainfont{FandolHei-Regular.otf}[
+  BoldFont=FandolHei-Bold.otf,ItalicFont=FandolKai-Regular.otf
+]
+\setCJKsansfont{FandolHei-Regular.otf}[
+  BoldFont=FandolHei-Bold.otf,ItalicFont=FandolKai-Regular.otf
+]
+\setCJKmonofont{FandolFang-Regular.otf}[
+  BoldFont=FandolHei-Bold.otf,ItalicFont=FandolKai-Regular.otf
+]
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.65em plus 0.15em minus 0.1em}
+\linespread{1.16}
+\raggedbottom
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+
+\ctexset{
+  part={
+    name={第,篇},
+    number=\chinese{part},
+    format=\centering\Huge\bfseries\sffamily\color{PyBlue},
+    hang=false,
+    beforeskip=92pt,
+    afterskip=64pt,
+    aftername={\par\nobreak\vspace{14pt}},
+    aftertitle={\par\nobreak\vspace{12pt}{\color{PythonYellow}\rule{32mm}{2pt}}},
+    pagestyle=empty
+  },
+  chapter={
+    name={第\enspace,\enspace 章},
+    number=\arabic{chapter},
+    format=\raggedright\sffamily\bfseries\Huge\color{PythonBlue},
+    aftername=\hspace{0.8em},
+    beforeskip=24pt,
+    afterskip=18pt
+  },
+  section={
+    format=\raggedright\sffamily\bfseries\Large\color{Ink},
+    beforeskip=18pt,
+    afterskip=8pt
+  }
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\ttfamily\color{PythonBlue}>>> \BookTitlePrefix}
+\fancyhead[R]{\small\color{Muted}\BookTitleText}
+\fancyfoot[C]{\small\ttfamily\color{Muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{%
+  {\color{CodeLine}\hrule width\headwidth height\headrulewidth}%
+}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\ttfamily\color{Muted}\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+\hypersetup{
+  pdftitle={\BookTitle},
+  pdfauthor={\BookAuthor},
+  pdfsubject={\BookSubtitle},
+  colorlinks=true,
+  linkcolor=DeepBlue,
+  urlcolor=CodeKeyword
+}
+% 目录沿用自动生成的页码与链接，章号只显示阿拉伯数字。
+\ctexset{
+  chapter/tocline={
+    \CTEXifname{\protect\numberline{\thechapter}}{\protect\numberline{}}#2
+  }
+}
+
+\makeatletter
+% 将篇标题和它下面的第一章一起换栏。
+\newbox\BookPartTocBox
+\let\BookChapterTocEntry\l@chapter
+\renewcommand*{\l@part}[2]{%
+  \box\BookPartTocBox
+  \global\setbox\BookPartTocBox=\vbox{%
+    \begingroup
+      \hypersetup{linkcolor=PyBlue}%
+      \color{PyBlue}%
+      \parindent\z@
+      \rightskip\@pnumwidth
+      \parfillskip-\@pnumwidth
+      \large\bfseries
+      \noindent #1\nobreak\hfill
+      \hb@xt@\@pnumwidth{\hss#2}\par
+    \endgroup
+  }%
+}
+\renewcommand*{\l@chapter}[2]{%
+  \ifvoid\BookPartTocBox
+    \BookChapterTocEntry{#1}{#2}%
+  \else
+    \addpenalty{-\@highpenalty}%
+    \addvspace{1.3em}%
+    \vbox{\box\BookPartTocBox\BookChapterTocEntry{#1}{#2}}%
+    \global\setbox\BookPartTocBox=\box\voidb@x
+  \fi
+}
+\renewcommand{\tableofcontents}{%
+  \begingroup
+    \ctexset{chapter={%
+      format=\centering\sffamily\mdseries\Huge\color{PythonBlue},
+      beforeskip=0pt,
+      afterskip=26pt
+    }}%
+    \chapter*{\contentsname}%
+    \@mkboth{\contentsname}{\contentsname}%
+    \hypersetup{linkcolor=Ink}%
+    \setlength{\columnsep}{11mm}%
+    \setlength{\multicolsep}{0pt}%
+    \setlength{\parskip}{0pt}%
+    \renewcommand{\@pnumwidth}{2.1em}%
+    \renewcommand{\@tocrmarg}{2.65em}%
+    \renewcommand*{\l@section}{\addvspace{0.25em}\@dottedtocline{1}{0.75em}{2.45em}}%
+    \begin{multicols}{2}
+      \@starttoc{toc}%
+      \box\BookPartTocBox
+      \global\setbox\BookPartTocBox=\box\voidb@x
+    \end{multicols}%
+  \endgroup
+}
+\makeatother
+
+\urlstyle{same}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+
+% 代码块默认使用 Python 样式。ctex 在 XeLaTeX 下为 listings 接入中文支持。
+\lstdefinestyle{python}{
+  language=Python,
+  basicstyle=\small\ttfamily\color{Ink},
+  keywordstyle=\bfseries\color{CodeKeyword},
+  stringstyle=\color{CodeString},
+  commentstyle=\itshape\color{CodeComment},
+  deletekeywords={print,exec},
+  morekeywords={async,await,nonlocal},
+  emph={print,len,range,enumerate,zip,open,int,str,list,dict,set,tuple},
+  emphstyle=\color{DeepBlue},
+  numbers=left,
+  numberstyle=\scriptsize\ttfamily\color{Muted},
+  stepnumber=1,
+  numbersep=10pt,
+  frame=single,
+  rulecolor=\color{CodeLine},
+  backgroundcolor=\color{CodeBg},
+  framesep=8pt,
+  framexleftmargin=22pt,
+  xleftmargin=30pt,
+  xrightmargin=9pt,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=4,
+  breaklines=true,
+  upquote=true,
+  aboveskip=12pt,
+  belowskip=12pt
+}
+\lstset{style=python}
+
+% 提示框均可跨页。
+\newcommand{\NoteSquare}[1]{\textcolor{#1}{\rule{0.75em}{0.75em}}}
+\tcbset{
+  python note/.style={
+    breakable,
+    coltitle=Ink,
+    coltext=Ink,
+    fonttitle=\sffamily\bfseries,
+    boxrule=0.85pt,
+    arc=2mm,
+    left=10pt,
+    right=10pt,
+    top=7pt,
+    bottom=7pt,
+    before skip=12pt,
+    after skip=12pt
+  }
+}
+\newtcolorbox{myunderstanding}{
+  python note,
+  title={\NoteSquare{PythonBlue}\enspace 核心直觉},
+  colframe=PythonBlue,
+  colback=PythonBlue!8!white,
+  colbacktitle=PythonBlue!17!white
+}
+\newtcolorbox{pycharmpractice}{
+  python note,
+  title={\NoteSquare{PythonYellow}\enspace PyCharm 实战},
+  colframe=PythonYellow,
+  colback=PythonYellow!7!white,
+  colbacktitle=PythonYellow!25!white
+}
+\newtcolorbox{pitfall}{
+  python note,
+  title={\NoteSquare{PitfallRed}\enspace 踩坑记录},
+  colframe=PitfallRed,
+  colback=PitfallRed!5!white,
+  colbacktitle=PitfallRed!12!white
+}
+
+% 提示框图标使用 TikZ 矢量路径。
+\newcommand{\SnakeIcon}{%
+  \tikz[baseline=-0.55ex,x=1em,y=1em,line cap=round]{%
+    \draw[line width=1.15pt]
+      (0.12,0.18) -- (0.60,0.18)
+      arc[start angle=-90,end angle=90,radius=0.15]
+      -- (0.30,0.48) arc[start angle=-90,end angle=-270,radius=0.14]
+      -- (0.72,0.76);
+    \fill (0.73,0.76) circle[radius=0.10];
+    \fill[PythonYellow!28!white] (0.75,0.80) circle[radius=0.023];
+  }%
+}
+\newcommand{\BulbIcon}{%
+  \tikz[baseline=-0.55ex,x=1em,y=1em,line cap=round,line join=round]{%
+    \draw[line width=0.75pt]
+      (0.29,0.29) -- (0.29,0.41)
+      .. controls (0.02,0.64) and (0.21,0.89) .. (0.43,0.89)
+      .. controls (0.65,0.89) and (0.84,0.64) .. (0.57,0.41)
+      -- (0.57,0.29) -- cycle;
+    \draw[line width=0.75pt] (0.34,0.14) -- (0.52,0.14);
+  }%
+}
+\newcommand{\BugIcon}{%
+  \tikz[baseline=-0.55ex,x=1em,y=1em,line cap=round]{%
+    \draw[line width=0.75pt] (0.44,0.40) ellipse[x radius=0.22,y radius=0.28];
+    \draw[line width=0.75pt]
+      (0.44,0.64) -- (0.44,0.13)
+      (0.32,0.65) -- (0.23,0.83) (0.56,0.65) -- (0.65,0.83)
+      (0.25,0.52) -- (0.06,0.60) (0.63,0.52) -- (0.82,0.60)
+      (0.22,0.38) -- (0.04,0.38) (0.66,0.38) -- (0.84,0.38)
+      (0.26,0.25) -- (0.10,0.17) (0.62,0.25) -- (0.78,0.17);
+  }%
+}
+
+\newtcolorbox{pycharmtip}{
+  python note,
+  title={\SnakeIcon\enspace PyCharm 快捷键},
+  colframe=PythonYellow,
+  colback=PythonYellow!7!white,
+  colbacktitle=PythonYellow!28!white
+}
+\newtcolorbox{pythonictip}{
+  python note,
+  title={\BulbIcon\enspace Pythonic 写法},
+  colframe=PythonBlue,
+  colback=PythonBlue!10!white,
+  colbacktitle=PythonBlue!22!white
+}
+\newtcolorbox{pybug}{
+  python note,
+  title={\BugIcon\enspace 常见报错与避坑},
+  colframe=PitfallRed,
+  colback=PitfallRed!5!white,
+  colbacktitle=PitfallRed!13!white
+}
+
+% 思维导图样式可用于总览和章首。每张图可单独指定分支角度与距离。
+\tikzset{
+  book mindmap/.style={
+    root concept/.style={
+      minimum size=30mm,text width=24mm,font=\sffamily\bfseries\large
+    },
+    level 1 concept/.style={
+      minimum size=23mm,text width=17mm,font=\sffamily\bfseries\small,
+      level distance=38mm,sibling angle=72
+    },
+    level 2 concept/.style={
+      minimum size=19mm,text width=16mm,font=\sffamily\footnotesize,
+      level distance=27mm,sibling angle=52
+    },
+    mindmap,
+    every node/.style={concept,align=center,text=Ink,inner sep=1mm},
+    concept color=PythonBlue
+  },
+  python flow step/.style={
+    rectangle,rounded corners=2mm,draw=PythonBlue,fill=CodeBg,
+    text=Ink,align=center,font=\sffamily\small,
+    minimum height=9mm,inner sep=5pt
+  },
+  python flow arrow/.style={-{Stealth[length=2.4mm]},draw=PythonBlue,thick}
+}
+
+\DeclareCaptionFont{captionink}{\color{Muted}}
+\captionsetup[figure]{font={small,captionink},labelfont=bf,
+                      justification=centering,singlelinecheck=false,position=bottom,
+                      skip=9pt}
+
+% 图像使用完整项目中的矢量 PDF。缺少图文件时使用同主题 TikZ 简图。
+\newcommand{\BookImage}[2]{%
+  \IfFileExists{figures/#1.pdf}{%
+    \includegraphics[width=#2]{figures/#1.pdf}%
+  }{%
+    \resizebox{#2}{!}{\csname BookFallback#1\endcsname}%
+  }%
+}
+\newcommand{\CaseStep}[2]{\par\smallskip{\bfseries\color{Muted}#1}\enspace #2\par}
+\ctexset{
+  part={
+    break={\clearpage},
+    format=\raggedright\Huge\bfseries\sffamily\color{PyBlue},
+    fixskip=true,beforeskip=0pt,afterskip=8pt,hang=true,
+    aftername=\hspace{0.65em},
+    aftertitle={\par\nobreak{\color{PythonYellow}\rule{\linewidth}{1.5pt}}},
+    pagestyle=plain
+  },
+  chapter={
+    break={\clearpage},
+    format=\raggedright\sffamily\bfseries\LARGE\color{PyBlue},
+    fixskip=true,beforeskip=0pt,afterskip=9pt,pagestyle=plain
+  },
+  section={beforeskip=13pt,afterskip=6pt}
+}
+\newcommand{\BookPartIntro}{\vfill}
+% 在篇页内排导读，并用弹性间距将寄语推至版心底部。
+\newcommand{\BookPart}[4]{%
+  \begingroup
+  \renewcommand{\BookPartIntro}{%
+    \vspace{14mm}%
+    {\large\bfseries\sffamily\color{PyBlue}本篇导读\par}%
+    \smallskip
+    {\large\color{Ink}#2\par}%
+    \medskip
+    #3\par
+    \vfill
+    {\centering\large\sffamily\color{PyBlue}#4\par}%
+    \vspace{5mm}%
+  }%
+  \part{#1}%
+  \endgroup
+}
+\makeatletter
+\renewcommand{\@endpart}{\par\BookPartIntro\clearpage}
+\renewcommand{\backmatter}{\clearpage\@mainmatterfalse}
+\makeatother
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.85}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{9pt plus 2pt minus 2pt}
+\setlength{\LTpre}{6pt}
+\setlength{\LTpost}{6pt}
+
+\expandafter\def\csname BookFallbackinterpreter\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {项目设置};
+\node[python flow step,text width=29mm,right=of a] (b) {运行配置};
+\node[python flow step,text width=29mm,right=of b] (c) {终端路径};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {解释器核对};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackreferences\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {名字};
+\node[python flow step,text width=29mm,right=of a] (b) {外层容器};
+\node[python flow step,text width=29mm,right=of b] (c) {共享的内层对象};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {对象引用};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacktype-info\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {编辑器推断};
+\node[python flow step,text width=29mm,right=of a] (b) {断点现场};
+\node[python flow step,text width=29mm,right=of b] (c) {运行时类型};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {两层观察};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacktraceback\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {异常末行};
+\node[python flow step,text width=29mm,right=of a] (b) {文件和行号};
+\node[python flow step,text width=29mm,right=of b] (c) {最小复现};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {读回溯};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacklist-preview\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原列表};
+\node[python flow step,text width=29mm,right=of a] (b) {切片新列表};
+\node[python flow step,text width=29mm,right=of b] (c) {独立追加};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {列表预览};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackset-difference\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {请求名单};
+\node[python flow step,text width=29mm,right=of a] (b) {已有名单};
+\node[python flow step,text width=29mm,right=of b] (c) {待同步差集};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {集合比较};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackgrouping\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原始事件};
+\node[python flow step,text width=29mm,right=of a] (b) {状态计数};
+\node[python flow step,text width=29mm,right=of b] (c) {按状态分组};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {同源日志};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackscope\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {当前函数};
+\node[python flow step,text width=29mm,right=of a] (b) {外层和模块};
+\node[python flow step,text width=29mm,right=of b] (c) {内置名字};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {名字查找};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackdecorator\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {定义原函数};
+\node[python flow step,text width=29mm,right=of a] (b) {完成包装};
+\node[python flow step,text width=29mm,right=of b] (c) {调用时执行};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {装饰器};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbacktransaction\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {开始与执行};
+\node[python flow step,text width=29mm,right=of a] (b) {成功提交};
+\node[python flow step,text width=29mm,right=of b] (c) {异常回滚};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {事务};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackconcurrency\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {启动任务};
+\node[python flow step,text width=29mm,right=of a] (b) {等待与协作};
+\node[python flow step,text width=29mm,right=of b] (c) {恢复处理};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {任务交接};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackhttp\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {方法与路径};
+\node[python flow step,text width=29mm,right=of a] (b) {服务处理};
+\node[python flow step,text width=29mm,right=of b] (c) {状态与内容};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {HTTP 往返};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackarchitecture\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {窗口或接口};
+\node[python flow step,text width=29mm,right=of a] (b) {业务规则};
+\node[python flow step,text width=29mm,right=of b] (c) {数据存储};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {业务分层};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackarray\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原数组};
+\node[python flow step,text width=29mm,right=of a] (b) {共享视图};
+\node[python flow step,text width=29mm,right=of b] (c) {独立副本};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {数组与切片};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackquality\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {原始四行};
+\node[python flow step,text width=29mm,right=of a] (b) {去重三行};
+\node[python flow step,text width=29mm,right=of b] (c) {有效两项};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {数据核对};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackpackage\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {源码与配置};
+\node[python flow step,text width=29mm,right=of a] (b) {构建 wheel};
+\node[python flow step,text width=29mm,right=of b] (c) {新环境运行};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {交付链路};
+\end{tikzpicture}
+}
+
+\expandafter\def\csname BookFallbackdiagnosis\endcsname{%
+\begin{tikzpicture}[node distance=8mm]
+\node[python flow step,text width=29mm] (a) {代码与数据};
+\node[python flow step,text width=29mm,right=of a] (b) {文件与环境};
+\node[python flow step,text width=29mm,right=of b] (c) {外部服务};
+\draw[python flow arrow] (a) -- (b);
+\draw[python flow arrow] (b) -- (c);
+\node[above=5mm of b,font=\sffamily\bfseries\large,text=PythonBlue] {排错路线};
+\end{tikzpicture}
+}
+
+% 图与表的题注均放在内容下方，长题注也按居中方式排版。
+\captionsetup*[table]{font={small,captionink},labelfont=bf,
+  justification=centering,singlelinecheck=false,position=bottom,skip=9pt}
+
+% ===== END preamble.tex =====
+
+
+\begin{document}
+\hypersetup{pageanchor=false}
+
+% ===== frontmatter/cover.tex =====
+\begin{titlepage}
+  \thispagestyle{empty}%
+  \begin{tikzpicture}[remember picture,overlay]
+    \begin{scope}[shift={(current page.north west)},x=1cm,y=-1cm]
+      \fill[CoverDark] (0,0) rectangle (21,29.7);
+      \fill[PythonBlue] (0,0) rectangle (15.2,2.2);
+      \fill[PythonYellow] (15.2,0) rectangle (21,2.2);
+
+      \fill[EditorDark] (2.2,4.1) rectangle (18.8,22.2);
+      \draw[EditorLine,line width=0.8pt] (2.2,4.1) rectangle (18.8,22.2);
+      \draw[EditorLine,line width=0.8pt] (2.2,5.5) -- (18.8,5.5);
+      \fill[PythonYellow] (2.75,4.8) circle[radius=0.09];
+      \fill[PythonBlue!75!white] (3.11,4.8) circle[radius=0.09];
+      \fill[CodeLine] (3.47,4.8) circle[radius=0.09];
+      \node[anchor=west,text=CodeLine,font=\small\ttfamily]
+        at (3.8,4.8) {main.py};
+      \node[anchor=east,text=CodeLine,font=\small\ttfamily]
+        at (18.2,4.8) {PYTHON 3};
+
+      \node[anchor=west,text=PythonYellow,font=\ttfamily\bfseries\LARGE]
+        at (3.2,7.3) {\code{>>>}};
+      \node[anchor=west,text=white,font=\sffamily\bfseries\fontsize{55}{63}\selectfont]
+        at (3.1,9.45) {\BookTitlePrefix};
+      \node[anchor=west,text=white,font=\sffamily\bfseries\fontsize{29}{37}\selectfont]
+        at (3.2,11.75) {\BookTitleText};
+      \fill[PythonYellow] (3.3,13.15) rectangle (6.5,13.24);
+      \node[anchor=west,text=CodeLine,font=\sffamily\Large]
+        at (3.2,14.35) {\BookSubtitle};
+
+      \node[anchor=west,text=EditorLine,font=\ttfamily\fontsize{83}{83}\selectfont]
+        at (3.15,18.75) {\code{{}}};
+      \node[anchor=east,text=EditorLine,font=\ttfamily\fontsize{72}{72}\selectfont]
+        at (17.8,19.75) {\code{< >}};
+
+      \draw[EditorLine,line width=0.8pt] (2.2,25.0) -- (18.8,25.0);
+      \node[anchor=west,text=CodeLine,font=\small\sffamily] at (2.2,25.8) {作者};
+      \node[anchor=west,text=white,font=\large\sffamily\bfseries]
+        at (2.2,26.75) {\BookAuthor};
+      \node[anchor=west,text=CodeLine,font=\small\sffamily] at (8.2,25.8) {版本};
+      \node[anchor=west,text=PythonYellow,font=\large\ttfamily\bfseries]
+        at (8.2,26.75) {\BookVersion};
+      \node[anchor=west,text=CodeLine,font=\small\sffamily] at (12.9,25.8) {日期};
+      \node[anchor=west,text=white,font=\large\sffamily]
+        at (12.9,26.75) {\BookDate};
+    \end{scope}
+  \end{tikzpicture}%
+  \null
+\end{titlepage}
+
+% ===== END frontmatter/cover.tex =====
+
+
+\frontmatter
+\hypersetup{pageanchor=true}
+
+% ===== frontmatter/roadmap.tex =====
+\chapter{全书路线图}
+
+{\sffamily\bfseries\color{Ink}\BookTitle}\par
+{\small\color{Muted}\BookSubtitle}\par
+
+全书按照语言、工程工具、系统交互、并发网络、扩展生态和项目交付组织。可沿主线学习，也可根据当前任务返回对应分支。
+
+六篇的主题与衔接关系见图~\ref{fig:book-mindmap}。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=26mm,text width=20mm}
+  ]
+    \node[text=white] {Python 3\\核心编程}
+      child[grow=120,level distance=44mm,concept color=DeepBlue] {
+        node[text=white] {01\\语言基石}
+      }
+      child[grow=60,level distance=44mm,concept color=PythonYellow] {
+        node {02\\进阶核心与\\工程化}
+      }
+      child[grow=0,level distance=49mm,concept color=PythonBlue] {
+        node[text=white] {03\\文件、数据与\\系统交互}
+      }
+      child[grow=-60,level distance=44mm,concept color=PythonYellow] {
+        node {04\\并发、网络与\\基础爬虫}
+      }
+      child[grow=-120,level distance=44mm,concept color=DeepBlue] {
+        node[text=white] {05\\扩展生态与\\工程化收束}
+      }
+      child[grow=180,level distance=49mm,concept color=PythonYellow] {
+        node {06\\项目实战}
+      };
+  \end{tikzpicture}
+  \caption{全书六篇的主题与四阶段项目交付路线。}
+  \label{fig:book-mindmap}
+\end{figure}
+
+% ===== END frontmatter/roadmap.tex =====
+
+
+% ===== frontmatter/preface.tex =====
+\chapter{前言与学习路线}
+
+写出几个能运行的例子以后，新的问题往往接踵而来：终端能找到的库，为什么在 PyCharm 中导入失败？代码拆成多个文件以后，应当从哪个入口启动？这些问题连接着语言规则、运行环境与工程组织，也构成了本书的学习主线。
+
+本书面向初学者，也适合希望整理零散脚本经验的读者。阅读时请把代码放回具体任务：先运行原例，再替换一组输入，对照结果变化；遇到报错，从回溯末行识别异常类型，再定位到项目中的文件和行号。
+
+全书先从解释器与 PyCharm 入手，建立对对象、容器、控制流、函数和模块的认识；随后学习文件、数据、并发、网络及常用工具，最后通过四阶段项目练习测试、持久化与交付。每段示例都应能回答三个问题：输入是什么，规则在哪里，结果怎样验证。读完后，尝试把同样的思路用于实际任务。
+
+\section*{开始练习前的检查}
+
+先按第 1 章确认 Python 3、PyCharm、运行配置和断点能够正常工作，并建立 \code{.venv}。安装依赖时，使用项目选定的解释器执行 \code{python -m pip}。跟练时在 \code{requirements.txt} 中记录依赖，第 17 章再将项目元数据、依赖声明和构建配置整理到 \code{pyproject.toml}。
+
+阅读代码前，先查阅使用说明和符号表，认清行号、交互提示符与三类提示框的用途。命名、缩进和导入顺序可对照 PEP 8；运行结果则应通过输入、输出与断点现场验证。
+
+\par\vspace{2.3em}
+\begin{center}
+  {\Large\sffamily\color{PyBlue}把想法写成代码，让每一步都经得起运行。}
+\end{center}
+
+% ===== END frontmatter/preface.tex =====
+
+
+% ===== frontmatter/acknowledgments.tex =====
+\chapter{致谢与参考}
+
+{\color{PyBlue}\rule{\textwidth}{0.9pt}}
+
+\begingroup
+\ctexset{section={format=\raggedright\sffamily\bfseries\Large\color{PyBlue},
+                  beforeskip=12pt,afterskip=6pt}}
+
+\section*{致谢}
+
+一本编程笔记的来路，常藏在许多人的耐心里：作者铺开问题，译者澄清术语，维护者修补工具，社区成员将失败整理成可复现的例子。那些写清输入、原因与修复过程的记录，让后来的读者少一些无从下手，多一条能够亲自走通的路。
+
+感谢 Python 开源社区、参考资料的作者与译者，也感谢认真运行示例、提出勘误的读者。若书中结果与实际运行不符，请附上输入、报错与环境信息。每一份具体的反馈，都是下一次修订得以落笔的依据。
+
+\section*{参考文献与延伸阅读}
+
+\setlength{\columnsep}{9mm}
+\setlength{\multicolsep}{3pt}
+\begin{multicols}{2}
+  \small
+  \raggedright
+  \setlength{\leftmargini}{1.9em}
+  \renewcommand{\labelenumi}{\textcolor{PyBlue}{[\arabic{enumi}]}}
+  \begin{enumerate}
+    \setlength{\itemsep}{3pt}
+    \setlength{\parsep}{0pt}
+    \item Eric Matthes，《Python 编程：从入门到实践》第 3 版。
+    \item Luciano Ramalho，《流畅的 Python》。
+    \item Micha Gorelick、Ian Ozsvald，《Python 高性能编程》。
+    \item 图灵程序设计丛书《Python 高手进阶之路》，套装全 10 册。
+    \item Jake VanderPlas，《Python 数据科学手册》。
+    \item 《pandas+Numpy+matplotlib》学习笔记。
+    \item 《matplotlib 数据可视化实战》。
+    \item \href{https://docs.python.org/zh-cn/3/}{Python 3 官方文档}、
+      \href{https://peps.python.org/pep-0008/}{PEP 8} 与
+      \href{https://docs.python.org/zh-cn/3/tutorial/venv.html}{虚拟环境教程}。
+    \item JetBrains 的
+      \href{https://www.jetbrains.com/help/pycharm/quick-start-guide.html}{PyCharm 快速入门}与
+      \href{https://www.jetbrains.com/help/pycharm/mastering-keyboard-shortcuts.html}{快捷键文档}。
+    \item \href{https://www.runoob.com/python3}{菜鸟教程 Python 3}。
+    \item \href{https://packaging.python.org/en/latest/tutorials/packaging-projects/}{Python 打包用户指南}。
+  \end{enumerate}
+\end{multicols}
+
+\section*{勘误}
+
+\begin{tcolorbox}[colframe=CodeLine,colback=CodeBg,boxrule=0.5pt,arc=1.5mm,
+                  left=7pt,right=7pt,top=4pt,bottom=4pt]
+  \textbf{作者}\enspace \BookAuthor\par
+  \textbf{勘误时请附}\enspace 书稿版本、章节或页码、代码行、运行环境和最小复现。
+\end{tcolorbox}
+\endgroup
+
+% ===== END frontmatter/acknowledgments.tex =====
+
+
+% ===== frontmatter/usage.tex =====
+\chapter{使用说明}
+
+阅读时可将示例与编辑器并排放置：先按原样运行，再修改一项输入，记录结果与原因。练习的目标是能够独立复现并解释行为。
+读到报错时也不用急着翻过去，那里往往藏着比成功输出更有用的线索。
+
+\section*{开工前，把三件东西对上}
+
+先准备 Python 3 和 PyCharm，再为本书练习建一个独立项目。
+项目里的 \code{.venv} 放解释器与依赖，自己的脚本放在它外面。
+本版运行验证使用 Python 3.12，具体依赖和验证范围见项目包中的
+\code{RUN_EXAMPLES.md}。换解释器版本以后，先重跑小样例，再运行项目。
+
+运行前请核对三处解释器设置：编辑器选中的项目解释器、运行配置所用的解释器、终端启动的解释器。
+如图~\ref{fig:usage-interpreter}，把终端里看到的路径与项目设置对照，
+通常比反复点安装按钮更快找到问题。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{interpreter}{\linewidth}
+  \caption{项目解释器、运行配置与终端解释器的路径对应关系。}
+  \label{fig:usage-interpreter}
+\end{figure}
+
+\section*{代码块怎样读}
+
+带行号的 Python 代码块是脚本。文件名写在上方，复制正文时把行号留在书里，
+保存为 UTF-8 编码的 \code{.py} 文件。缩进每层使用四个空格。
+几行属于同一个缩进块，可以沿着左侧空白一眼看出来，别用全角空格补齐。
+
+\code{>>>} 是交互式解释器的主提示符，跟练时只输入它右边的代码。
+终端命令放在标有 terminal 的代码块里，在终端执行。
+“运行核对”中的输出只用于对照，代码中注明“取消注释以复现”的语句则是刻意留下的错误入口。
+先跑正常版本，再单独打开一处错误，免得几个问题挤到同一个回溯里。
+
+注释解释这一段为什么这样写。改动代码时，注释也要跟着核对。
+如果示例只展示某个项目中的函数，标题会标明它在源码中的位置，
+完整的导入、入口和依赖都在对应项目目录里。
+
+\section*{示例运行六步法}
+
+\begin{enumerate}
+  \item 找到文件名和所在目录，先看需要哪些库、样本或服务。
+  \item 原样运行，对照输出。路径和耗时随机器变化，先核对含义与顺序。
+  \item 用断点看关键变量，确认是哪个输入走到了哪条分支。
+  \item 每次只改一个条件，例如空列表、缺失字段、负数或不存在的路径。
+  \item 给失败留下输入与回溯，再按附录 C 的路径排查。
+  \item 重新跑原例和变体，把修复前后的结果一起记下。
+\end{enumerate}
+
+\begin{myunderstanding}
+将练习看作一次小型实验：输入是条件，代码是步骤，输出是可核对的结果。运行成功以后，再改变一项条件，解释结果为何随之变化。
+\end{myunderstanding}
+
+\section*{先留下自己的运行现场}
+
+下面四行适合放在新练习最前面。它们记录解释器版本、位置和工作目录，
+方便将终端与 PyCharm 的运行结果放在一起比较。
+提交代码前，可再把这些临时诊断输出收进日志或删除。
+\begin{lstlisting}[title={\code{check_environment.py}}]
+import sys
+from pathlib import Path
+
+# 三个现场信息，核对解释器与相对路径的起点。
+print(sys.version.split()[0])
+print(sys.executable)
+print(Path.cwd())
+\end{lstlisting}
+
+\section*{项目包怎样用}
+
+主文件 \code{main.tex} 管篇章顺序，\code{preamble.tex} 管字体、配色、提示框与目录。
+\code{chapters} 放正文，\code{examples} 放章节脚本，\code{projects} 放四阶段项目。
+配图在 \code{figures}，生成它们的代码在 \code{tools}。
+可把整个项目目录解压后再编译，避免只拿一个主文件漏掉图和输入文件。
+
+从 \code{examples/ch11} 运行带参数的日志例子时，使用同目录的
+\code{sample.log}。项目三则把输入与输出路径都写进命令。
+碰到找不到文件，先打印当前工作目录，再看参数究竟指向哪里。
+完整运行方法见 \code{RUN_EXAMPLES.md}。
+
+\section*{图、提示框和边界条件}
+
+蓝框「核心直觉」把概念落到一个能记住的形象上，黄框「PyCharm 实战」给出可操作的观察点，
+红框「踩坑记录」则留下出错条件和修复路线。比喻用来建立直觉，
+真正的边界以代码、输出和文中说明为准。
+
+界面图注明“示意”时，画的是观察关系。真实 PyCharm 的按钮位置和快捷键以所选 Keymap 为准。
+浏览器、桌面 GUI、外部数据库和 Docker 例子需要相应环境。
+本版对这些部分写清了验证范围，连接参数都由读者的测试环境提供。
+
+\section*{按任务安排阅读}
+
+第一次接触 Python，可从第一篇开始，每节保留一个能独立运行的文件。
+已经写过脚本的读者，可先按第 7、8 章补充测试、日志和版本记录，再查阅相关语言规则。
+要处理数据，就先走文件与持久化，再接第 16 章和项目三。
+要写网络任务，先把第 13 章的本机示例跑顺，再加入并发。
+
+书里的练习可以变成自己的笔记。每章末尾，可写下三行，今天跑通了什么，
+改了哪个输入，以及哪条报错以后想一眼认出来。
+久而久之，熟练就从这些有来路的细节里长出来。
+
+% ===== END frontmatter/usage.tex =====
+
+
+% ===== frontmatter/symbols.tex =====
+\chapter{Python 特色符号表}
+
+本表可用于对照代码中的符号与上下文。符号本身很短，含义却常由它站的位置决定。
+星号出现在函数定义、调用和表达式里，会分别承担收集、展开或运算。
+先看上下文，再看这一行怎样把值交给下一步，读代码就有了方向。
+
+\begingroup\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}
+                   >{\raggedright\arraybackslash}p{0.30\textwidth}
+                   >{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
+\toprule
+\textbf{符号或名字} & \textbf{所在语境} & \textbf{核对要点}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{符号或名字} & \textbf{所在语境} & \textbf{核对要点}\\
+\midrule
+\endhead
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 名字与对象}\\[3pt]
+\code{=} & 把名字绑定到右侧得到的对象。 & \code{count = 3}。再次赋值可以改绑。\\[3pt]
+\code{:} & 在变量或参数后引出类型注解。 & \code{count: int = 3}。运行时仍按实际对象执行。\\[3pt]
+\code{->} & 在函数签名中标注返回值类型。 & \code{def size() -> int}。它不是返回语句。\\[3pt]
+\code{is / is not} & 比较是否为同一个对象。 & 判断缺失哨兵常写 \code{value is None}。\\[3pt]
+\code{== / !=} & 比较值是否相等。 & \code{name == "notes.md"}，具体比较行为由类型实现。\\[3pt]
+\code{None} & 表达这里没有一个实际值。 & 与 \code{0}、空字符串分开判断其业务含义。\\[3pt]
+\code{del} & 删除名字绑定或容器中的位置。 & \code{del items[0]}。是否回收对象还取决于其他引用。\\[3pt]
+\code{id() / type()} & 分别观察对象标识与实际类型。 & \code{type(value).__name__} 可用于临时诊断。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 序列、映射与集合}\\[3pt]
+\code{[]} & 列表字面量，也用于下标访问。 & \code{files[0]} 是第一项。列表可以增删位置。\\[3pt]
+\code{()} & 分组表达式或调用参数，也常用于元组。 & 单元素元组写 \code{("notes.md",)}，逗号不能省。\\[3pt]
+\code{{}} & 空字典，或非空字典与集合的字面量。 & 空集合用 \code{set()}，非空集合如 \code{1, 2} 放在花括号内。\\[3pt]
+\code{key: value} & 在字典字面量中连接键和值。 & \code{status["notes.md"]} 按键读取。键须可哈希。\\[3pt]
+\code{[start:stop]} & 取切片，停止位置不包含在结果中。 & \code{files[:2]} 取前两项。复制深度要按类型核对。\\[3pt]
+\code{[a:b:c]} & 切片的第三项控制步长。 & \code{items[::2]} 隔一项取一个，步长不能为零。\\[3pt]
+\code{[-1]} & 从末尾取最后一项。 & 容器为空时仍会抛 \code{IndexError}。\\[3pt]
+\code{in / not in} & 检查成员关系。 & 对字典默认检查键，对字符串检查子串。\\[3pt]
+\code{| / & / -} & 集合的并集、交集与差集。 & 字典中的 \code{|} 则表示合并，须看操作数类型。\\[3pt]
+\code{.get()} & 按键读取，缺失时使用默认值。 & \code{data.get("state", "unknown")} 不会补写这个键。\\[3pt]
+\code{.items()} & 取字典的键值对视图。 & \code{for key, value in data.items()}。\\[3pt]
+\code{enumerate()} & 遍历时同时得到序号和值。 & \code{start=1} 可让显示编号从 1 开始。\\[3pt]
+\code{zip()} & 按位置将几个可迭代对象配对。 & 默认按最短一列结束，必要时检查长度或使用 strict。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 参数、解包与表达式}\\[3pt]
+\code{*args} & 在函数定义中收集额外位置实参。 & 结果是元组。名称 args 是惯例。\\[3pt]
+\code{**kwargs} & 在函数定义中收集额外关键字实参。 & 结果是字典。关键字参数名必须是字符串。\\[3pt]
+\code{*values} & 在调用或容器中展开可迭代对象。 & \code{func(*values)} 与形参收集要区分上下文。\\[3pt]
+\code{**mapping} & 在调用或字典中展开映射。 & 函数调用中出现重复关键字会报错。\\[3pt]
+\code{/} & 在签名中分隔仅限位置参数。 & \code{def f(value, /)}。普通表达式中 / 表示除法。\\[3pt]
+\code{*} & 签名中的单独星号引出仅限关键字参数。 & \code{def f(*, enabled=True)}。\\[3pt]
+\code{lambda} & 构造只有一个表达式的匿名函数。 & 常见于 \code{sorted(names, key=len)} 的短规则。\\[3pt]
+\code{for / in} & 按迭代协议逐项消费对象。 & 可用于循环，也可出现在推导式里。\\[3pt]
+\code{if / else} & 根据条件选出一个表达式结果。 & 表达式要让读者容易看清每条分支。\\[3pt]
+\code{:=} & 赋值表达式，在表达式中绑定名字。 & 复杂条件里先考虑拆成普通赋值是否更清楚。\\[3pt]
+\code{and / or / not} & 按真值短路计算。 & and 和 or 可能返回操作数本身，未必是 bool。\\[3pt]
+\texttt{// / \char37 / **} & 分别是整除、取余和乘方。 & 负数整除向下取整，浮点数精度仍要留意。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 字符串与源码约定}\\[3pt]
+\code{'...' / "..."} & 用单引号或双引号写字符串。 & 外层引号与内容里的引号配合使用。\\[3pt]
+\code{三引号} & 写跨行字符串，也常写文档字符串。 & 三引号中的缩进和换行都可能进入实际内容。\\[3pt]
+\code{f 前缀} & 让花括号里的表达式参与字符串构造。 & \code{f"{count} files"}。要显示花括号需双写。\\[3pt]
+\code{r 前缀} & 减少反斜杠转义的原始字符串写法。 & 常见于正则。仍须遵守字符串结束引号的规则。\\[3pt]
+\code{b 前缀} & 写 bytes 字面量。 & bytes 与 str 之间要用确定的编码转换。\\[3pt]
+\code{换行转义} & 源码中的反斜杠与 n 表示换行字符。 & 终端换行与实际文件中的换行可用 \code{repr()} 核对。\\[3pt]
+\code{#} & 从当前位置开始写单行注释。 & 字符串里的井号属于字符串内容。\\[3pt]
+\code{!r / :.2f} & f-string 中的表示转换与格式规范。 & \code{!r} 使用 repr，\code{.2f} 控制显示两位小数。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 函数、对象与执行边界}\\[3pt]
+\code{return} & 结束函数并交回结果。 & 没有显式返回值的函数交回 None。\\[3pt]
+\code{yield} & 产出一项并暂停生成器。 & 下一次取值从暂停处继续，用完的生成器会结束。\\[3pt]
+\code{@decorator} & 把函数或类交给装饰器并重新绑定名字。 & 包装发生在定义阶段，调用逻辑由返回的对象决定。\\[3pt]
+\code{with / as} & 进入上下文，按约定取得绑定值并收尾。 & 是否抑制异常由上下文管理器的退出行为决定。\\[3pt]
+\code{try / except} & 围住可能失败的操作并按类型处理异常。 & 捕获范围尽量围住确实会失败的步骤。\\[3pt]
+\code{else / finally} & 分别用于成功路径和退出时的收尾。 & finally 中的 return 可能盖住原来的结果或异常。\\[3pt]
+\code{raise / from} & 抛出异常，或明确写出异常因果。 & \code{raise ValueError('bad') from error} 保留来路。\\[3pt]
+\code{assert} & 检查程序员写下的内部或测试约定。 & 优化模式可跳过断言，用户输入校验要用正常代码。\\[3pt]
+\code{async / await} & 定义协程与等待可等待对象。 & await 能让出执行权，具体操作仍须配合异步接口。\\[3pt]
+\code{self / super()} & 当前实例的惯用形参名与协作调用入口。 & super 按方法解析顺序寻找后续实现。\\[3pt]
+\code{__init__} & 在对象创建后初始化实例状态。 & 实例自己的可变属性通常在这里创建。\\[3pt]
+\code{__str__ / __repr__} & 日常显示与调试表示的约定方法。 & 打印对象和查看容器中的对象时可能走不同入口。\\[3pt]
+\code{__name__} & 模块在当前执行方式下的名字。 & 与 \code{"__main__"} 比较，常用来控制脚本入口。\\[3pt]
+\code{__file__} & 模块源文件的路径信息。 & 交互环境中可能不存在，不能拿它代替当前目录。\\[3pt]
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\color{PyBlue}\bfseries 工具与路径}\\[3pt]
+\code{pip} & 安装、查询和核对 Python 软件包。 & 常用 \code{python -m pip} 明确所用解释器。\\[3pt]
+\code{venv / .venv} & 创建隔离环境的模块与常用目录名。 & 先选解释器，再把依赖装进该环境。\\[3pt]
+\code{Path.cwd()} & 当前进程的工作目录。 & 相对路径从这里解释，PyCharm 运行配置会影响它。\\[3pt]
+\code{__main__ 入口} & 用守卫区分直接运行与导入。 & 子进程启动也要核对这个入口边界。\\[3pt]
+\addlinespace[4pt]
+\bottomrule
+\end{longtable}
+\endgroup
+
+\begin{myunderstanding}
+将符号当路标。看到冒号，先分清它在引出代码块、标注类型，还是连接字典的键和值。
+看到方括号，再问它是在建列表、取元素，还是做切片。名字与上下文一起看，
+比背下一串互不相连的定义更容易用到真实代码里。
+\end{myunderstanding}
+
+% ===== END frontmatter/symbols.tex =====
+
+\tableofcontents
+
+\mainmatter
+
+\BookPart{语言基石}
+  {第一行代码可以很短。要是它罢工，先看看是不是点错了运行按钮。}
+  {\textbf{把脚本跑起来。} 在 PyCharm 中选好解释器，运行第一个脚本。碰到报错，先读回溯末行，再定位出错的代码。
+
+   \textbf{把数据放对地方。} 用字符串拼接输出，按访问需求选择列表、元组、字典或集合。通过修改和复制操作，观察哪些名字指向同一个对象。
+
+   \textbf{把规则写清楚。} 用分支和循环筛选记录，用异常和日志保留失败原因，再把重复逻辑收进有明确参数和返回值的函数。}
+  {看清数据怎么走，再决定代码怎么写。}
+
+% ===== chapters/01-quick-start.tex =====
+\chapter{快速起步}
+\label{ch:quick-start}
+
+第一段脚本先回答三个问题：从哪里启动，接收什么输入，产生什么结果。确认这些运行条件以后，才能把语言问题与环境问题分开排查。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[book mindmap,level 1 concept/.append style={minimum size=19mm,text width=15mm,font=\sffamily\bfseries\footnotesize}]
+    \node[text=white,minimum size=23mm,text width=17mm,font=\sffamily\bfseries\small] {第一章\\快速起步}
+      child[grow=180,level distance=33mm,concept color=DeepBlue] {
+        node[text=white] {01\\输出函数}
+      }
+      child[grow=0,level distance=33mm,concept color=PythonYellow] {
+        node {02\\项目环境}
+      }
+      child[grow=-90,level distance=23mm,concept color=DeepBlue!20!white] {
+        node {03\\读懂报错}
+      };
+  \end{tikzpicture}
+  \caption*{起步路线：输出、运行环境与错误定位。}
+\end{figure}
+
+\section{Python 编程第一步}
+
+\begin{myunderstanding}
+将 \code{print()} 当成小票机。要核对结果，可用它把手里的东西显示出来。
+拿到 \code{return} 交回的值，还能继续用它做计算。
+\end{myunderstanding}
+
+\code{print()} 是 Python 的内置函数。默认情况下，它把传入的对象转换成文本，
+用空格分隔多个对象，并在末尾换行。将下面这段保存为 \code{main.py}，
+运行后先看到 \code{Hello, Python!}，下一行是 \code{5}。
+签名里的 \code{a: int} 和 \code{b: int} 标注参数的预期类型，
+\code{-> int} 标注返回值的预期类型。
+
+\begin{lstlisting}[title={\ttfamily main.py}]
+def add(a: int, b: int) -> int:
+    return a + b  # 把结果交给调用方。
+
+
+print("Hello, Python!")
+print(add(2, 3))
+\end{lstlisting}
+
+\begin{pythonictip}
+让 \code{add()} 只管算，把显示交给调用方。这样写测试时，可以直接比较
+\code{add(2, 3)} 的结果和 \code{5}。类型注解则留给读代码的人、编辑器和静态检查工具。
+\end{pythonictip}
+
+
+\section{在 PyCharm 里怎么跑脚本}
+
+将项目和解释器想成工具箱和工位。脚本都在工具箱里，选中的工位才决定用哪套工具。
+新项目通常建一个 \code{.venv}，再把里面的 Python 选成项目解释器。
+首次运行时，右键单击编辑区中的 \code{main.py}，选择运行该文件，并在运行窗口里核对输出。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \node[python flow step,text width=25mm] (python) {安装\\Python 3};
+    \node[python flow step,text width=25mm,right=5mm of python] (venv)
+      {创建项目\\与 \code{.venv}};
+    \node[python flow step,text width=25mm,right=5mm of venv] (interpreter)
+      {选择项目\\解释器};
+    \node[python flow step,text width=25mm,right=5mm of interpreter] (run)
+      {运行\\\code{main.py}};
+    \draw[python flow arrow] (python) -- (venv);
+    \draw[python flow arrow] (venv) -- (interpreter);
+    \draw[python flow arrow] (interpreter) -- (run);
+  \end{tikzpicture}
+  \caption*{创建虚拟环境、选择解释器并运行脚本的配置流程。}
+\end{figure}
+
+\begin{pycharmpractice}
+碰到导入失败时，先用下面的脚本打印 \code{sys.executable}。
+在 PyCharm 和终端各跑一次，再比较两边的解释器路径。
+\end{pycharmpractice}
+
+\begin{lstlisting}[title={\code{check_interpreter.py}}]
+import sys
+
+# 打印当前进程所用的 Python 解释器路径。
+print(sys.executable)
+\end{lstlisting}
+
+\begin{pycharmtip}
+想少挪一次鼠标时，可双击 \code{Shift} 打开全局搜索，输入 \code{Run} 找到运行操作。
+如果改过键位，就到 \code{Keymap} 查实际绑定。
+\end{pycharmtip}
+
+运行前，可按图~\ref{fig:pycharm-interpreter} 的关系核对解释器路径。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{interpreter}{\linewidth}
+  \caption{项目与终端选用同一虚拟环境，解释器路径应与 \code{sys.executable} 一致。}
+  \label{fig:pycharm-interpreter}
+\end{figure}
+
+
+\section{第一眼先看报错的哪一行}
+
+将回溯当成一张倒着读的路线单。先看末尾的异常类型和错误消息，再往上找最近一处
+属于自己脚本的文件名和行号。这样可以直接回到当时出问题的那次调用。
+
+\begin{pitfall}
+从控制台抄代码时，最容易顺手把 \code{>>>} 也带上。把
+\code{>>> print(2 + 3)} 整行贴进脚本，会得到 \code{SyntaxError}。
+保存到 \code{.py} 文件时，只留右侧的 \code{print(2 + 3)}。
+\end{pitfall}
+
+\begin{pybug}
+将调用改成 \code{add("2", 3)} 时，错误会在函数里的加法处暴露出来。
+注解给了一个预期，实际传进来的仍是一个字符串和一个整数。
+如果这个字符串来自输入框，先在读取输入的地方用 \code{int()} 转换，
+再把整数交给 \code{add()}。
+\end{pybug}
+
+图~\ref{fig:pycharm-traceback} 把异常末行与代码位置连起来，方便沿回溯走回现场。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{traceback}{\linewidth}
+  \caption{\code{add("2", 3)} 在加法处触发 \code{TypeError}，回溯记录函数位置与异常类型。}
+  \label{fig:pycharm-traceback}
+\end{figure}
+
+\subsection*{两分钟动手演练}
+
+先把 \code{add(2, 3)} 改成 \code{add(-2, 3)}，在运行前猜一下结果。
+接着恢复原例，再故意传入字符串 \code{"2"}，按上面的路线读一遍回溯。
+最后改成 \code{add(int("2"), 3)}，看看程序又打印了什么。
+
+\subsection*{快速起步的验收}
+
+在 \code{return a + b} 这一行设断点，确认参数值是 \code{2} 和 \code{3}，
+再继续运行，检查输出是否为 \code{5}。如果运行窗口和断点里的值对不上，
+先检查当前运行配置指向哪个脚本，再检查解释器路径。
+
+\subsection*{进阶边界演练}
+可复制一份运行配置，把脚本换成另一个同名文件，再观察解释器路径和文件路径。这个练习说明，编辑器里打开的那份文件，和运行按钮真正启动的文件，需要用现场信息核对。
+
+% ===== END chapters/01-quick-start.tex =====
+
+
+% ===== chapters/02-variables-strings.tex =====
+\chapter{核心数据结构}
+\label{ch:variables-strings-containers}
+
+容器的选择取决于要回答的问题：名单需要顺序，记录需要按字段查找，成员判断只关心某个值是否存在。先明确访问方式，再选择列表、字典或集合。
+
+
+% 本节参考 Matthes《Python 编程：从入门到实践》第 3 版第 2 章，
+% Ramalho《流畅的 Python》第 8.1 节，以及菜鸟教程的基本数据类型、
+% 字符串和类型注解三篇。书中的代码示例可独立运行。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=18mm}
+  ]
+    \node[text=white,minimum size=26mm,text width=22mm] {第2章\\核心数据结构}
+      child[grow=154,level distance=36mm,concept color=DeepBlue] {
+        node[text=white] {01\\变量与命名}
+      }
+      child[grow=26,level distance=36mm,concept color=PythonYellow] {
+        node {02\\字符串与\\格式化}
+      }
+      child[grow=-26,level distance=36mm,concept color=PythonBlue] {
+        node[text=white] {03\\列表与元组}
+      }
+      child[grow=-154,level distance=36mm,concept color=PythonYellow!46!white] {
+        node {04\\字典与集合}
+      };
+  \end{tikzpicture}
+  \caption*{变量绑定、字符串格式化及四类常用容器。}
+\end{figure}
+
+执行 \code{backup = items} 不会复制列表。向 \code{items} 添加元素后，\code{backup} 也能看到变化，因为两个名字绑定的是同一个对象。判断容器操作时，先确认引用关系，再区分原地修改与创建新对象。
+
+\section{变量与字符串}
+\label{sec:variables-and-strings}
+
+将变量名想成贴在对象上的便利贴。执行 \code{retries = 3} 时，Python 先求出右侧的值，
+再把名字 \code{retries} 绑定到整数对象 \code{3}。写 \code{retries = 4} 就是把贴纸换个地方。
+两张贴纸也能贴在同一个对象上，开头那份“备份”就是这么来的。
+
+按内容挑引号。单引号和双引号都能写出 \code{str}，三引号可以保留源码里的换行。
+要把值填进一句话，可用 \code{f} 开头的字符串，把表达式放进花括号。
+
+
+\begin{lstlisting}[title={\ttfamily variables.py},aboveskip=6pt,belowskip=6pt]
+retries: int = 3  # 重试次数用整数。
+task = '同步 "笔记"'  # 单引号保留双引号。
+status = "It's ready."  # 双引号保留撇号。
+notes = """已检查文件
+等待开始同步"""  # 三引号保留换行。
+
+# 花括号里的表达式先求值，再放进字符串。
+summary = f"{task}，最多重试 {retries} 次。"
+# 用换行符分隔传给 print() 的三段文字。
+print(summary, status, notes, sep="\n")
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+C 语言通常要求先声明变量类型。Python 执行赋值时即可建立名字与对象的绑定，
+用到这个名字时，解释器根据它指向的对象来处理操作。
+\code{retries: int = 3} 里的 \code{: int} 是写给读者和检查工具的约定。
+右侧得到什么对象，运行时就绑定什么对象。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+将光标放在最后一行的 \code{summary} 上。
+在 Windows 默认键位下，按 \code{Ctrl+Shift+P}，也可以用菜单里的
+\texttt{View > Type Info}。如果出现表达式列表，就选 \code{summary}。
+这里看到的 \code{str} 是编辑器推断的类型。要核对运行时的对象，
+可在脚本末尾临时加一行 \code{print(type(summary))} 再运行一次。
+
+\href{https://www.jetbrains.com/help/pycharm/python-code-insight.html\#show-expression-type}
+  {JetBrains 文档中的表达式类型查看操作}
+\end{pycharmpractice}
+
+\begin{pitfall}
+若要将 \code{"hello"} 的首字母改成大写，直接执行 \code{s[0] = 'H'}，
+解释器回了一个 \code{TypeError}。字符串一旦建好，里面的字符就固定了。
+先用 \code{s[1:]} 取出从第二个字符到末尾的 \code{"ello"}，
+再在前面拼一个 \code{"H"}，最后让 \code{s} 指向拼好的新字符串。
+\end{pitfall}
+
+
+\begin{lstlisting}[title={\code{fix_greeting.py}}]
+# 两个名字起初都指向同一个字符串。
+s = "hello"
+original = s
+
+# 单独取消下一行注释，可以复现 TypeError。
+# s[0] = 'H'
+
+# 拼出新字符串，再把 s 绑过去。
+s = "H" + s[1:]
+
+# 对照输出，检查原来的字符串。
+print(s)         # Hello
+print(original)  # hello
+\end{lstlisting}
+
+
+图~\ref{fig:pycharm-type-inference} 对照静态类型推断与本次运行的变量值。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{type-info}{\linewidth}
+  
+  \caption{在 PyCharm 中查看变量的类型推断。}
+  \label{fig:pycharm-type-inference}
+\end{figure}
+
+\subsection*{把换行和小数位写清楚}
+
+给日志拼一行文字时，用 \texttt{\textbackslash t} 隔开列，用
+\texttt{\textbackslash n} 换行。排查对齐问题时，用 \code{repr()} 把这些字符
+显出来。打印耗时时，可用 \code{.2f} 约定两位小数。
+
+
+\begin{lstlisting}[title={\code{format_log.py}}]
+# 用 repr 显示实际的制表符和换行符。
+line = "notes.md\tok\n"
+print(repr(line))  # 'notes.md\tok\n'
+
+# 格式化只决定显示效果，原数值仍可参与计算。
+seconds = 1.236
+print(f"{seconds:.2f} s")  # 1.24 s
+\end{lstlisting}
+
+
+\section{列表与元组}
+\label{sec:lists-and-tuples}
+
+同步脚本中，文件清单需要增删，适合放进列表，类似可以调整格子的抽屉；目标主机与端口通常成对传递，适合组成元组。元组固定的是元素位置，不保证其引用的对象也不可变。
+
+列表用方括号写，元组常用圆括号包住用逗号分隔的元素。两者都按顺序放东西，
+所以可以用 \code{files[0]} 取第一项。写 \code{files[:2]} 时，Python 从开头取到
+索引 \code{2} 之前，得到一个新列表。先留好预览，再继续给原列表加任务。
+
+
+\begin{lstlisting}[title={\code{sync_queue.py}}]
+# 先留一份只含前两个文件的预览。
+files = ["notes.md", "todo.md"]
+preview = files[:2]
+
+# 给待同步列表加一项，再核对首项和预览。
+files.append("ideas.md")
+print(files[0])  # notes.md
+print(preview)   # ['notes.md', 'todo.md']
+
+# 主机和端口总是成对使用，按顺序拆开。
+target = ("backup.local", 443)
+host, port = target
+print(f"{host}:{port}")  # backup.local:443
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+可分两层看。列表允许增加位置，也允许把某个位置换成另一个对象。
+元组创建时就定下了位置和每个位置引用的对象。如果某个位置装的是一个列表，
+仍能改那个列表的内容。快递盒封住的是格位，格位里的抽屉照样能拉开。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在 \code{files.append("ideas.md")} 左侧点一下，设个断点，然后用 Debug 运行。
+程序停在这一行时，先在变量面板展开 \code{files} 和 \code{preview}。
+按 \code{F8}（Step Over）执行这一行后，\code{files} 多了第三项，
+\code{preview} 还是原来两项。键位改过的话，直接点调试工具栏的 Step Over。
+
+\href{https://www.jetbrains.com/help/pycharm/stepping-through-the-program.html}
+  {JetBrains 的单步调试说明}
+\end{pycharmpractice}
+
+\begin{pitfall}
+将同步任务分批后，\code{preview = batches[:]} 只复制外层列表（图~\ref{fig:visual-ch2}）。向预览中的第一批添加文件，原列表的同一批也会变化。
+切片只复制外层列表，两边的第一个位置仍指向同一份内层列表。
+这个例子只有一批，将这一批也切片一次，才得到可以单独修改的预览。
+\end{pitfall}
+
+
+\begin{lstlisting}[title={\code{copy_batch.py}}]
+# 只复制外层，第一批文件仍被两个列表共享。
+batches = [["notes.md"]]
+preview = batches[:]
+preview[0].append("todo.md")
+print(batches)  # [['notes.md', 'todo.md']]
+
+# 重新做预览，这次把第一批也复制一份。
+preview = [batches[0][:]]
+preview[0].append("ideas.md")
+print(batches)  # [['notes.md', 'todo.md']]
+print(preview)  # [['notes.md', 'todo.md', 'ideas.md']]
+\end{lstlisting}
+
+
+列表追加与切片预览的对照见图~\ref{fig:pycharm-sync-queue}，先看两边的项数，再看引用的层次。
+\begin{figure}[htbp]
+  \centering
+  % 素材就绪后，将截图保存到下列路径。
+  \IfFileExists{figures/pycharm-sync-queue.png}{%
+    \includegraphics[width=0.90\linewidth]{figures/pycharm-sync-queue.png}%
+  }{%
+    \BookImage{list-preview}{\linewidth}%
+  }
+  \caption{追加元素后，\code{files} 增加第三项，切片 \code{preview} 保留前两项。}
+  \label{fig:pycharm-sync-queue}
+\end{figure}
+
+\subsection*{给文件编号，再配上状态}
+
+用 \code{enumerate()} 给文件编号，用 \code{zip()} 把文件名与状态按位置配对。
+普通 \code{zip()} 会在最短的一列结束时停下，所以先核对两边的条数。
+同步清单里也会遇到更新和删除。知道位置时用下标赋值，想移除已处理的末项时用
+\code{pop()} 取走它。
+
+
+\begin{lstlisting}[title={\code{number_tasks.py}}]
+# 改正文件名，移走队尾已经处理的条目。
+files = ["note.md", "todo.md", "done.md"]
+files[0] = "notes.md"
+files.pop()
+states = ["ok", "retry"]
+
+# 一一配对，再给每条结果编号。
+for number, (name, state) in enumerate(
+    zip(files, states), start=1
+):
+    print(number, name, state)
+\end{lstlisting}
+
+
+\section{字典与集合}
+\label{sec:dicts-and-sets}
+
+列表适合按位置取值；按文件名查询同步状态时，可用字典建立索引，以文件名为键、同步状态为值。
+
+例如，\code{status_by_file["notes.md"]} 直接查询该文件对应的状态。
+
+有时只需知道“服务器上有没有这个名字”。这时用集合，像拿一张只勾名字的签到表。
+将待同步清单交给 \code{set()} 去重，再用 \code{-} 减掉服务器已有的文件名。
+\code{&} 则留下两边都有的名字。最后用 \code{sorted()} 排好输出，
+这样示意图中的顺序每次都一样。
+
+
+\begin{lstlisting}[title={\code{sync_index.py}}]
+# 用文件名查状态。缺失的键显示 unknown。
+status_by_file = {"notes.md": "done"}
+status_by_file["todo.md"] = "queued"
+print(status_by_file["notes.md"])  # done
+print(status_by_file.get("draft.md", "unknown"))  # unknown
+
+# 集合折叠重复文件名，再和服务器名单对照。
+requested = ["notes.md", "todo.md", "todo.md"]
+wanted = set(requested)
+remote = {"notes.md"}
+print("todo.md" in wanted)       # True
+print(sorted(wanted & remote))  # ['notes.md']
+print(sorted(wanted - remote))  # ['todo.md']
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+将哈希值想成取件码。字典查键、集合查成员时，先用哈希值缩小查找范围。
+哈希值相同，还要看对象是否相等。手里只有文件名时，这比从列表头挨个核对更合适。
+要是手里已经有下标，直接取 \code{files[0]} 就很顺手。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在 \code{sync_index.py} 最后一行设断点，用 Debug 运行。
+暂停后，展开 \code{wanted} 与 \code{remote}，核对两份名单。
+
+按 \code{Alt+F8} 打开求值窗口，计算下面的表达式：
+\begin{center}
+  \code{sorted(wanted - remote)}
+\end{center}
+结果应为 \code{['todo.md']}。修改过键位时，从调试菜单打开求值操作。
+
+\href{https://www.jetbrains.com/help/pycharm/examining-suspended-program.html}
+  {JetBrains 的调试求值说明}
+\end{pycharmpractice}
+
+\begin{pitfall}
+前一节将主机与端口配为一对。若把这两个值放进列表，再用列表作为字典键，
+结果刚建字典就遇到 \code{TypeError}。字典键和集合成员都得可哈希。
+哈希值要在对象的生命周期内保持稳定，相等的对象也要有相同的哈希值。
+这次用字符串和整数组成的元组就行。元组里要是塞了列表，照样会报错。
+\end{pitfall}
+
+
+\begin{lstlisting}[title={\code{target_key.py}}]
+# 取消下一行的注释，可以复现 TypeError。
+# target_names = {["backup.local", 443]: "内网备份"}
+
+# 字符串和整数都可哈希，这个元组可以作键。
+target = ("backup.local", 443)
+target_names = {target: "内网备份"}
+print(target_names[target])  # 内网备份
+\end{lstlisting}
+
+
+图~\ref{fig:pycharm-sync-difference} 把请求名单与已有名单并排，待同步结果从差集中取出。
+\begin{figure}[htbp]
+  \centering
+  \IfFileExists{figures/pycharm-sync-difference.png}{%
+    \includegraphics[width=0.90\linewidth]{figures/pycharm-sync-difference.png}%
+  }{%
+    \BookImage{set-difference}{\linewidth}%
+  }
+  \caption{\code{sorted(wanted - remote)} 的结果为待同步文件 \code{todo.md}。}
+  \label{fig:pycharm-sync-difference}
+\end{figure}
+
+\subsection*{合并两份名单}
+
+需要汇总两台机器上的文件名时，用 \code{|} 取并集。两个集合都出现的名字只留一次，
+所以可以先合并再排序，得到一份方便核对的总清单。
+
+
+\begin{lstlisting}[title={\code{merge_names.py}}]
+# 合并两台机器的文件名，再按名字显示。
+local = {"notes.md", "todo.md"}
+remote = {"notes.md", "archive.md"}
+print(sorted(local | remote))
+\end{lstlisting}
+
+
+\section{推导式与 collections 四大金刚}
+\label{sec:comprehensions-collections}
+
+将推导式当成一台流水线打包机。同步日志进来，先写清楚要留下哪些记录，
+再决定每条记录要打包成什么样子。下面的 \code{[name for name, state in events if state == "retry"]}
+把重试记录的文件名装成列表。要保留重复出现的文件名，列表就派得上用场。
+要找的是出现过重试的不同文件时，再把结果交给 \code{set()}。
+
+
+\begin{lstlisting}[title={\code{sync_report.py}}]
+from collections import Counter, defaultdict
+
+# 每条日志记录文件名和同步状态。
+events = [
+    ("notes.md", "ok"),
+    ("todo.md", "retry"),
+    ("draft.md", "retry"),
+]
+# 先筛选重试记录，再统计各状态出现的次数。
+retry_files = [
+    name for name, state in events if state == "retry"
+]
+states = [state for name, state in events]
+counts = Counter(states)
+print(retry_files)          # ['todo.md', 'draft.md']
+print(counts["retry"])      # 2
+
+# 每种状态用自己的列表收集文件名。
+files_by_state = defaultdict(list)
+for name, state in events:
+    files_by_state[state].append(name)
+print(files_by_state["ok"])  # ['notes.md']
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+让 \code{Counter} 负责数票，让 \code{defaultdict(list)} 负责分筐。
+\code{Counter} 给出某个状态出现几次，分筐则留下这些状态对应的文件名。
+这两个结果都来自同一份日志，回答的问题不同。
+\end{myunderstanding}
+
+\begin{pitfall}
+只需判断某类状态是否已有记录时，使用 \code{files_by_state.get("failed")}。
+直接取 \code{files_by_state["failed"]} 会在键缺失时调用 \code{list()}，
+再把得到的空列表存进去。此后遍历分组时，多出来的这个空组也会出现。
+\end{pitfall}
+
+计数和分组解决了报表问题。真要一条条重试时，将任务放进 \code{deque}，
+从左端取第一件。用 \code{namedtuple} 给任务字段起名，拿到任务后可以直接读
+\code{job.name}，顺着上一节元组的写法又往前走了一步。
+
+
+\begin{lstlisting}[title={\code{retry_queue.py}}]
+from collections import deque, namedtuple
+
+# 给原先靠位置区分的两个字段起名。
+Job = namedtuple("Job", ["name", "state"])
+queue = deque([Job("todo.md", "retry")])
+
+# 新任务从右边排进来，最早的任务从左边取出。
+queue.append(Job("draft.md", "retry"))
+job = queue.popleft()
+print(job.name)  # todo.md
+\end{lstlisting}
+
+
+\begin{pycharmpractice}
+在脚本最后一行设断点，用 Debug 运行。变量面板里先展开 \code{counts} 看次数，
+再展开 \code{files_by_state} 对照文件名。也可求值
+\code{files_by_state.get("failed")}，然后看分组里有没有多出一个键。
+\end{pycharmpractice}
+
+计数和分组的区别画在图~\ref{fig:pycharm-sync-report}，同一份日志可以交出两种答案。
+\begin{figure}[htbp]
+  \centering
+  \IfFileExists{figures/pycharm-sync-report.png}{%
+    \includegraphics[width=0.90\linewidth]{figures/pycharm-sync-report.png}%
+  }{%
+    \BookImage{grouping}{\linewidth}%
+  }
+  \caption{\code{counts} 统计各状态次数，\code{files_by_state} 保存对应文件名。}
+  \label{fig:pycharm-sync-report}
+\end{figure}
+
+\subsection*{用同一份清单核对容器}
+
+给 \code{sync_report.py} 再添一条 \code{("todo.md", "retry")}。
+重试记录多一条，计数也多一次。若问题换成“有几个不同的文件需要重试”，
+就看 \code{set(retry_files)} 的长度。先分清问题，再挑返回列表、计数或集合。
+
+\subsection*{进阶边界演练}
+字段名应表达业务含义，避免通过位置暗示用途。字典里的 True 与 1 会按相等键处理。若要分别表达开关和次数，可用明确的字段名，把布尔值与计数放在不同字段里。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{references}{\linewidth}
+\caption{浅拷贝仅复制外层列表，内层列表仍由两份外层列表共同引用。}
+\label{fig:visual-ch2}
+\end{figure}
+
+% ===== END chapters/02-variables-strings.tex =====
+
+
+% ===== chapters/03-outline.tex =====
+\chapter{流程控制与异常处理}
+\label{ch:03-outline}
+
+流程控制决定一条输入经过哪些步骤，异常处理则保留步骤失败时的原因。把正常路径与失败路径分别写清，才能解释结果，也便于定位错误。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 3 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {条件判断}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {循环遍历}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {异常与日志}
+      };
+  \end{tikzpicture}
+  \caption*{条件决定分支，循环处理记录，异常与日志保留失败线索。}
+\end{figure}
+
+
+\section{条件与循环}
+
+将条件判断当成进门前的分流牌。先问这一条记录该不该处理，再决定走哪条路。
+\code{if} 只执行条件为真的分支。空列表、空字符串、零和 \code{None} 在条件里都算假，
+写条件表达式之前，先明确空值在这段业务里究竟代表什么。
+
+循环则把同一套规则交给每条记录。遇到当前这条不合格，用 \code{continue}；
+已经找到要找的对象，才用 \code{break} 提前结束。下面先生成一张新清单，
+保留原清单用于对照。
+
+
+\begin{lstlisting}[title={\code{filter_tasks.py}}]
+# 逐条筛选，输出清单和原清单分别保留。
+files = ["notes.md", "cache.tmp", "draft.tmp", "todo.md"]
+kept = []
+for name in files:
+    if name.endswith(".tmp"):
+        continue
+    kept.append(name)
+
+print(kept)
+print(len(files))  # 原清单仍有四项。
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+['notes.md', 'todo.md']
+4
+\end{lstlisting}
+
+\par
+
+
+\section{异常处理}
+
+将异常处理想成安全气囊，碰到可预期的失误时接住它，再决定交给谁处理。
+\code{try} 里只放可能失败的那一小段。\code{except} 按异常类型处理，
+没有抛出异常时才执行 \code{else}。离开这组语句前，\code{finally} 负责收尾。
+
+输入能转成整数，还不代表它符合任务要求。在业务边界用 \code{raise} 写清约束，
+把失败交给上层。调用方若要重试，就有了明确的信号。
+第一个例子把失败和收尾顺序摆出来，随后再把同样的处理用到一组输入。
+
+
+\begin{lstlisting}[title={\code{exception_path.py}}]
+def read_retries(raw):
+    # 转换失败和超出范围，都是输入无效。
+    value = int(raw)
+    if value < 0:
+        raise ValueError("重试次数不能小于零")
+    return value
+
+
+try:
+    count = read_retries("-1")
+except ValueError as error:
+    print(error)
+else:
+    print("重试次数", count)
+finally:
+    # 即使转入 except，这一行也会执行。
+    print("输入检查结束")
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+重试次数不能小于零
+输入检查结束
+\end{lstlisting}
+
+\par
+
+\subsection*{动手｜先处理一条坏输入}
+
+给同步任务加一道入口检查。拿到字符串后先转成整数，坏数据就在转换这一小段报错。成功转换的记录还要过一次大小判断。这样可以从日志里认出坏输入，也能看到剩下哪些任务继续往下走。
+
+\begin{lstlisting}[title={\code{scan_sizes.py}}]
+import logging
+
+# 坏记录写日志，合格的大小另存。
+logging.basicConfig(level=logging.WARNING, format="%(message)s")
+sizes = []
+for raw in ["12", "bad", "0", "8"]:
+    try:
+        size = int(raw)
+    except ValueError:
+        logging.warning("忽略无效大小 %r", raw)
+        continue
+
+    if size > 0:
+        sizes.append(size)
+
+print(sizes)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 脚本应记录一条警告，并输出 [12, 8]。将 bad 改成 5 再跑，警告消失，结果里多出 5。这里只捕获 ValueError，其他错误会保留原来的异常栈。
+
+\section{异常记录的最佳实践}
+
+用日志留下“当时发生了什么”。调试时看数值可以临时打印，任务交给别人运行以后，
+日志还得带上级别和失败上下文。\code{logging.exception()} 在异常处理分支里记录消息，
+并附上正在处理的异常栈，后续排查才能找到原来的代码行。
+
+下面把日志写进内存，便于自动核对。正式脚本可在入口配置文件或控制台处理器，
+业务模块只拿自己的 logger。异常跨过一层就记录一遍，会把同一条失败写成很多条，
+通常在决定处理或终止任务的那一层记录。
+
+
+\begin{lstlisting}[title={\code{capture_error.py}}]
+import io
+import logging
+
+# 演示专用日志对象，避免重复挂接处理器。
+stream = io.StringIO()
+logger = logging.getLogger("capture-demo")
+logger.handlers.clear()
+logger.propagate = False
+logger.setLevel(logging.ERROR)
+logger.addHandler(logging.StreamHandler(stream))
+
+try:
+    int("broken")
+except ValueError:
+    logger.exception("输入转换失败")
+
+# 核对消息和异常栈都进入了日志。
+print("输入转换失败" in stream.getvalue())
+print("ValueError" in stream.getvalue())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+True
+True
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+先分清状态分支和失败信号。条件判断决定往哪走，异常把当前步骤的失败交给能处理它的调用层。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在 except 内设置断点，先看原始输入，再看捕获到的异常对象。Step Over 能看见 finally 何时执行。
+\end{pycharmpractice}
+
+\begin{pitfall}
+遍历时删除当前列表会改变后续位置。先生成新清单，或者遍历副本，再明确修改目标。
+\end{pitfall}
+图~\ref{fig:chapter-3-flow} 把输入检查拆开，先核对转换，再决定怎样记录本条结果。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {读入记录};
+    \node[python flow step,text width=25mm,right=of a] (b) {尝试转换};
+    \node[python flow step,text width=25mm,right=of b] (c) {选择成功或失败};
+    \node[python flow step,text width=25mm,right=of c] (d) {记录结果};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{转换成功后继续校验，转换失败时记录输入并进入异常处理分支。}
+  \label{fig:chapter-3-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+把异常换成更贴合业务的类型时，可用 raise from 保留原始原因。只看最终那一句话有时会漏掉最早的失败，回溯里的因果链值得从头走一遍。附录 C 留了从错误入口到复验的完整记录。
+
+% ===== END chapters/03-outline.tex =====
+
+
+% ===== chapters/04-outline.tex =====
+\chapter{函数与作用域}
+\label{ch:04-outline}
+
+函数将一项操作封装为有名字的接口。参数约定输入，返回值约定结果；边界清楚以后，拆分模块、编写测试和复用代码都有了依据。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 4 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {参数传递}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {高阶函数}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {作用域与闭包}
+      };
+  \end{tikzpicture}
+  \caption*{参数传递、返回值与闭包作用域。}
+\end{figure}
+
+
+\section{函数定义与参数}
+
+将函数当成一台榨汁机。调用方递材料进去，函数按约定交出结果。
+参数名写清楚以后，调用方就能选按位置传值，或按名字指定。默认值是在函数定义时准备好的，
+因此带状态的列表要特别留意下面的连续调用。
+
+\code{*args} 收集额外的位置实参，\code{**kwargs} 收集额外的关键字实参。
+星号后面的普通参数只能按名字传，这样阅读调用处就能看懂开关的用途。
+在小例子里把它们摊开打印一次，随后把真实参数尽量写具体。
+
+
+\begin{lstlisting}[title={\code{call_options.py}}]
+def describe(name, *tags, enabled=True, **options):
+    # args 收成元组，kwargs 收成字典。
+    return name, tags, enabled, options.get("retries", 0)
+
+
+result = describe(
+    "sync", "daily", "local", enabled=False, retries=2
+)
+print(result)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+('sync', ('daily', 'local'), False, 2)
+\end{lstlisting}
+
+\par
+
+\subsection*{动手｜用连续两次调用检查默认值}
+
+默认参数类似预先放在柜台上的工具。函数定义执行时就把默认值放好了，之后的调用会重复拿到它。连续调用两次，可观察默认列表中的旧元素如何保留到下一次调用。
+
+\begin{lstlisting}[title={\code{task_defaults.py}}]
+# 复现两次调用共用同一个默认列表。
+def add_shared(name, tasks=[]):
+    tasks.append(name)
+    return tasks
+
+
+# 省略清单时，每次调用都创建一份。
+def add_task(name, tasks=None):
+    if tasks is None:
+        tasks = []
+    tasks.append(name)
+    return tasks
+
+
+first = add_shared("notes.md")
+second = add_shared("todo.md")
+print(first, second)
+print(add_task("notes.md"), add_task("todo.md"))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 第一行会打印两份相同的列表。修正后两次调用各拿到一份新清单。若调用方主动传入自己的列表，函数会把新任务追加到这份列表。
+
+\section{高阶函数与 Lambda}
+
+高阶函数像一个能换刀头的工具。处理流程由高阶函数组织，将“怎样比较”或“怎样转换”
+作为函数交进去。\code{sorted()} 返回新列表，\code{key} 决定每项拿什么来比较。
+\code{lambda} 适合在眼前写清的一小段表达式。
+
+\code{map()} 和 \code{filter()} 在 Python 3 里按需给结果。若要查看完整内容，
+会显式转成列表。规则一旦需要多步校验和解释，就给它写一个有名字的函数，
+调试时也容易设断点。
+
+
+\begin{lstlisting}[title={\code{rank_tasks.py}}]
+# 同一批任务先筛选，再排序和提取名称。
+tasks = [("notes.md", 2), ("todo.md", 1), ("draft.md", 2)]
+selected = filter(lambda task: task[1] >= 2, tasks)
+ordered = sorted(selected, key=lambda task: task[0])
+names = list(map(lambda task: task[0], ordered))
+print(names)
+print(tasks[0])  # 原列表中的顺序没有被改动。
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+['draft.md', 'notes.md']
+('notes.md', 2)
+\end{lstlisting}
+
+\par
+
+
+\section{命名空间与类型注解}
+
+名字的查找像沿抽屉上的地址找人。函数里先查局部，再查包住它的函数，
+接着查模块全局，最后查内置名字。闭包让内层函数在外层调用结束后仍能使用那份外层绑定。
+要在内层重新绑定外层名字，用 \code{nonlocal} 明确交代。
+
+类型注解把输入和输出约定放在签名旁边，运行时照常执行。
+在 PyCharm 查看类型，再用终端运行 \code{python -m mypy} 加文件名做静态检查。
+检查器的报错用来追到调用处，程序运行的断点则核对实际对象。
+
+
+\begin{lstlisting}[title={\code{make_counter.py}}]
+def make_counter(start: int):
+    count = start
+
+    def advance() -> int:
+        # 重新绑定外层 count，要明确写 nonlocal。
+        nonlocal count
+        count += 1
+        return count
+
+    return advance
+
+
+counter = make_counter(10)
+print(counter())
+print(counter())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+11
+12
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+参数传递会让形参绑定到实参对象。改对象内容与让形参重新绑定，是两种不同的动作。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+光标放在函数名上查看签名，再在调用处设断点。进入函数后逐个核对形参，尤其看默认值何时被使用。
+\end{pycharmpractice}
+
+\begin{pitfall}
+默认列表在函数定义时创建。连续两次调用都看结果，往往比只跑一遍更容易发现状态被共用。
+\end{pitfall}
+
+\subsection*{进阶边界演练}
+循环里临时建立回调时，应检查回调读取的是哪份外层绑定。闭包保存绑定关系（图~\ref{fig:visual-ch4}），若每个回调都该记住当时那个值，可以用工厂函数或明确的默认参数固定。把回调逐个调用一次，是最短的核对路线。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{scope}{\linewidth}
+\caption{普通函数的 LEGB 名称查找顺序：局部、外层函数、模块与内置作用域。}
+\label{fig:visual-ch4}
+\end{figure}
+
+% ===== END chapters/04-outline.tex =====
+
+
+\BookPart{进阶核心与工程化}
+  {代码会跑只是第一关。每改一行都要祈祷，下一步就该写测试了。}
+  {\textbf{组织对象与执行过程。} 用类管理实例状态，用属性校验输入。区分迭代器何时取值、生成器何时暂停、装饰器何时包装，以及上下文管理器何时清理资源。
+
+   \textbf{拆分模块，固定预期。} 将可复用代码拆进模块和包，用参数化测试覆盖不同输入，再用 Mock 模拟外部接口的返回结果。
+
+   \textbf{定位问题，保留改动。} 用断点查看状态，用性能分析定位耗时，再通过格式化、静态检查与 Git 检查并记录变更。}
+  {让测试守住约定，让每次修改都有凭据。}
+
+% ===== chapters/05-outline.tex =====
+\chapter[面向对象编程]{面向对象编程（OOP）}
+\label{ch:05-outline}
+
+设计类时，先确定对象需要保存的状态和提供的操作，再考虑继承关系。实例属性、类属性与协作对象各有职责，不能只凭语法相似就混用。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 5 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {类与实例}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {属性与封装}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {继承与共享状态}
+      };
+  \end{tikzpicture}
+  \caption*{实例状态、属性校验与继承协作。}
+\end{figure}
+
+
+\section{类与对象}
+
+类像模具，实例是做出的某一块饼干。在 \code{__init__} 里设置实例属性。
+\code{__str__} 用于日常显示，\code{__repr__} 为调试提供对象的可辨识表示。
+
+方法里的 \code{self} 就是这一次调用对应的实例。它让同一段方法代码操作各自的状态。
+下面用一条联系人记录对照两种显示，随后用同步任务检查实例属性。
+
+
+\begin{lstlisting}[title={\code{contact_repr.py}}]
+class Contact:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        # 日常显示用简洁名字。
+        return self.name
+
+    def __repr__(self):
+        # 调试时保留类型名和字符串边界。
+        return f"Contact(name={self.name!r})"
+
+
+person = Contact("小雪")
+print(person)
+print(repr(person))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+小雪
+Contact(name='小雪')
+\end{lstlisting}
+
+\par
+
+
+\section{封装与 @property}
+
+将 property 当成属性前面的一道门。调用处照常写 \code{job.name = value}，
+门内统一处理去空格和校验。访问属性时可以通过 getter 返回整理后的值，
+赋值时则经过 setter。属性内部用另一个名字存储，避免再次调用同一个 setter。
+
+单下划线是内部使用的约定。它方便读代码的人识别边界，具体校验仍由代码执行。
+在 PyCharm 中先找属性的使用处，再检查改名或添加校验会影响哪些调用。
+
+\subsection*{动手｜让两个实例各管各的状态}
+
+用两个同步任务检查属性放在哪里。任务名经过同一个属性入口清理，日志列表在初始化时创建。这样只给第一个任务记一条消息，第二个任务的列表就会保持为空。
+
+\begin{lstlisting}[title={\code{sync_jobs.py}}]
+class SyncJob:
+    def __init__(self, name):
+        self.name = name
+        # 每个实例在初始化时建自己的日志。
+        self.log = []
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("任务名不能为空")
+        self._name = cleaned
+
+
+# 给一个实例写日志，再检查另一个实例。
+first = SyncJob(" notes.md ")
+second = SyncJob("todo.md")
+first.log.append("queued")
+print(first.name, first.log)
+print(second.name, second.log)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 正常输出两行，notes.md 后面有一条日志，todo.md 后面是空列表。把任务名换成只含空格的字符串，可以复现校验失败。
+
+\section{继承与常见设计误区}
+
+类属性像挂在模具旁边的一张共享纸条。实例属性则写在每块饼干自己的标签上。
+若把日志列表写在类体里，所有实例都可能看到同一份列表。
+上节把列表放进 \code{__init__}，就让每次创建对象时各建一份。
+
+继承时，先找真正共用的行为。\code{super()} 按方法解析顺序把调用交给后面的类。
+多继承的协作要求各类保持能衔接的参数和调用约定，先用单继承把路径看清。
+
+
+\begin{lstlisting}[title={\code{inherit_name.py}}]
+class Job:
+    def label(self):
+        return "sync"
+
+
+class NamedJob(Job):
+    def label(self):
+        # super 取父层行为，再补当前层的信息。
+        return super().label() + ":notes.md"
+
+
+print(NamedJob().label())
+print([cls.__name__ for cls in NamedJob.__mro__])
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+sync:notes.md
+['NamedJob', 'Job', 'object']
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+实例属性给每个对象自己的状态，类属性适合真正共享的配置。继承共用行为时，要让每层的职责和参数能接起来。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在属性 setter 设断点，给实例赋值后观察输入和内部存储字段。查找用法可以帮助核对属性更名的影响。
+\end{pycharmpractice}
+
+\begin{pitfall}
+在 setter 里再次赋值给同一个属性，会递归调用自己。用另一个内部字段保存校验后的值。
+\end{pitfall}
+
+\subsection*{进阶边界演练}
+给类增加字段前，先问这个字段属于每个实例，还是整类共享。需要组合另一种能力时，也可以让实例持有一个协作对象。遇到多继承，再查看 MRO，把每一次 super 的去向画出来。
+
+% ===== END chapters/05-outline.tex =====
+
+
+% ===== chapters/06-outline.tex =====
+\chapter{迭代、生成器与装饰器}
+\label{ch:06-outline}
+
+生成器按需执行，装饰器在定义阶段完成包装，上下文管理器负责进入和离开资源。理解这些工具，关键在于区分定义、调用、暂停与清理的时机。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 6 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {迭代与生成}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {装饰时与调用时}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {资源清理}
+      };
+  \end{tikzpicture}
+  \caption*{迭代取值、装饰器包装与上下文资源管理。}
+\end{figure}
+
+
+\section{迭代器与生成器}
+
+列表像一整车砖，生成器像传送带。
+\code{iter()} 提供迭代器，\code{next()} 取下一项，用完会抛出
+\code{StopIteration}。\code{for} 会自动处理这个结束信号。
+
+函数里写了 \code{yield} 后，调用先得到生成器对象。第一次取值才开始执行，
+每次产出后暂停，下一次从上次的位置继续。下面先用批次日志看执行时机，
+再产出前几个斐波那契数。生成器保留当前状态，若把所有结果再收进列表，
+那份结果仍然要占内存。
+
+
+\begin{lstlisting}[title={\code{fibonacci.py}}]
+def fibonacci(count):
+    # 只保留相邻两项，用它们计算下一项。
+    left, right = 0, 1
+    for _ in range(count):
+        yield left
+        left, right = right, left + right
+
+
+print(list(fibonacci(7)))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+[0, 1, 1, 2, 3, 5, 8]
+\end{lstlisting}
+
+\par
+
+\subsection*{动手｜拆开生成与消费}
+
+要观察生成器何时推进，可在每次交出一批前输出一条消息。调用生成器函数只创建生成器对象；请求下一项时，函数才执行到 yield。每次取走一批，下一次都从上次暂停的位置继续。
+
+\begin{lstlisting}[title={\code{iter_batches.py}}]
+# 每次只取出当前一批文件。
+def iter_batches(files, size):
+    for start in range(0, len(files), size):
+        print("准备第", start // size + 1, "批")
+        yield files[start : start + size]
+
+
+# 依次拉取两批，观察日志和结果的顺序。
+batches = iter_batches(["notes.md", "todo.md", "draft.md"], 2)
+print("生成器已建立")
+print(next(batches))
+print(next(batches))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 第一行应先出现“生成器已建立”，随后每次取一批才出现准备消息。把第二个 next 删除，准备第二批的消息也随之消失。
+
+\section{装饰器}
+
+装饰器像给函数套一个手机壳。原函数还在，调用入口已经换成外层包装函数。
+装饰语法执行时就调用装饰器（图~\ref{fig:visual-ch6}），把原函数交进去。等以后调用函数名，
+包装函数才开始计时，再把参数交给原函数。
+
+用 \code{wraps} 把原函数的名称、文档等元信息带到包装函数上。
+计时用 \code{perf_counter()}，收尾写在 \code{finally}，这样原函数抛异常时
+也能记下经过的时间。耗时会波动，只验证顺序和返回值。
+
+
+\begin{lstlisting}[title={\code{timed_call.py}}]
+from functools import wraps
+from time import perf_counter
+
+
+def timer(function):
+    @wraps(function)
+    def wrapped(*args, **kwargs):
+        started = perf_counter()
+        try:
+            return function(*args, **kwargs)
+        finally:
+            print("耗时已记录", perf_counter() >= started)
+    return wrapped
+
+
+@timer
+def add(left, right):
+    # 原函数继续负责计算。
+    return left + right
+
+
+print(add(2, 3))
+print(add.__name__)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+耗时已记录 True
+5
+add
+\end{lstlisting}
+
+\par
+
+
+\section{上下文管理器与 with}
+
+将 with 想成借书时一起办好的归还手续。进入时拿到资源，
+离开时统一执行退出动作。代码块里出错，退出动作仍有机会清理资源，
+具体异常是否继续抛出由上下文管理器的实现决定。
+
+用 \code{contextmanager} 写小型管理器时，\code{yield} 前面是准备过程，
+后面用 \code{finally} 放清理。下面先用打印标出顺序，第 9 章再换成文件资源。
+
+
+\begin{lstlisting}[title={\code{managed_demo.py}}]
+from contextlib import contextmanager
+
+
+@contextmanager
+def checked_resource():
+    print("取得资源")
+    try:
+        yield "notes.md"
+    finally:
+        # 离开 with 时统一收尾。
+        print("归还资源")
+
+
+with checked_resource() as name:
+    print("处理", name)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+取得资源
+处理 notes.md
+归还资源
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+先区分创建与执行。生成器在取值时推进，装饰器在定义时包装，包装后的函数则在调用时执行。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在装饰器和包装函数各设一个断点，重启脚本，看两个断点分别在定义阶段和调用阶段停下。
+\end{pycharmpractice}
+
+\begin{pitfall}
+生成器消费完后再遍历会直接结束。需要重复处理时，重新创建生成器，或者在输入规模允许时保存结果。
+\end{pitfall}
+图~\ref{fig:chapter-6-flow} 把装饰时与调用时接起来，断点也沿这条路线设置。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {定义原函数};
+    \node[python flow step,text width=25mm,right=of a] (b) {调用装饰器};
+    \node[python flow step,text width=25mm,right=of b] (c) {返回包装函数};
+    \node[python flow step,text width=25mm,right=of c] (d) {调用时再计时};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{装饰时完成包装，后续调用才进入计时逻辑并执行原函数。}
+  \label{fig:chapter-6-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+迭代器常常只能消费一遍。将一次取值看成往前迈一步，调试时的 list 转换也会把它走到尽头。要再处理一遍，就重新创建输入，或者在合适的规模下保留已经生成的结果。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{decorator}{\linewidth}
+\caption{定义阶段完成装饰器包装；调用阶段执行包装函数及原函数。}
+\label{fig:visual-ch6}
+\end{figure}
+
+% ===== END chapters/06-outline.tex =====
+
+
+% ===== chapters/07-outline.tex =====
+\chapter{模块、包与测试入门}
+\label{ch:07-outline}
+
+模块组织可复用定义，入口控制程序何时启动，测试固定输入与预期结果。三者配合，可以在调整代码结构时持续验证行为。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 7 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {导入与入口}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {断言与参数化}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {外部依赖隔离}
+      };
+  \end{tikzpicture}
+  \caption*{模块导入、参数化测试与外部接口替身。}
+\end{figure}
+
+
+\section{模块导入机制}
+
+模块是一个可导入的代码文件，包把相关模块组织到同一条导入路径下。
+将复用函数放进模块，把启动动作收进 \code{main()}。
+直接运行文件时，\code{__name__} 是 \code{"__main__"}；
+导入时则是模块名，入口守卫便能控制启动动作。
+
+先在本目录准备 \code{calc.py}，再由 \code{use_calc.py} 导入。
+导入会执行模块顶层语句，因此连接服务和读命令参数都要找好位置。
+两个模块互相导入时，先把共同使用的定义搬到独立模块，再梳理调用方向。
+
+
+\begin{lstlisting}[title={\code{use_calc.py}}]
+from calc import add
+
+# 导入后只使用函数，由当前入口负责显示。
+print(add(2, 3))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+5
+\end{lstlisting}
+
+\par
+
+
+\section[自动化测试基础]{自动化测试基础（pytest）}
+
+测试像给工具量尺寸。输入、预期结果和失败位置都写在代码里，
+改完实现再跑一次，就能看到原来的约定是否还成立。
+\code{assert} 写在测试中描述预期，用户输入校验仍用正常的分支和异常。
+
+用 \code{pytest.mark.parametrize} 指定多组输入与预期值。
+
+在本目录运行 \code{python -m pytest -q}，三个参数组合应各跑一次。
+PyCharm 可以从测试函数旁运行，也可以在测试窗口重跑失败项。
+
+
+\begin{lstlisting}[title={\code{test_add_cases.py}}]
+import pytest
+
+
+def add(left, right):
+    # 被测函数保持明确的输入与输出。
+    return left + right
+
+
+@pytest.mark.parametrize(
+    "left,right,expected",
+    [(2, 3, 5), (-2, 3, 1), (0, 0, 0)],
+)
+def test_add(left, right, expected):
+    assert add(left, right) == expected
+\end{lstlisting}
+
+
+\section{Mock 与外部依赖隔离}
+
+将 Mock 想成排练时的对手演员。外部接口回什么，由测试先约定好，
+被测代码按正常结构处理它。这样能反复演练成功、超时和无效响应。
+
+替换要发生在被测代码实际查找依赖的位置。示例把依赖作为参数传进去，
+测试里可以核对返回值，也可以核对调用参数。
+真服务的协议是否匹配，还要留给使用测试环境的集成验证。
+
+\subsection*{动手｜把网络依赖换成可核对的替身}
+
+测试状态查询时，只需核对自己的代码有没有拿对键、传对文件名。将请求函数当参数递进去，在测试里用 Mock 回一份可预期的数据，实际网络请求留给集成测试。
+
+\begin{lstlisting}[title={\code{test_lookup.py}}]
+from unittest.mock import Mock
+
+
+def lookup_status(fetch, filename):
+    # fetch 由调用方提供，结果仍按正常业务结构读取。
+    return fetch(filename)["status"]
+
+
+def test_lookup():
+    fetch = Mock(return_value={"status": "done"})
+    assert lookup_status(fetch, "notes.md") == "done"
+    fetch.assert_called_once_with("notes.md")
+
+
+# 当作脚本运行时，可以直接核对这条测试。
+if __name__ == "__main__":
+    test_lookup()
+    print("test_lookup passed")
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 直接运行本文件应打印 \code{test_lookup passed}。把业务函数里的状态键拼错会报 KeyError。保留 \code{test_} 函数命名后，也能交给 pytest 收集。
+
+\begin{myunderstanding}
+模块入口、可复用函数与外部依赖各有调用位置。先把边界画清，测试就能在合适的位置换掉依赖。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+从测试旁的运行按钮执行一条参数化测试，再从测试窗口重跑失败项，核对输入与预期值。
+\end{pycharmpractice}
+
+\begin{pitfall}
+脚本命名成 json.py 或 requests.py 可能遮住要导入的库。报导入错误时，先看 traceback 指向哪个文件。
+\end{pitfall}
+
+\subsection*{把两个导入入口分开跑}
+\code{calc.py} 与 \code{use_calc.py} 放在同目录。分别运行这两个文件，
+前者显示入口消息，后者只显示计算结果。
+
+
+\begin{lstlisting}[title={\code{calc.py}}]
+def add(left, right):
+    # 复用逻辑位于模块顶层，启动动作位于入口守卫。
+    return left + right
+
+
+if __name__ == "__main__":
+    print("从 calc.py 入口运行", add(2, 3))
+\end{lstlisting}
+
+\par
+
+\subsection*{进阶边界演练}
+给导入问题留三项信息，模块来源、入口文件和工作目录。导入会使用模块缓存，修改文件后若结果像没更新，先确认进程是否重新启动，再看是否读到了另一份同名模块。
+
+% ===== END chapters/07-outline.tex =====
+
+
+% ===== chapters/08-outline.tex =====
+\chapter{调试、代码质量与 Git}
+\label{ch:08-outline}
+
+断点呈现某一时刻的状态，性能分析记录调用次数与耗时。先固定输入并缩小问题范围，再修改实现，最后复验结果与性能。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 8 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {断点与剖析}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {格式与静态检查}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {Git 与分支}
+      };
+  \end{tikzpicture}
+  \caption*{断点和性能分析定位问题，质量工具与 Git 记录改动。}
+\end{figure}
+
+
+\section{PyCharm 断点调试与性能分析}
+
+断点用于观察某个时刻的值，剖析器把一段运行里的调用和耗时列成账单。
+先用条件断点停在目标任务上，再用监视表达式看状态变化。
+确认结果正确以后，才去比同一份输入上的累计耗时。
+
+\code{cProfile} 会给程序增加测量开销。耗时差距很小时，可多跑几轮，
+把输入规模、解释器和依赖版本一起记下。
+下面这份列表查找练习正好能接上第 2 章的集合索引。
+
+\subsection*{动手｜先核对结果，再找耗时位置}
+
+剖析器像一张记账单。先把输入固定，跑出能核对的结果，再看哪几个函数累积耗时高。表里时间随机器和当时的负载变化，在同样输入下重复比较，单次数字只负责指路。
+
+\begin{lstlisting}[title={\code{profile_lookup.py}}]
+import cProfile
+import pstats
+
+
+def count_matches(files, queries):
+    # 反复在列表里查名字，保留同一份输入。
+    return sum(name in files for name in queries)
+
+
+files = [f"file-{i}.md" for i in range(1000)]
+queries = ["file-999.md", "missing.md"] * 1000
+profiler = cProfile.Profile()
+hits = profiler.runcall(count_matches, files, queries)
+print("命中数", hits)
+
+# 按累计耗时排序，显示前四条记录。
+pstats.Stats(profiler).sort_stats("cumulative").print_stats(4)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 固定输入应得到 1000 次命中，剖析表里能找到 \code{count_matches}。把 query 数量改小后先核对命中数，再看调用次数变化。
+
+\section{代码格式化与静态检查}
+
+格式化像整理桌面，静态检查像出门前点一遍工具。
+在项目里写下规则，再让命令行和编辑器用同一份配置。
+Black 管代码排版，Ruff 和 Flake8 都能报一部分代码问题，具体启用哪些规则由项目统一决定。
+
+下面的例子把 Ruff 用于检查，把 Black 用于格式化。先运行
+\code{python -m black --check .} 和 \code{python -m ruff check .}，
+看到差异后再运行格式化命令。Flake8 的项目可以用同样方式单独检查，
+避免重复规则把一处问题报很多次。
+
+
+\section{Git 基础与版本管理}
+
+将 Git 的提交当成能退回去的存档点。先用 diff 看改了什么，
+再把这次要保存的文件加入暂存区，提交说明写出改动目的。
+新分支给一段工作留出独立路线，合并前再检查结果。
+
+在 PyCharm 的提交窗口逐个看文件差异，再提交。
+\code{push} 会把本地提交送到配置好的远端，第一次使用要先核对远端地址和分支。
+练习从空的本地仓库开始，先保存一份文件，再改一行观察 diff。
+
+\begin{myunderstanding}
+正确结果是比较性能的前提。将输入固定，先查调用次数，再看耗时分布，最后用同样样本复测改动。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+条件断点只在指定任务停下，监视表达式记录关键状态。性能表中的累计耗时可用于定位调用链上的瓶颈。
+\end{pycharmpractice}
+
+\begin{pitfall}
+格式化和静态检查采用项目统一配置。先看 diff，再提交配置变更，避免排版差异盖住功能改动。
+\end{pitfall}
+
+\subsection*{同一份规则交给编辑器和终端}
+下面的配置位于 \code{pyproject.toml}。
+先核对格式化结果，再检查代码问题。
+\par\noindent\code{python -m black --check style_demo.py}\par
+\noindent\code{python -m ruff check style_demo.py}\par
+
+\begin{lstlisting}[language={},title={\code{pyproject.toml}}]
+# 用同一份配置描述本项目的排版与检查。
+[tool.black]
+line-length = 79
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+\end{lstlisting}
+本地提交可分三步完成：
+\begin{enumerate}
+  \item 执行 \code{git init}，创建练习仓库。
+  \item 执行 \code{git add style_demo.py}，暂存目标文件。
+  \item 执行 \code{git diff --cached}，核对差异后再提交。
+\end{enumerate}
+推送前确认目标分支与远端配置。
+
+\subsection*{进阶边界演练}
+性能表里，单独看自身耗时和连同子调用的累计耗时，会得到不同线索。递归与重复调用还会影响次数。记录输入规模后再比较，优化前后的结果也要相同，才能谈节省了多少工作。
+
+% ===== END chapters/08-outline.tex =====
+
+
+\BookPart{文件、数据与系统交互}
+  {文件不会迷路。点下运行时，程序可能站在另一个目录里。}
+  {\textbf{找对文件，读对内容。} 用 \code{pathlib} 处理路径，核对工作目录与字符编码，再通过上下文管理器完成读写。
+
+   \textbf{选好存储方式。} 比较 JSON、CSV 的数据表示，整理配置项，并用 SQLite 保存和查询记录。写入后重新读回，检查字段、类型和数量。
+
+   \textbf{让脚本接得住输入。} 处理时区与时间戳，从日志中提取字段，并用命令行参数指定输入路径和运行选项。}
+  {写入只是半程，读回才能对账。}
+
+% ===== chapters/09-outline.tex =====
+\chapter{文件 I/O 与路径管理}
+\label{ch:09-outline}
+
+文件操作同时涉及路径、字节与编码。先明确文件位置和读写约定，再开展批处理，避免把路径错误误判为内容错误。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 9 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {文本与编码}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {路径与工作目录}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {批量文件操作}
+      };
+  \end{tikzpicture}
+  \caption*{路径定位文件，编码解释字节，资源管理保证关闭。}
+\end{figure}
+
+
+\section{文件读写与上下文管理}
+
+磁盘上放的是字节，在 Python 里处理的字符串要经过解码。
+将编码想成翻译时使用的字典。读写双方用同一套编码，中文才能对得上。
+这里显式写 \code{encoding="utf-8"}，也方便读代码的人知道文件约定。
+
+\code{with open(...)} 离开代码块就关闭文件。文本读写用字符串，
+二进制模式则读写 bytes。遇到解码失败，先核对来源编码，
+再看文件是否混入了另一种格式。
+
+
+\begin{lstlisting}[title={\code{utf8_roundtrip.py}}]
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory() as folder:
+    # 先写 UTF-8，再按同样编码读回。
+    path = Path(folder) / "note.txt"
+    with path.open("w", encoding="utf-8") as stream:
+        stream.write("雪落长安无声")
+
+    with path.open("r", encoding="utf-8") as stream:
+        print(stream.read())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+雪落长安无声
+\end{lstlisting}
+
+\par
+
+
+\section[现代路径操作]{现代路径操作（pathlib）}
+
+路径像快递地址，当前工作目录决定相对地址从哪里出发。
+\code{Path.cwd()} 返回进程的工作目录，\code{Path(__file__).parent}
+则指向脚本文件所在目录。先选清楚基准，再拼子路径。
+
+批处理前，列出匹配到的文件和目标路径，确认命名冲突怎样处理。
+先用 \code{mkdir()} 准备目录，把 \code{parents} 和 \code{exist_ok} 设为真，
+复制与移动的行为交给 shutil，练习先放在临时目录里反复跑。
+
+\subsection*{动手｜在临时目录里走一遍文件流程}
+
+文件批处理像搬箱子。先确定源文件的位置，再建好目标目录，最后才搬。练习用临时目录装一份自己生成的小文件，便于反复检查路径和编码。
+
+\begin{lstlisting}[title={\code{copy_note.py}}]
+from pathlib import Path
+from shutil import copy2
+from tempfile import TemporaryDirectory
+
+# 在临时目录造一份 UTF-8 样本。
+with TemporaryDirectory() as folder:
+    root = Path(folder)
+    source = root / "notes.txt"
+    source.write_text("同步完成", encoding="utf-8")
+
+    # 先建目标目录，再把文件复制过去。
+    destination = root / "backup" / source.name
+    destination.parent.mkdir()
+    copy2(source, destination)
+    print(destination.relative_to(root).as_posix())
+    print(destination.read_text(encoding="utf-8"))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 输出应包含 backup/notes.txt 和同步完成。路径输出统一用 \code{as_posix()}，因此 Windows 也显示斜杠。文件名里的中文或空格可继续做变体练习。
+
+\begin{myunderstanding}
+路径是地址，工作目录是地址的起点。编码则决定字节怎样变成文本，两件事各核对一次。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+运行配置里查看 Working directory，再打印 \code{Path.cwd()}。从编辑器运行和从终端运行时，对照它们的值。
+\end{pycharmpractice}
+
+\begin{pitfall}
+覆盖写入前要明确目标文件。批处理先用临时目录练习，并把实际命中的文件名显示出来。
+\end{pitfall}
+文件读取的两层约定见图~\ref{fig:chapter-9-flow}，先找地址，再按编码理解字节。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {路径与工作目录};
+    \node[python flow step,text width=25mm,right=of a] (b) {读取字节};
+    \node[python flow step,text width=25mm,right=of b] (c) {按编码解码};
+    \node[python flow step,text width=25mm,right=of c] (d) {得到字符串};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{路径决定读哪个文件，编码决定怎样解释里面的字节。}
+  \label{fig:chapter-9-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+写结果文件时，先把完整内容放进同目录的临时文件，成功后再替换目标。这样失败现场与已发布结果各有位置。若需要并发写入或断电级别的保证，还要按存储和平台的约定进一步设计。
+
+% ===== END chapters/09-outline.tex =====
+
+
+% ===== chapters/10-outline.tex =====
+\chapter{数据持久化与格式转换}
+\label{ch:10-outline}
+
+持久化的验收标准是重新启动后仍能读回正确数据。写入以后应核对字段、类型与数量，格式转换尤其要检查缺失值和文本表示。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 10 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {JSON CSV 与 Pickle}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {配置与环境}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {SQLite 持久化}
+      };
+  \end{tikzpicture}
+  \caption*{文件格式转换、配置读取与 SQLite 持久化。}
+\end{figure}
+
+
+\section{常用数据格式}
+
+将数据格式当成不同形状的信封。JSON 适合有层次的字典和列表，
+CSV 适合一行一条记录的表。写出去以后，可读回来再核对字段和值的类型。
+
+CSV 用 \code{newline=""} 交给 csv 模块处理换行，数字列在读入后明确转换。
+JSON 不能直接表示任意 Python 对象，需要先变成约定的数据结构。
+Pickle 可保存更多 Python 对象，但加载会执行对象重建逻辑，只应加载可信来源的数据。
+
+\subsection*{动手｜读回数据后查一次类型}
+
+只比较显示内容容易遗漏类型变化。例如数字 3 写入 CSV 后，再读出的内容可能是字符串。这个练习用同一份记录走两种格式，读回后立刻核对类型。
+
+\begin{lstlisting}[title={\code{round_trip.py}}]
+import csv
+import io
+import json
+
+row = {"name": "notes.md", "retries": 3}
+
+# JSON 的数字字段读回后仍是整数。
+json_row = json.loads(json.dumps(row))
+
+# CSV 默认读回字符串，先在内存里跑通读写。
+stream = io.StringIO(newline="")
+writer = csv.DictWriter(stream, fieldnames=["name", "retries"])
+writer.writeheader()
+writer.writerow(row)
+stream.seek(0)
+csv_row = next(csv.DictReader(stream))
+
+print(type(json_row["retries"]).__name__)
+print(type(csv_row["retries"]).__name__)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace JSON 一路保留整数，默认 CSV 读取返回文本。若后续要做加法，就在 CSV 读入后的字段转换处用 int() 明确处理。
+
+\section{配置文件处理}
+
+配置像工具箱里的刻度旋钮。让默认值、配置文件和环境变量有明确的先后顺序，
+然后把最终值转换成业务需要的类型。环境变量读出来通常是字符串，
+所以端口和重试次数要有独立的转换与校验。
+
+\code{configparser} 负责 INI 格式。\code{.env} 是一个文件名约定，
+先用加载器读文件，再从环境里取值。
+下面用内存 INI 演练优先级，项目包另给 python-dotenv 的加载示例。
+
+
+\begin{lstlisting}[title={\code{config_order.py}}]
+import configparser
+import os
+from unittest.mock import patch
+
+# 默认配置来自 INI，再让环境中的同名值覆盖。
+config = configparser.ConfigParser()
+config.read_string("[sync]\nretries = 2\n")
+
+with patch.dict(os.environ, {"SYNC_RETRIES": "4"}):
+    raw = os.getenv("SYNC_RETRIES", config["sync"]["retries"])
+    print(int(raw))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+4
+\end{lstlisting}
+
+\par
+
+
+\section{SQLite 轻量级数据库入门}
+
+SQLite 像一本带检索功能的本地账本。连接选定文件，建表定义字段，
+SQL 写清筛选条件，事务把一组改动收成一次提交。
+连接的 \code{with} 管提交和回滚（图~\ref{fig:visual-ch10}），再用 closing 明确关闭连接。
+
+将输入放在占位符对应的参数里，避免把用户内容拼进 SQL。
+下面故意在事务里抛一次异常，重新查询时应该看不到那条未提交的记录。
+
+
+\begin{lstlisting}[title={\code{rollback_demo.py}}]
+from contextlib import closing
+import sqlite3
+
+with closing(sqlite3.connect(":memory:")) as db:
+    db.execute("CREATE TABLE notes (name TEXT)")
+    try:
+        with db:
+            db.execute("INSERT INTO notes VALUES (?)", ("notes.md",))
+            raise ValueError("取消本次写入")
+    except ValueError:
+        # 事务块离开时已回滚，再查一次。
+        print(db.execute("SELECT count(*) FROM notes").fetchone()[0])
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+0
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+格式转换会改变可以表达的类型。落盘后重新读取，再看类型和数量，比只核对文本外观更可靠。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在提交事务前设断点，核对参数值。继续执行后换一个连接查询，检查提交是否真的完成。
+\end{pycharmpractice}
+
+\begin{pitfall}
+sqlite3 连接的上下文管理器负责事务，关闭连接还要单独安排。用 closing 可以把退出路径写在同一处。
+\end{pitfall}
+
+\subsection*{显式加载环境文件}
+在本章样例目录，把 \code{.env.example} 复制为 \code{.env}。
+安装 python-dotenv 后运行下面脚本，应输出 3。
+当前环境里若已设置同名变量，\code{override=False} 会保留它。
+
+
+\begin{lstlisting}[title={\code{load_env.py}}]
+import os
+
+from dotenv import load_dotenv
+
+# 显式加载 .env，不覆盖当前已经存在的环境变量。
+load_dotenv(".env", override=False)
+print(int(os.getenv("SYNC_RETRIES", "2")))
+\end{lstlisting}
+
+\par
+
+\subsection*{进阶边界演练}
+JSON 的 null 读成 None，CSV 的空单元格则要按读取器和业务规则解释。SQL 的 NULL 参与比较也有自己的规则。格式之间转换时，可把缺失、空文本和零各留一个样本，不让它们挤成同一种状态。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{transaction}{\linewidth}
+\caption{事务成功时提交，发生异常时回滚，随后释放连接。}
+\label{fig:visual-ch10}
+\end{figure}
+
+% ===== END chapters/10-outline.tex =====
+
+
+% ===== chapters/11-outline.tex =====
+\chapter{时间、正则与命令行工具}
+\label{ch:11-outline}
+
+时间、日志和命令行参数都连接着外部输入。明确时区、格式与字段约定，才能把一段临时脚本整理成可重复运行的工具。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 11 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {时间与时区}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {正则与日志}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {命令行与定时}
+      };
+  \end{tikzpicture}
+  \caption*{时间与时区、日志字段提取及命令行参数。}
+\end{figure}
+
+
+\section[时间处理]{时间处理（datetime）}
+
+时间点和钟面上的字样是两回事。将 UTC 时间当成统一坐标，
+展示时再换成本地时区。带时区的 datetime 才能明确说明一个钟面数字对应哪个时刻，
+两个地区的同一瞬间可以显示不同的小时。
+
+存储和跨系统传递时，保留偏移或统一用 UTC。
+\code{timestamp()} 配合带时区对象使用，读回时也明确传入时区。
+夏令时地区需要用 zoneinfo 的地区规则，固定偏移只描述一个偏移量。
+
+
+\begin{lstlisting}[title={\code{time_point.py}}]
+from datetime import datetime, timedelta, timezone
+
+# 同一时刻，分别显示 UTC 与固定的东八区偏移。
+utc = datetime(2026, 1, 1, tzinfo=timezone.utc)
+local = utc.astimezone(timezone(timedelta(hours=8)))
+print(utc.isoformat())
+print(local.isoformat())
+print(utc.timestamp() == local.timestamp())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+2026-01-01T00:00:00+00:00
+2026-01-01T08:00:00+08:00
+True
+\end{lstlisting}
+
+\par
+
+
+\section[正则表达式实战]{正则表达式（Re）实战}
+
+正则像文字筛子，先给它规定日志长什么样，再把字段挑出来。
+命名组让取值处能直接写字段名。原始字符串写法 \code{r"..."} 能减少反斜杠转义的负担。
+
+正则匹配到“像 IP 的一串字”以后，地址是否合法仍交给专门的解析器。
+下面保留原日志，再用 ipaddress 核对地址。规则越写越长时，先拆字段，
+把每一层需要判断的事写清楚。
+
+
+\begin{lstlisting}[title={\code{parse_address.py}}]
+import ipaddress
+import re
+
+# 正则先找字段，合法性再交给 IP 解析器。
+line = "at=2026-01-01T00:00:00Z ip=192.0.2.1"
+match = re.search(r"ip=(?P<address>\S+)", line)
+if match is not None:
+    address = ipaddress.ip_address(match.group("address"))
+    print(address)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+192.0.2.1
+\end{lstlisting}
+
+\par
+
+
+\section[脚本工具化]{脚本工具化（argparse）}
+
+命令行参数像工具面板。路径、输出位置和开关放在入口解析，
+业务函数拿到明确的值再处理。这样一份脚本就能处理不同文件，
+也能让定时任务用相同命令复现。
+
+argparse 负责显示帮助和缺少参数的提示；业务代码仍须检查路径与字段是否合法。
+定时执行时，工作目录、解释器、时区和日志位置都写明确。
+下面用一份固定日志跑通输入路径到解析结果的过程。
+
+\subsection*{动手｜给日志脚本加一个输入入口}
+
+将输入路径从代码里挪到参数里，再从日志行提取时间和 IP 字段。读到格式不符的行就跳过，方便用同一条命令跑不同日志。这里的正则负责找字段，时间解析交给 datetime。
+
+\begin{lstlisting}[title={\code{scan_log.py}}]
+import argparse
+from datetime import datetime, timezone
+from pathlib import Path
+import re
+
+# 只提取约定格式的时间字段和 IP 字段。
+pattern = re.compile(r"^(\S+)\s+ip=(\S+)$")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=Path, required=True)
+    args = parser.parse_args()
+
+    for line in args.input.read_text(encoding="utf-8").splitlines():
+        match = pattern.fullmatch(line)
+        if match is None:
+            continue
+        stamp, address = match.groups()
+        moment = datetime.fromisoformat(stamp)
+        print(moment.astimezone(timezone.utc).isoformat(), address)
+
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 先进入 \code{examples/ch11}，再运行下列命令。\par\noindent\code{python scan_log.py --input sample.log}\par 程序应输出一条 UTC 时间和地址。省略 \code{--input} 时，argparse 会显示用法并结束。
+
+\begin{myunderstanding}
+时间点、显示格式和时区分开处理。正则先提字段，字段是否合法交给对应的解析函数核对。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在运行配置的参数栏填写 --input sample.log，再检查工作目录。终端复现时用同样参数。
+\end{pycharmpractice}
+
+\begin{pitfall}
+没有时区的时间戳转换会依赖运行机器的本地配置。给存储时间和转换入口明确写出时区。
+\end{pitfall}
+
+\subsection*{进阶边界演练}
+时间戳要同时交代单位与时区语境。秒和毫秒混用时，结果可能跳到完全不合理的年份。正则提取完字段后，再用日期或 IP 解析器做校验，免得一段像样的文字冒充有效数据。
+
+% ===== END chapters/11-outline.tex =====
+
+
+\BookPart{并发、网络与基础爬虫}
+  {同时派十个任务去取数据，也得先说清谁拿钥匙、谁等回信。}
+  {\textbf{选择并发方式。} 对比线程、进程和协程的执行与交接方式。练习加锁、传递结果、等待任务完成，并安排异常与退出路径。
+
+   \textbf{读懂一次 HTTP 往返。} 用本机服务练习发送请求、设置超时和检查状态码，再按响应内容选择 JSON 或 HTML 解析方式。
+
+   \textbf{处理网页中的变化。} 用标签和属性定位字段，检查字段缺失的情况，并在本地演示页验证浏览器自动化的等待条件。}
+  {让等待有期限，让任务有交代。}
+
+% ===== chapters/12-outline.tex =====
+\chapter{并发编程基础}
+\label{ch:12-outline}
+
+并发会同时改变执行顺序和状态交接方式。先确定数据归属、结果传递与退出路径，再选择线程、进程或协程。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 12 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {线程与锁}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {进程与队列}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {异步任务}
+      };
+  \end{tikzpicture}
+  \caption*{线程共享状态、进程隔离数据、协程协作等待。}
+\end{figure}
+
+
+\section{多线程与 GIL}
+
+线程像同一间工作室里的几位工人，能共享桌上的数据，也容易同时伸手改同一份记录。
+用锁把一组必须连着完成的状态修改围起来，再用队列或返回值交接结果。
+
+启用 GIL 的 CPython 同一时刻由一个线程执行受它保护的 Python 代码，
+等待 I/O 时线程仍有用处。自由线程构建和会释放 GIL 的扩展有不同表现，
+判断性能前，先核对解释器与任务类型。GIL 也不能代替业务上的共享状态保护。三种并发方式的交接机制见图~\ref{fig:visual-ch12}。
+
+
+\begin{lstlisting}[title={\code{locked_count.py}}]
+from threading import Lock, Thread
+
+total = 0
+lock = Lock()
+
+
+def count():
+    global total
+    for _ in range(1000):
+        # 把读、加、写作为一段受保护的操作。
+        with lock:
+            total += 1
+
+
+workers = [Thread(target=count) for _ in range(2)]
+for worker in workers:
+    worker.start()
+for worker in workers:
+    worker.join()
+print(total)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+2000
+\end{lstlisting}
+
+\par
+
+
+\section{多进程基础}
+
+进程像另外开一间工作室。各自有内存，任务和结果要经过可传递的边界。
+将工作函数放在模块顶层，传入简单数据，再把结果交回主进程。
+启动新进程会有成本，先把任务分到合适大小，再比较并行是否划算。
+
+Windows 常用 spawn 启动方式，会重新导入入口模块。
+创建进程池的动作放进入口守卫，
+在 PyCharm 里也从这份脚本入口运行。
+下面用同一批数字核对进程池返回结果的顺序。
+
+
+\begin{lstlisting}[title={\code{process_squares.py}}]
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import get_context
+
+
+def square(value):
+    # 顶层函数便于子进程导入。
+    return value * value
+
+
+if __name__ == "__main__":
+    with ProcessPoolExecutor(
+        max_workers=2, mp_context=get_context("spawn")
+    ) as pool:
+        print(list(pool.map(square, [2, 3, 4])))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+[4, 9, 16]
+\end{lstlisting}
+
+\par
+
+
+\section[异步 I/O]{异步 I/O（asyncio 极简入门）}
+
+异步像点菜后拿着号码去做别的事。事件循环安排协程推进，
+协程碰到可等待的操作时用 await 让出执行权。
+这要求所等的操作也配合异步接口，直接在协程里做耗时的同步调用仍会卡住循环。
+
+\code{gather()} 可以一起等多个协程。失败、取消和超时都要在调用边界想清楚，
+清理放进 finally 或异步上下文管理器。下面先只观察完成顺序和结果顺序，
+接着再用本地网络练习处理状态。
+
+\subsection*{动手｜对照完成顺序与结果顺序}
+
+异步任务类似按单号取餐：完成顺序可能不同于提交顺序，但可以按原任务顺序整理返回结果。这里用短暂的异步等待模拟两份检查，便于专心看任务顺序。
+
+\begin{lstlisting}[title={\code{async_checks.py}}]
+import asyncio
+
+
+async def check(name, delay):
+    # 等待时让出事件循环，其他任务可以继续。
+    await asyncio.sleep(delay)
+    print("完成", name)
+    return name
+
+
+async def main():
+    # gather 按传入顺序返回各自结果。
+    results = await asyncio.gather(
+        check("slow", 0.05),
+        check("fast", 0.0),
+    )
+    print(results)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+\end{lstlisting}
+
+\textbf{运行核对}\enspace fast 应先完成，gather 返回的列表仍按传入顺序排列。把其中的异步等待换成阻塞睡眠，再对照这两种顺序。
+
+\begin{myunderstanding}
+线程共享内存，进程通过传递数据协作，协程在等待处交还执行权。先看任务在等什么，再选并发方式。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+多进程脚本从带入口守卫的文件运行。调试线程时先看当前选中的线程，再检查共享变量和锁的位置。
+\end{pycharmpractice}
+
+\begin{pitfall}
+协程里直接调用同步阻塞函数会拖住事件循环。异步代码也要检查所调用函数是否真正提供异步接口。
+\end{pitfall}
+协程暂停与恢复的顺序见图~\ref{fig:chapter-12-flow}，等待时仍有其他任务可以推进。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {提交协程};
+    \node[python flow step,text width=25mm,right=of a] (b) {运行到 await};
+    \node[python flow step,text width=25mm,right=of b] (c) {等待外部完成};
+    \node[python flow step,text width=25mm,right=of c] (d) {恢复协程};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{协程在异步等待处让出执行权，事件循环可以推进其他就绪任务。}
+  \label{fig:chapter-12-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+取消任务也要走完清理路径。协程里的 finally 适合归还已经取得的资源。一次任务失败以后，其他任务是否仍继续，要按所用的 gather、TaskGroup 或线程池接口来核对，不能只凭相似名字推断。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{concurrency}{\linewidth}
+\caption{线程、进程和协程的交接机制示意，条带长度不表示实测耗时。}
+\label{fig:visual-ch12}
+\end{figure}
+
+% ===== END chapters/12-outline.tex =====
+
+
+% ===== chapters/13-outline.tex =====
+\chapter{网络请求与基础爬虫}
+\label{ch:13-outline}
+
+网络请求可能返回成功、拒绝、等待或格式变化的内容。请求发出以后，还需依次检查状态码、响应格式与业务字段，不能只判断连接是否建立。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 13 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {HTTP 与 Session}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {HTML 表格}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {浏览器自动化}
+      };
+  \end{tikzpicture}
+  \caption*{HTTP 请求、HTML 解析与自动化等待。}
+\end{figure}
+
+
+\section{requests 核心用法}
+
+HTTP 请求像寄出一张带回邮地址的表单。方法说明动作，路径和查询参数说明目标，
+请求头携带协商信息，响应状态码和响应体再把处理结果送回来。
+
+用 Session 复用连接，给请求设置超时，先检查状态码再解析内容（图~\ref{fig:visual-ch13}）。
+requests 的 timeout 控制连接与读取等待，具体端到端耗时还受重试和业务处理影响。
+GET 重试可以按错误原因和服务端提示来决定，带副作用的请求则先考虑重复提交怎样识别。
+
+\subsection*{动手｜把第一次 HTTP 实验留在本机}
+
+在本机开一个短命的 HTTP 服务，先确认请求、状态码和 JSON 解析这条链路。地址和端口由本机分配，例子每次都有同一份响应。学会读响应以后，再把相同的检查搬到获准访问的端点。
+
+\begin{lstlisting}[title={\code{local_http.py}}]
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
+
+import requests
+
+
+class DemoHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # 用固定的本地样本练习 JSON 响应。
+        body = b'{"name": "notes.md"}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        # 输出留给客户端的状态码和字段值。
+        pass
+
+
+with ThreadingHTTPServer(("127.0.0.1", 0), DemoHandler) as server:
+    worker = Thread(target=server.serve_forever)
+    worker.start()
+    try:
+        host, port = server.server_address[:2]
+        with requests.Session() as session:
+            session.trust_env = False
+            response = session.get(f"http://{host}:{port}/", timeout=2)
+            response.raise_for_status()
+            print(response.status_code, response.json()["name"])
+    finally:
+        server.shutdown()
+        worker.join()
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 运行前安装 requests。脚本应打印状态码 200 和 notes.md，随后服务线程退出。客户端给出超时，并先检查状态码，再解析响应。
+
+\section[解析 HTML]{解析 HTML（BeautifulSoup）}
+
+拿到 HTML 后，将解析树当成一张可按标签找格子的表格。
+BeautifulSoup 先把文本变成节点，再用选择器找到表、行和单元格。
+字段提取之后还要核对列数与含义，网页多了装饰元素时尤其如此。
+
+下面在本地 HTML 上练习。找到目标表后，再取每一行的单元格文字，
+最后用 csv 模块处理分隔与引号。与网络请求分开跑，能分清是哪一步出的问题。
+
+
+\begin{lstlisting}[title={\code{extract_table.py}}]
+import csv
+import io
+
+from bs4 import BeautifulSoup
+
+html = """<table id="files">
+<tr><th>name</th><th>status</th></tr>
+<tr><td>notes.md</td><td>done</td></tr>
+</table>"""
+soup = BeautifulSoup(html, "html.parser")
+stream = io.StringIO(newline="")
+writer = csv.writer(stream, lineterminator="\n")
+
+# 逐行提取，CSV 模块负责转义和分隔。
+for row in soup.select("#files tr"):
+    cells = row.select("th, td")
+    writer.writerow([cell.get_text(strip=True) for cell in cells])
+
+print(stream.getvalue(), end="")
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+name,status
+notes.md,done
+\end{lstlisting}
+
+\par
+
+
+\section{自动化与边界}
+
+浏览器自动化像坐到另一台电脑前操作页面。Selenium 驱动浏览器执行点击与输入，
+页面脚本什么时候把元素放好，需要显式等待对应条件。
+
+先在本地演示页上验证等待条件。实际访问时按站点规则、robots.txt 和服务端提示控制速率，
+把失败记录下来。固定 sleep 可以用于节流，判断页面是否就绪则用等待条件。
+下面的例子需要可用的 Chrome、驱动与 Selenium，先用 data 页面演示一个元素的定位。
+
+
+\begin{lstlisting}[title={\code{browser_demo.py}}]
+from urllib.parse import quote
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as conditions
+from selenium.webdriver.support.ui import WebDriverWait
+
+# 使用内存 HTML，先核对定位与等待。
+html = '<p id="status">ready</p>'
+options = webdriver.ChromeOptions()
+options.add_argument("--headless=new")
+with webdriver.Chrome(options=options) as browser:
+    browser.get("data:text/html," + quote(html))
+    element = WebDriverWait(browser, 5).until(
+        conditions.visibility_of_element_located((By.ID, "status"))
+    )
+    print(element.text)
+\end{lstlisting}
+
+
+\textbf{运行条件}\enspace 需要 Selenium、可用浏览器及驱动。本次先完成代码语法检查，页面交互须在对应环境中复核。
+
+\begin{myunderstanding}
+请求得到字节，解析得到字段，字段再进入存储。每一步都留出输入与输出，出错时能定位到这一层。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+本地服务的处理函数和客户端分别设断点。服务端停住会影响客户端超时，可把这个影响记在验证结果里。
+\end{pycharmpractice}
+
+\begin{pitfall}
+能收到响应还要检查状态码和内容格式。重试前先分清请求能否重复执行，避免一次失败变成多次业务动作。
+\end{pitfall}
+图~\ref{fig:chapter-13-flow} 把请求、处理、响应与解析接在一起，每段都留出核对点。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {客户端请求};
+    \node[python flow step,text width=25mm,right=of a] (b) {服务端处理};
+    \node[python flow step,text width=25mm,right=of b] (c) {状态码与响应体};
+    \node[python flow step,text width=25mm,right=of c] (d) {解析并存储};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{先核对状态与内容格式，再把提取的字段交给后续处理。}
+  \label{fig:chapter-13-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+状态码、响应头和响应体要相互核对。200 也可能带来一份 HTML 提示页，解析 JSON 失败时先留住原响应。Session 使用结束及时关闭，流式响应也要走到明确的退出位置。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{http}{\linewidth}
+\caption{HTTP 请求与响应链路：先检查状态，再解析内容。}
+\label{fig:visual-ch13}
+\end{figure}
+
+% ===== END chapters/13-outline.tex =====
+
+
+\BookPart{扩展生态与工程化收束}
+  {程序最挑的环境，往往就是离开开发者电脑之后的第一个环境。}
+  {\textbf{连接数据与界面。} 了解数据库连接和事务，用参数绑定处理输入，并把业务规则从按钮回调中拆出来，方便独立验证。
+
+   \textbf{把表变成可核对的结果。} 用 NumPy 处理数组，用 Pandas 清理和汇总记录，再用 Matplotlib 出图。导出工作簿后复核缺失值、行数和统计口径。
+
+   \textbf{在新环境中重走安装。} 声明依赖和构建配置，生成并安装 wheel，核对命令入口，再了解如何用 Docker 固定运行环境。}
+  {交付的起点，是另一台机器上的第一次运行。}
+
+% ===== chapters/14-outline.tex =====
+\chapter{数据库交互实战}
+\label{ch:14-outline}
+
+数据库连接成功并不等于数据写入正确。事务、约束和读回结果共同构成验收依据；异常时还应保证回滚和资源释放。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 14 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {数据库连接}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {对象与表}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {安全与连接池}
+      };
+  \end{tikzpicture}
+  \caption*{连接、查询、事务及资源释放。}
+\end{figure}
+
+
+\section{MySQL 与 MongoDB 基础}
+
+数据库连接像办一张带权限的借阅卡。连接参数确定连到哪里、用谁的身份，
+查询再限定取哪份记录。关系库把记录放在约定的表中，MongoDB 用文档组织字段。
+
+将地址和凭据交给环境变量，库名和集合名在演示环境里先准备好。
+下面列出两种客户端的连接入口。运行前安装 PyMySQL 与 PyMongo，并配置实际测试库。
+连接能够建立只是第一步，业务查询还要核对字段、索引和超时。
+
+
+\begin{lstlisting}[title={\code{external_databases.py}}]
+import os
+
+import pymongo
+import pymysql
+
+# 凭据从当前运行环境读取。
+with pymysql.connect(
+    host=os.environ["MYSQL_HOST"],
+    user=os.environ["MYSQL_USER"],
+    password=os.environ["MYSQL_PASSWORD"],
+    database=os.environ["MYSQL_DATABASE"],
+    connect_timeout=5,
+) as connection:
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT 1")
+        print(cursor.fetchone()[0])
+
+# 客户端退出上下文时关闭连接资源。
+with pymongo.MongoClient(
+    os.environ["MONGO_URI"], serverSelectionTimeoutMS=5000
+) as client:
+    print(client.admin.command("ping")["ok"])
+\end{lstlisting}
+
+\textbf{运行条件}\enspace 需要运行中的测试数据库及已配置的环境变量。本次完成代码语法检查，连接结果须在测试库中复核。
+
+
+\section[SQLAlchemy思想]{SQLAlchemy（ORM）思想}
+
+ORM 像在表和对象之间放一位翻译。类描述字段，实例代表一条记录，
+Session 组织操作与事务。翻译仍然要按 SQL 和数据库约束工作，
+遇到复杂查询时，可把生成的 SQL 也拿出来看。
+
+下面用 SQLite 跑同一套 ORM 思路，不需要额外服务。
+\code{Session.begin()} 成功离开时提交，失败时回滚，
+重新开会话再读一次，就能核对数据已经保存。
+
+
+\begin{lstlisting}[title={\code{orm_note.py}}]
+from sqlalchemy import String, create_engine, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Note(Base):
+    __tablename__ = "notes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String, unique=True)
+
+
+engine = create_engine("sqlite+pysqlite:///:memory:")
+Base.metadata.create_all(engine)
+# 提交后换一个会话读取。
+with Session(engine) as session, session.begin():
+    session.add(Note(name="notes.md"))
+with Session(engine) as session:
+    note = session.scalar(select(Note).where(Note.name == "notes.md"))
+    print(note.name)
+engine.dispose()
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+notes.md
+\end{lstlisting}
+
+\par
+
+
+\section{安全与连接池}
+
+连接池像门口可轮借的钥匙，使用完就及时归还。
+让连接、游标和事务各有清楚的退出路径，错误时回滚，
+避免下一段代码接着处理一份未结束的事务。
+
+用户输入通过驱动参数传入。表名、列名这类 SQL 结构要由程序的允许列表决定，
+不能用字段值占位符代替。下面继续用 SQLite 核对带引号的输入，
+同样的思路再迁移到其他驱动对应的参数写法。
+
+\subsection*{动手｜用带引号的输入检验参数绑定}
+
+采用第 10 章的 SQLite 做一个本地演练。文件名里带撇号时，最容易看出字符串拼接会把数据搅进语句。参数绑定把 SQL 和输入分开，数据库只按字段值比较。
+
+\begin{lstlisting}[title={\code{bind_query.py}}]
+from contextlib import closing
+import sqlite3
+
+with closing(sqlite3.connect(":memory:")) as db:
+    # 用带撇号的文件名核对绑定行为。
+    name = "O'Brien.md"
+    db.execute("CREATE TABLE files (name TEXT)")
+    db.execute("INSERT INTO files VALUES (?)", (name,))
+
+    # 语句结构和用户输入分别交给驱动。
+    row = db.execute(
+        "SELECT name FROM files WHERE name = ?", (name,)
+    ).fetchone()
+    print(row[0])
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 脚本应取回 O'Brien.md。这里的问号占位符是 sqlite3 的写法，换数据库驱动时按它的文档选择参数样式。
+
+\begin{myunderstanding}
+连接负责通信，事务负责一组改动的成败，ORM 负责对象与表的映射。每层都有自己的退出路径。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+先在参数绑定处停下看输入，再检查查询结果。连接测试只验证服务可达，业务查询还要看数据和事务。
+\end{pycharmpractice}
+
+\begin{pitfall}
+参数占位符用于字段值，表名和列名要由程序控制。换数据库驱动时按其文档选择参数样式。
+\end{pitfall}
+图~\ref{fig:chapter-14-flow} 标出事务的分界，异常路径要回到清楚的回滚位置。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {取得连接};
+    \node[python flow step,text width=25mm,right=of a] (b) {开始事务};
+    \node[python flow step,text width=25mm,right=of b] (c) {执行 SQL};
+    \node[python flow step,text width=25mm,right=of c] (d) {提交或回滚};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{一组改动成功时提交，异常路径负责回滚并归还连接。}
+  \label{fig:chapter-14-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+可把唯一约束当成最后一层核对。先查询再插入仍可能遇到并发冲突，冲突后该重试、读取已有记录还是报错，要由业务语义决定。参数化保护字段值，表名和列名则由程序自己的允许范围来选。
+
+% ===== END chapters/14-outline.tex =====
+
+
+% ===== chapters/15-outline.tex =====
+\chapter{GUI 与本地工具开发}
+\label{ch:15-outline}
+
+界面负责接收输入与展示结果，业务层负责校验和处理。把两者分开，才能独立测试规则，并避免按钮回调承担过多职责。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 15 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {窗口和事件}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {业务逻辑}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {界面与测试}
+      };
+  \end{tikzpicture}
+  \caption*{事件回调连接界面输入与独立业务函数。}
+\end{figure}
+
+
+\section{PyQt / Tkinter 入门}
+
+窗口像一张带按钮的工作台。布局决定东西放在哪里，事件循环等用户动作，
+回调只在动作到来时执行。先用标准库 Tkinter 做最小输入窗口，
+PyQt 则把同样的链路组织成控件、信号和槽。
+
+按钮里做耗时下载会让界面失去响应。可把业务处理放进独立函数，
+需要后台执行时再用线程或任务把结果交回界面线程。
+下面先只接输入和显示，运行需要能打开窗口的桌面环境。
+
+
+\begin{lstlisting}[title={\code{window_demo.py}}]
+import tkinter as tk
+from tkinter import ttk
+
+
+def greet():
+    # 回调只取输入并更新显示。
+    text = entry.get().strip()
+    result.set(f"你好，{text}" if text else "请先输入名字")
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("笔记问候")
+    entry = ttk.Entry(root)
+    entry.pack(padx=16, pady=8)
+    result = tk.StringVar(value="等待输入")
+    ttk.Button(root, text="问候", command=greet).pack()
+    ttk.Label(root, textvariable=result).pack(pady=8)
+    root.mainloop()
+\end{lstlisting}
+
+\textbf{运行条件}\enspace 需要可显示窗口的桌面环境。本次完成代码语法检查，窗口操作须在桌面环境中复核。
+
+
+\section{逻辑与界面分离}
+
+将界面当舞台，处理规则当剧本。用户点按钮时，
+回调把输入交给函数，再把返回结果放到控件上。
+这样搜索规则能在终端里先验证，换一个界面也能沿用。
+
+下面的函数只依赖传入的数据，测试时可以直接给列表和查询词。
+接到窗口以后，在回调设置断点，先核对输入，再单步进入处理函数。
+
+\subsection*{动手｜先跑通脱离窗口的处理函数}
+
+窗口像舞台，搜索逻辑才是剧本。先把处理函数写到能单独运行，再让按钮把输入框的值交给它。以后换成命令行或者另一个窗口时，同一个搜索结果还能原样核对。
+
+\begin{lstlisting}[title={\code{search_titles.py}}]
+def search_titles(titles, query):
+    # 界面传来的输入先去空格，再统一比较大小写。
+    key = query.strip().casefold()
+    return [title for title in titles if key in title.casefold()]
+
+
+# 没有窗口时也可以核对搜索结果。
+if __name__ == "__main__":
+    titles = ["notes.md", "todo.md", "old_notes.md"]
+    print(search_titles(titles, " NOTES "))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 独立运行应输出 notes.md 和 \code{old_notes.md}。把查询改成带多余空格的字符串，结果应一致。GUI 的回调只负责取输入、调用函数和显示返回值。
+
+\begin{myunderstanding}
+界面收输入并展示结果，业务函数处理规则。让函数能脱离窗口运行，测试和复用会顺很多。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在按钮回调设置断点，先看控件读出的值，再单步进入业务函数，最后核对返回结果怎样显示。
+\end{pycharmpractice}
+
+\begin{pitfall}
+耗时工作放进界面回调会堵住事件循环。后台任务完成后，要按框架约定把更新交回界面线程。
+\end{pitfall}
+图~\ref{fig:chapter-15-flow} 把输入送到业务函数，再把结果送回显示层。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {用户输入};
+    \node[python flow step,text width=25mm,right=of a] (b) {界面回调};
+    \node[python flow step,text width=25mm,right=of b] (c) {业务函数};
+    \node[python flow step,text width=25mm,right=of c] (d) {更新显示};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{界面把输入交给业务函数，再把结果显示在控件中。}
+  \label{fig:chapter-15-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+窗口关闭也是一次退出流程。正在进行的任务需要知道如何结束，错误要回到界面上让使用者看见。业务层可独立测试（图~\ref{fig:visual-ch15}）；随后，再逐项走一遍输入、取消、重复提交和重新打开程序的路径。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{architecture}{\linewidth}
+\caption{界面与 API 共用业务规则，持久化层管理数据与事务。}
+\label{fig:visual-ch15}
+\end{figure}
+
+% ===== END chapters/15-outline.tex =====
+
+
+% ===== chapters/16-outline.tex =====
+\chapter[数据处理与可视化初探]{数据处理与可视化初探（边界限定）}
+\label{ch:16-outline}
+
+图表应当能追溯到输入数据。清洗、分组与导出时，持续核对行数、缺失值、标签和单位，确保表格与图形表达同一套统计口径。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 16 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {数组与表格}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {图表与导出}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {Excel 自动化}
+      };
+  \end{tikzpicture}
+  \caption*{数组与表格处理、图表生成及工作簿导出。}
+\end{figure}
+
+
+\section{Pandas 与 NumPy 极简入门}
+
+NumPy 数组像摆好形状的格盘，shape 说明格子怎样排列，dtype 约定存放的数值类型。
+Pandas 在列和索引上增加名字，适合从 CSV 走到按组汇总。
+先检查表头和行数，再决定哪些列转换、哪些缺失值保留。
+
+空白和零在业务上可能含义不同。\code{size} 数记录，\code{count} 只数有值的项，
+求和前先说明缺失值的处理口径。下面用三行数据把这几个数字对上，
+再把汇总表交给图表和办公自动化。
+
+\subsection*{先看数组的形状}
+
+先给 NumPy 一张两行两列的小表，指定整数类型。
+shape 留下形状，沿指定轴求和得到每列的结果。
+基础切片可能共享底层数据，需要独立修改时，应明确调用 copy（图~\ref{fig:visual-ch16}）。
+
+
+\begin{lstlisting}[title={\code{array_shape.py}}]
+import numpy as np
+
+# shape 说明两行两列，axis=0 沿行方向汇总。
+values = np.array([[1, 2], [3, 4]], dtype=np.int64)
+print(values.shape)
+print(values.sum(axis=0).tolist())
+
+# 基础切片共享数据，复制后再独立修改。
+selected = values[:, :1].copy()
+selected[0, 0] = 9
+print(values[0, 0])
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 三行输出应为 \code{(2, 2)}、
+\code{[4, 6]} 和 \code{1}。副本的修改没有写回原数组。
+
+\subsection*{动手｜从 CSV 样本得到可核对的汇总}
+
+先给报表准备一份只有三行的样本。缺失耗时留在表里，只有有效耗时参与求和。统计时同时看记录数和有效值数量，这样一眼就能发现某组还有没填的数据。
+
+\begin{lstlisting}[title={\code{sync_summary.py}}]
+from io import StringIO
+
+import pandas as pd
+
+# 用带缺失值的小表核对统计口径。
+sample = StringIO("team,seconds\nteam-a,2\nteam-a,\nteam-b,3\n")
+table = pd.read_csv(sample)
+
+# size 算行数，count 算有值的记录数。
+summary = table.groupby("team", as_index=False).agg(
+    rows=("seconds", "size"),
+    valid=("seconds", "count"),
+    total=("seconds", "sum"),
+)
+row = summary.loc[summary["team"] == "team-a"].iloc[0]
+print(len(table), row["rows"], row["valid"], row["total"])
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 运行前安装 pandas。输入是三行，输出中 team-a 有两条记录、一个有效耗时，耗时和为 2.0。图表章节和项目三可以复用这张汇总表。
+
+\section{图表生成}
+
+Figure 像整张画布，Axes 是画布上负责一个坐标系的区域。
+先用 \code{subplots()} 拿到它们，再通过 Axes 设置曲线、坐标轴和图例。
+同一份汇总表用折线图看变化，用柱状图看分组比较。
+
+导出时保留清楚的轴标签和单位。PDF 可保存矢量图形，位图内容仍受自身分辨率影响。
+下面在无界面的后端生成一页两图，输出位置就在脚本运行目录。
+
+
+\begin{lstlisting}[title={\code{draw_report.py}}]
+from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")  # 自动生成报表时使用无界面后端。
+import matplotlib.pyplot as plt
+
+days = [1, 2, 3]
+counts = [2, 4, 3]
+figure, axes = plt.subplots(1, 2, figsize=(7, 3), layout="constrained")
+axes[0].plot(days, counts, marker="o", label="synced")
+axes[0].set(xlabel="Day", ylabel="Files")
+axes[0].legend()
+axes[1].bar(["A", "B"], [5, 4])
+axes[1].set(xlabel="Team", ylabel="Files")
+figure.savefig("report.pdf")
+plt.close(figure)  # 批量生成时及时释放画布。
+print(Path("report.pdf").is_file())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+True
+\end{lstlisting}
+
+\par
+
+
+\section{办公自动化}
+
+工作簿像一个文件夹，工作表是里面的表格页。openpyxl 可以读写单元格和样式，
+先约定表头，再逐行追加汇总结果，保存后重新打开核对。
+
+公式单元格的计算依赖表格软件，openpyxl 本身不计算公式。
+需要在 Python 端核对的统计，先算出数值再写入。
+下面把固定的两组汇总写进临时工作簿，读回来验证总行数和最后一个值。
+
+
+\begin{lstlisting}[title={\code{write_workbook.py}}]
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from openpyxl import Workbook, load_workbook
+
+with TemporaryDirectory() as folder:
+    path = Path(folder) / "report.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Summary"
+    sheet.append(["team", "files"])
+    sheet.append(["A", 5])
+    sheet.append(["B", 4])
+    workbook.save(path)
+    workbook.close()
+
+    # 重新读文件，核对表头后的两行。
+    restored = load_workbook(path, read_only=True)
+    print(restored["Summary"].max_row, restored["Summary"]["B3"].value)
+    restored.close()
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+3 4
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+先明确缺失值、重复项和分组口径，再生成图表。图好不好看之前，先把表里的数对清楚；项目三样本的行数与有效值计数见图~\ref{fig:visual-quality}。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在导出前设置断点，核对 DataFrame 的 shape、列名和几行样本，再打开导出的工作簿查看结果。
+\end{pycharmpractice}
+
+\begin{pitfall}
+字符串列里的空白、真正缺失值和零可能有不同含义。清洗前保留原始输入，规则写在可重复执行的函数里。
+\end{pitfall}
+图~\ref{fig:chapter-16-flow} 串起报表步骤，后一步使用前一步核对过的结果。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {读入样本};
+    \node[python flow step,text width=25mm,right=of a] (b) {清洗并核对};
+    \node[python flow step,text width=25mm,right=of b] (c) {按组汇总};
+    \node[python flow step,text width=25mm,right=of c] (d) {出图与导出};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{每步核对行数和统计口径，图表使用最终汇总表作为输入。}
+  \label{fig:chapter-16-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+分组前先核对索引与列。给 DataFrame 赋值时，可明确用 loc 指定目标，避免链式赋值让修改意图变得模糊。求和之前还要决定全缺失组怎样表达，表中的缺失与图上的显示要能互相说明。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{array}{\linewidth}
+\caption{基础切片可共享底层数据，复制后修改不影响原数组。}
+\label{fig:visual-ch16}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\BookImage{quality}{\linewidth}
+\caption{四行输入按事件编号去重后剩三条，其中两条具有有效耗时。}
+\label{fig:visual-quality}
+\end{figure}
+
+% ===== END chapters/16-outline.tex =====
+
+
+% ===== chapters/17-outline.tex =====
+\chapter{工程化收束：打包与部署}
+\label{ch:17-outline}
+
+交付需要摆脱开发机器上的隐含条件。包能安装、入口能运行、输入能复现，才说明路径、依赖与配置已被明确记录。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 17 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {项目元数据}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {构建与安装}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {容器运行}
+      };
+  \end{tikzpicture}
+  \caption*{元数据与依赖声明连接源码、构建产物和运行环境。}
+\end{figure}
+
+
+\section{项目依赖与构建}
+
+将项目元数据想成包裹上的运单。名称、版本和运行依赖告诉使用者里面是什么，
+构建系统再根据配置产出可安装的 wheel。项目里的包目录是源码，
+安装后的环境才是用户真正运行的现场。
+
+\code{pyproject.toml} 的构建依赖、运行依赖和工具配置各有位置。
+下面先把最小包构建好，再离开源码目录测试导入。
+版本约束根据实际支持范围声明，验收时把解释器和构建结果记下来。
+
+\subsection*{动手｜把一个小包构建成 wheel}
+
+将构建当作一次打包寄送。先把包名、版本和构建后端写清，再检查收件人能不能在干净环境里安装。
+样例放在项目压缩包的 \code{examples/ch17}，里面有下面这份配置和一个最小包。
+
+\begin{lstlisting}[language={},title={\code{pyproject.toml}}]
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "notes-demo"
+version = "0.1.0"
+description = "A small package for Python notes"
+
+[tool.setuptools]
+packages = ["notes_demo"]
+\end{lstlisting}
+
+在样例目录运行 \code{python -m pip wheel --no-deps . -w dist}，再在干净环境中安装（图~\ref{fig:visual-ch17}）
+\code{dist} 里的 wheel。换到样例目录以外运行 \code{python -m notes_demo}，
+应看到「笔记：notes.md」。换目录能避开源码目录碰巧被直接导入的情况。
+
+\section{Docker 极简部署}
+
+容器像把运行工具一起放进一个可重复准备的工位。
+镜像描述基础环境和安装步骤，容器启动时再执行命令。
+先在本机把样例 wheel 跑通，再把同一份包复制到镜像里安装。
+
+下面 Dockerfile 放在第 17 章样例根目录，构建上下文中需先准备好
+\code{dist} 里的 wheel。执行 \code{docker build -t notes-demo .}，
+随后用 \code{docker run --rm notes-demo} 核对输出。
+基础镜像和依赖版本在发布时一起记录，文件输入则通过明确的挂载路径传入。
+
+\begin{myunderstanding}
+构建把源码变成安装包，安装把它放进环境，运行再检验入口。三步分别记录结果，才能发现源码路径带来的误判。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+用新建的虚拟环境安装 wheel，再把工作目录切到源码外。这样可以核对导入的包来自安装位置。
+\end{pycharmpractice}
+
+\begin{pitfall}
+在源码目录里运行成功，可能只是刚好导入了本地文件。交付前换目录，并核对包的 \code{__file__}。
+\end{pitfall}
+图~\ref{fig:chapter-17-flow} 给交付过程留下四个核对点，换环境时逐步重走一遍。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {源码与配置};
+    \node[python flow step,text width=25mm,right=of a] (b) {构建 wheel};
+    \node[python flow step,text width=25mm,right=of b] (c) {安装到新环境};
+    \node[python flow step,text width=25mm,right=of c] (d) {运行与核对};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{构建、安装与运行各有产物，交付时逐步检查。}
+  \label{fig:chapter-17-flow}
+\end{figure}
+
+\subsection*{容器构建文件}
+下面文件与 \code{pyproject.toml} 放在同一目录，先生成 \code{dist} 里的 wheel。
+本次已检查文件内容，容器构建与启动需要 Docker 环境复核。
+\begin{lstlisting}[language={},title={\code{Dockerfile}}]
+# 在本章样例目录构建，先生成 dist 里的 wheel。
+FROM python:3.12-slim
+WORKDIR /app
+COPY dist/ /wheels/
+RUN python -m pip install --no-cache-dir /wheels/*.whl
+CMD ["python", "-m", "notes_demo"]
+\end{lstlisting}
+
+\subsection*{进阶边界演练}
+构建完成后，可保留 wheel 的名称与版本，再换工作目录、换新环境核对。程序若需要随包分发的数据文件，还要检查它们确实进入产物。最后把启动命令、输入约定和输出位置写在一起。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{package}{\linewidth}
+\caption{源码构建为 wheel，再由新环境安装并验证入口。}
+\label{fig:visual-ch17}
+\end{figure}
+
+% ===== END chapters/17-outline.tex =====
+
+
+\BookPart{项目实战}
+  {演示总挑最乖的输入。验收记得请重名联系人、坏链接和空表也来坐坐。}
+  {\textbf{通讯录与批量下载。} 先完成能新增、查询、修改和删除的本地通讯录，验证重启后数据仍可读。再做多线程下载器，记录每个任务的成功、超时或失败结果。
+
+   \textbf{清洗数据并生成报表。} 统一 Excel 或 CSV 的字段与缺失值口径，输出清洗表、工作簿和图，并核对各文件中的关键数字。
+
+   \textbf{完成综合挑战。} 从 PyQt 资料管理器与 FastAPI 本地服务中选择一条路线，明确业务规则与数据存储方式，用正常输入和错误输入验收。}
+  {把演示走过的路，留给下一位运行程序的人。}
+
+% ===== projects/stages.tex =====
+\chapter*{项目一 本地通讯录管理系统}
+\addcontentsline{toc}{chapter}{\protect\numberline{}项目一 本地通讯录管理系统}
+
+\textbf{阶段一｜巩固基础（CLI + 函数 + 文件）}
+
+从能添加、查询、修改和删除联系人开始。数据用 JSON 持久化，命令行只收参数和显示结果，
+联系人规则与文件存储各放一处。核心代码分成命令入口、联系人操作和 JSON 读写三段。
+
+验收时，添加一条联系人后退出程序，再次启动仍能查到它。还应用损坏的 JSON
+复现一次读入错误，并检查程序给出的提示。扩展练习留给按姓名检索与导出。
+
+\section*{验收清单}
+用三个动作做首轮验收。先新增一条记录并核对 JSON，再重启应用核对查询，
+最后在副本中放入损坏的 JSON，确认程序报出可定位的错误，文件内容也能留给排查。
+
+\section*{从需求落到文件}
+该项目按单用户命令行工具设计。联系人以姓名为键，电话作为文本保存。
+同名添加先报错，删除不存在的联系人也给出明确反馈。
+入口解析参数，读写函数负责 JSON，更新操作先在内存里完成，再写到同目录的临时文件。
+完整内容写好后用替换操作发布，读入失败时原文件留给排查。
+
+源码在 \code{projects/01-contacts/contacts.py}。依次运行下面的命令，
+可检查新增、更新电话、重新读取和删除。演示电话只是测试字段。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 创建演示记录。
+python contacts.py --file demo.json add Xiaoxue 0000
+# 修改已有联系人的电话。
+python contacts.py --file demo.json update Xiaoxue 1234
+# 再次启动，从 JSON 里读取。
+python contacts.py --file demo.json list
+# 删除并保存。
+python contacts.py --file demo.json remove Xiaoxue
+\end{lstlisting}
+\Needspace{17\baselineskip}
+\section*{核心代码}
+\begin{lstlisting}[title={\code{contacts.py 中的读取}}]
+def read_contacts(path):
+    # 文件不存在时按首次运行处理。
+    if not path.exists():
+        return {}
+    records = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(records, dict) or not all(
+        isinstance(name, str) and isinstance(phone, str)
+        for name, phone in records.items()
+    ):
+        raise ValueError("通讯录必须是姓名到电话的字典")
+    return records
+\end{lstlisting}
+对同名联系人再次执行添加，程序应以非零状态结束，JSON 中的原记录仍在。
+接着把文件副本写成坏 JSON，核对错误消息与文件内容，确认错误现场还保留着。
+
+\chapter*{项目二 多线程网页图片/表格批量下载器}
+\addcontentsline{toc}{chapter}{\protect\numberline{}项目二 多线程网页图片/表格批量下载器}
+
+\textbf{阶段二｜系统与并发（Pathlib + Threading）}
+
+先准备一组获准下载的资源地址。入口把任务放进 \code{queue}，
+工作线程用 \code{requests} 请求资源，再用 \code{Path} 整理输出路径。
+核心代码按任务、下载、写入和日志拆开。
+
+验收用受控地址各复现一次成功、超时与失败。运行结束后，对照保存文件和日志，
+确认每项任务都有结果。扩展练习是调整工作线程数并观察同一输入下的表现。
+
+\section*{验收清单}
+用本机测试服务验收下载流程，分别准备正常响应、延迟响应和失败状态码。
+每项任务都要有可追溯的记录，失败文件不能出现在成功清单里。
+
+\section*{从清单到工作线程}
+将明确给定的资源地址写进一行一个 URL 的文本文件。
+主线程给每项编号并入队，每个工作线程使用自己的 Session。
+响应检查通过后，内容先写入 \code{.part} 临时文件，完整下载再改为最终文件名。
+失败记录带着编号回到结果队列，主线程按编号汇总。
+
+源码在 \code{projects/02-downloader/download.py}。在资源地址已确认可下载的前提下运行
+\par\noindent\code{python download.py --urls urls.txt --output downloads}\par 
+返回 JSON 中每项包含编号、成功与否，以及保存名或错误消息。
+目标文件已经存在时，这一项会报告失败，便于核对重跑的影响。
+
+\section*{核心代码}
+\begin{lstlisting}[title={\code{download.py 中的任务收尾}}]
+from queue import Queue
+
+tasks = Queue()
+tasks.put("notes.md")
+item = tasks.get()
+try:
+    # 先用一条任务核对确认完成的路径。
+    print("处理", item)
+finally:
+    tasks.task_done()
+tasks.join()
+\end{lstlisting}
+上面的单任务演练输出「处理 notes.md」。多线程下载过程在项目源码中。
+用本机测试服务分别返回成功和失败状态，确认成功文件内容能读回，
+失败项有记录，临时文件清理后不会被算作成功产物。
+
+\chapter*{项目三 Excel/CSV 自动化数据清洗与报表生成}
+\addcontentsline{toc}{chapter}{\protect\numberline{}项目三 Excel/CSV 自动化数据清洗与报表生成}
+
+\textbf{阶段三｜数据与报表（Pandas + 自动化）}
+
+读入 Excel 或 CSV，处理缺失值和重复行，再做分组汇总。图表使用同一份汇总表。
+
+\section*{验收清单}
+用含缺失值与重复行的样本，核对读入行数、去重后的行数和各组统计。
+
+\section*{先写清洗规则，再写报表}
+将输入约定成事件表，每条有 \code{event_id}、\code{team} 和 \code{seconds}。
+同一事件编号重复时留首条，无法转换的耗时保留为缺失，
+负耗时则报错。分组表同时输出事件数、有效耗时条数和耗时总和，
+整组都缺失时总和继续保留缺失。
+
+在 \code{projects/03-report} 下运行命令，输出目录应为新目录。
+传入 \code{.xlsx} 时读取第一张工作表。所有产物写完后才发布结果目录。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 一份样本生成清洗表、工作簿和图。
+python report.py --input sample.csv --output result
+\end{lstlisting}
+
+\section*{核心代码}
+\begin{lstlisting}[title={\code{report.py 中的汇总}}]
+# 只让同一事件参与一次统计。
+cleaned = table.drop_duplicates("event_id").copy()
+cleaned["seconds"] = pd.to_numeric(cleaned["seconds"], errors="coerce")
+summary = cleaned.groupby("team", as_index=False).agg(
+    events=("event_id", "size"),
+    valid=("seconds", "count"),
+    total=("seconds", lambda values: values.sum(min_count=1)),
+)
+\end{lstlisting}
+样本四行应清洗成三行。A 组有两个事件、一个有效耗时，总和为 2。
+核对工作簿与 PDF 柱状图，再添加一组耗时全缺失的记录，比较表中的缺失值和图上的显示。
+
+\chapter*{综合挑战（二选一）}
+\addcontentsline{toc}{chapter}{\protect\numberline{}综合挑战}
+
+\textbf{阶段四｜综合挑战}
+
+\section*{路线 A（本地应用） PyQt 个人学习资料管理器}
+\addcontentsline{toc}{section}{\protect\numberline{}路线 A PyQt 资料管理器}
+
+用 PyQt 搭界面，SQLite 存资料索引，文件操作放进可单独调用的函数。
+核心代码分为界面事件、资料服务与存储。验收时新增一条资料、搜索它、重启后再查一次，
+再用 \code{pytest} 测试业务函数。扩展练习是为资料加标签。
+
+\section*{路线 B（网络服务） FastAPI 本地 API 服务}
+\addcontentsline{toc}{section}{\protect\numberline{}路线 B FastAPI 本地服务}
+
+让 FastAPI 接收 JSON，在本地 SQLite 保存数据。核心代码分为接口、校验和存储，
+用接口测试检查一次创建、一次查询和一次无效输入。扩展练习留给分页查询。
+
+\section*{验收清单}
+路线 A 的验收从纯业务函数开始，随后检查界面事件和重启后的数据库记录。
+路线 B 用同一份样本检查接口返回、无效输入和重新启动后的读取。两条路线都要记录运行命令与预期输出。
+
+\section*{共享一层业务存储}
+两条路线共用 \code{projects/04-library/storage.py}，SQLite 只保存标题和资料路径。
+每次操作各开连接，写入在事务中完成，离开后关闭。
+资料路径设为唯一，同一文件再次登记会得到明确的重复反馈。
+
+路线 A 的界面在 \code{gui.py}。安装 PyQt6 后运行 \code{python gui.py}，
+选择资料文件，输入标题关键字筛选。按钮回调只负责读取选择结果、调用存储和刷新列表。
+业务层可以脱离界面测试，界面本身仍需在桌面环境中检查输入与反馈。
+
+路线 B 的接口在 \code{api.py}。安装 FastAPI 与 Uvicorn 后，在该目录运行
+\par\noindent\code{python -m uvicorn api:create_app --factory}\par 
+启动后在本地服务的 \code{/docs} 页面发送请求。
+创建成功返回 201，重复路径返回 409，缺失记录返回 404，
+字段无效由模型校验给出 422。
+
+\section*{核心代码}
+\begin{lstlisting}[title={\code{api.py 中的查询}}]
+@app.get("/notes/{note_id}")
+def get_note(note_id: int):
+    # 接口层把存储层的缺失结果转成 HTTP 状态。
+    note = library.get(note_id)
+    if note is None:
+        raise HTTPException(404, "资料不存在")
+    return note
+\end{lstlisting}
+用同一条资料先新增、再查询，再重建业务对象读取，核对持久化。
+接口测试额外检查空白输入与重复路径。
+扩展练习从标签字段开始，先定迁移与查询规则，再把它接进界面或 API。
+
+% ===== END projects/stages.tex =====
+
+
+\appendix
+
+% ===== backmatter/appendices.tex =====
+\chapter{第三方库安装与国内镜像加速配置}
+
+安装软件包前，先确认实际使用的解释器。终端能用的库，未必在 PyCharm 选定的解释器里。
+所以安装之前，先看路径，再看版本，最后才看下载来源。
+这几个动作看似慢半步，却能省下很多“装过了为什么还是找不到”的来回。
+
+\section{先确认安装位置}
+
+下面的诊断脚本只读取信息。运行后，将解释器路径和 pip 显示的路径放在一起比较。
+如果两边属于不同环境，就用目标解释器的完整路径执行安装命令。
+\begin{lstlisting}[title={\code{inspect_install.py}}]
+import importlib.util
+import sys
+
+# 先找解释器，再看当前环境能否定位包。
+print("Python:", sys.executable)
+print("Version:", sys.version.split()[0])
+spec = importlib.util.find_spec("requests")
+print("requests:", None if spec is None else spec.origin)
+\end{lstlisting}
+
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 用本次运行的解释器调用 pip。
+python -m pip --version
+# 已安装包的版本和位置。
+python -m pip show requests
+# 检查当前依赖关系。
+python -m pip check
+\end{lstlisting}
+
+安装问题应区分为两类。找不到模块时查解释器和安装位置，
+导入时提示依赖版本冲突则查依赖关系。
+\code{pip check} 通过后，还要跑项目自己的最小例子，确认实际行为也符合约定。
+
+\section{新环境从一份小清单开始}
+
+为练习建立 \code{.venv}，把自己的代码留在环境目录外。
+在 Windows PowerShell 中可以直接调用环境里的解释器，
+让命令指向哪里一目了然。下面命令在项目目录执行。
+\begin{lstlisting}[language={},title={\texttt{PowerShell}}]
+# 创建隔离环境。
+python -m venv .venv
+# 核对环境里的 Python 和 pip。
+.\.venv\Scripts\python.exe --version
+.\.venv\Scripts\python.exe -m pip --version
+# 安装本书示例需要的库。
+.\.venv\Scripts\python.exe -m pip install -r requirements-demo.txt
+\end{lstlisting}
+
+macOS 与 Linux 的环境解释器通常在 \code{.venv/bin/python}。
+环境激活以后可以简写为 \code{python}，仍应用第一节的脚本核对一次。
+换机器或目录时，按依赖重新建立环境，项目代码与输入文件随项目一起迁移。
+具体环境结构可查
+\href{https://docs.python.org/3/library/venv.html}{venv 官方文档}。
+
+\section{下载来源要写清楚}
+
+需要临时换用镜像时，将来源写在这一次命令里。
+下面地址按清华镜像站的实际使用说明填写，执行前可以再打开链接核对。
+命令在终端中作为一行执行，书页内的视觉折行不增加新命令。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 只给本次安装指定来源。
+python -m pip install requests --index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+\end{lstlisting}
+
+想把设置留在当前环境里，先查配置来源，再决定写入范围。
+可记录改动前的值，随后用 \code{pip config debug} 查实际读取了哪些文件。
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 查看读取的配置文件和当前配置。
+python -m pip config debug
+python -m pip config list -v
+# 当前虚拟环境的配置位置由 --site 明确指定。
+python -m pip config --site set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+\end{lstlisting}
+
+镜像解决的是下载来源问题。Python 版本不受某个 wheel 支持、构建依赖缺失、
+或代码导入了同名本地文件，都还要沿各自路径排查。
+命令和配置规则分别见
+\href{https://mirrors.tuna.tsinghua.edu.cn/help/pypi/}{清华镜像站说明}与
+\href{https://pip.pypa.io/en/stable/topics/configuration/}{pip 配置文档}。
+
+\section{把一次安装变成能重建的记录}
+
+\begin{itemize}
+  \item \code{requirements-demo.txt} 保存本书示例使用的依赖。
+  \item \code{RUN_EXAMPLES.md} 记录运行入口与示例环境。
+  \item 第 17 章的项目配置说明包的元数据、运行依赖与构建约定。
+\end{itemize}
+
+\begin{lstlisting}[language={},title={\texttt{terminal}}]
+# 记录本次环境的实际安装结果。
+python -m pip freeze > requirements-tested.txt
+# 在另一个干净环境重装并核对。
+python -m pip install -r requirements-tested.txt
+python -m pip check
+\end{lstlisting}
+
+从全局环境导出时，可能把这次项目没用到的库一起带进去。
+因此可在专门的练习环境里保存清单。
+最后离开源码目录，再运行安装好的入口，检查导入的是哪一份包。
+
+\begin{pycharmpractice}
+先在项目设置里核对 Python Interpreter，再打开运行配置，检查脚本、解释器、
+参数和 Working directory。终端安装完成后，还要从 IDE 运行一次诊断脚本，
+把结果写进同一张环境记录。
+\end{pycharmpractice}
+
+\section{安装失败时的短路线}
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{看到的现象} & \textbf{排查动作}\\
+\midrule
+\code{No module named ...} & 核对解释器，再用同一个解释器执行 pip show。\\
+\code{No matching distribution} & 查看包名、Python 版本、平台与该库支持范围。\\
+构建 wheel 失败 & 读最早出现的构建错误，核对编译工具和构建依赖。\\
+下载超时或连接失败 & 核对实际使用的索引、网络与代理，再确认服务可达。\\
+\code{pip check} 报冲突 & 读出冲突的两端约束，回到干净环境复现依赖组合。\\
+安装成功仍导入错误 & 检查本地同名文件、工作目录与模块的实际来源。\\
+\bottomrule
+\end{tabularx}\par
+
+给每次安装问题保留三项记录，完整命令、最早的错误信息，以及解释器路径。
+再次求助时，这些比“安装失败了”的一句话更能让人接得上手。
+
+
+\section{资料与章节对照}
+
+下表按章节说明参考资料与内容的对应关系，便于查阅基础语法、容器机制及数据处理的延伸材料。
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.36\textwidth}
+                               >{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{资料} & \textbf{放进书稿的位置} \\
+  \midrule
+  《Python 编程：从入门到实践》（第 3 版） &
+    第 1 至 5 章对照变量、容器、条件、函数与类，第 7 章对照测试示例的组织方式。 \\[4pt]
+  《流畅的 Python》 &
+    第 2 章补名字绑定、序列、字典和集合，以及推导式与专用容器。
+    第 4 至 6 章对照作用域、装饰器和迭代协议。 \\[4pt]
+  《Python 高性能编程》 &
+    第 2 章用字典和集合一章核对查找思路，第 6 章补生成器的按需计算。
+    第 8、12 章分别对照性能分析与并发案例。 \\[4pt]
+  《Python 高手进阶之路》（套装全 10 册） &
+    使用套装中《Python 编程：从入门到实践》的字典、函数、类和测试内容，
+    对应第 2、4、5、7 章。 \\[4pt]
+  《Python 数据科学手册》 &
+    第 16 章从 NumPy 的数据类型过渡到 Pandas 的缺失值、聚合与分组，
+    再接 Matplotlib 出图。 \\[4pt]
+  《pandas+Numpy+matplotlib》笔记 &
+    第 16 章用于对照 NumPy 数组创建、形状和数据类型的入门顺序。 \\[4pt]
+  《matplotlib 数据可视化实战》 &
+    第 16.2 节对照子图、Figure 与 Axes 的写法，以及轴标签、图例和条形图设计。 \\
+  \bottomrule
+\end{tabularx}\par
+
+\section*{菜鸟教程与语义核对}
+
+\begin{itemize}
+  \item 从 \href{https://www.runoob.com/python3}{菜鸟教程 Python 3 入口}查语法。
+    第 2 章使用其\href{https://www.runoob.com/python3/python3-data-structure.html}{数据结构}
+    和\href{https://www.runoob.com/python3/python-comprehensions.html}{推导式}页面。
+    专用容器的细节对照\href{https://docs.python.org/3/library/collections.html}{Python 的 collections 文档}。
+  \item 第 3、6 章对照菜鸟教程的\href{https://www.runoob.com/python3/python3-errors-execptions.html}{错误和异常}、
+    \href{https://www.runoob.com/python3/python3-iterator-generator.html}{迭代器与生成器}
+    和\href{https://www.runoob.com/python3/python-decorators.html}{装饰器}。
+  \item 第 12、13 章分别对照菜鸟教程的
+    \href{https://www.runoob.com/python3/python-asyncio.html}{asyncio}
+    与\href{https://www.runoob.com/python3/python-requests.html}{requests}。
+    GIL 的语境见\href{https://docs.python.org/3/howto/free-threading-python.html}{Python 的自由线程说明}。
+  \item 第 17 章构建步骤对照
+    \href{https://packaging.python.org/en/latest/tutorials/packaging-projects/}{Python 打包用户指南}。
+\end{itemize}
+
+\section*{本版新增练习的核对资料}
+参数、异常、迭代与资源清理可对照
+\href{https://docs.python.org/3/tutorial/}{Python 官方教程}与
+\href{https://docs.python.org/3/library/}{标准库文档}。
+测试操作对照 \href{https://docs.pytest.org/en/stable/}{pytest 文档}，
+ORM 对照 \href{https://docs.sqlalchemy.org/}{SQLAlchemy 文档}。
+数据出图与工作簿操作分别对照
+\href{https://matplotlib.org/stable/}{Matplotlib 文档}、
+\href{https://openpyxl.readthedocs.io/}{openpyxl 文档}。
+接口测试对照 \href{https://fastapi.tiangolo.com/tutorial/testing/}{FastAPI 测试教程}。
+
+
+\chapter{PyCharm 高阶技巧}
+
+断点像一盏能挪动的灯，照亮的是程序走到这里时的现场。
+先选择能观察状态变化的断点，再确定需要检查的变量。
+同一段代码反复停在正确的地方，许多原本靠猜的行为就会自己显出来。
+
+\section{运行配置是一份可复现的说明}
+
+给常用脚本保存独立的运行配置，写清脚本路径、参数、工作目录和解释器。
+拿第 11 章举例，脚本是 \code{scan_log.py}，参数是
+\code{--input sample.log}，工作目录放在样例所在目录。
+环境变量也在配置中记录，重新运行时才能接回同一组条件。
+
+如果界面里选了正确解释器，但运行结果仍不对，可检查当前选中的配置是否属于另一个脚本。
+最终以 \code{sys.executable}、\code{Path.cwd()} 和实际参数为准。
+静态推断与运行时变量的区别见图~\ref{fig:appendix-ide}。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{type-info}{\linewidth}
+  \caption{编辑器提示反映静态推断，调试面板显示本次运行的类型与值。}
+  \label{fig:appendix-ide}
+\end{figure}
+
+\section{先找改变值的那一行}
+
+下面脚本只有三条输入。将断点放在相加之前，先看旧值，再单步执行，
+最后核对新值。这样很容易区分“即将执行的行”和“已经执行完的行”。
+\begin{lstlisting}[title={\code{debug_total.py}}]
+total = 0
+for value in [2, 3, 5]:
+    # 断点停在这里时，total 还是本次相加前的值。
+    total += value
+    print(value, total)
+
+# 输出应依次为 2 2、3 5、5 10。
+print("最终", total)
+\end{lstlisting}
+
+Step Over 适合先看当前函数的步骤，Step Into 用来进入自己想查看的调用，
+Step Out 执行到当前函数返回，再停回调用方。
+多层调用时，可在 Frames 中选中对应栈帧，再看那一层的参数和局部变量。
+
+\section{条件断点和监视表达式}
+
+循环次数较多时，可在断点属性中设置条件，避免每轮都暂停，
+例如只在 \code{value == 5} 时暂停。条件本身也会求值，表达式应保持简单，避免改变状态。
+监视表达式适合持续观察关键状态，例如 \code{len(tasks)} 或某个字段值。
+
+求值窗口适合核对一个表达式。读列表长度通常不会改变现场，
+调用 \code{pop()} 却会取走元素。遇到带副作用的方法，先确认是否真要执行，
+再决定放到脚本中复现还是在现场求值。
+操作细节可对照
+\href{https://www.jetbrains.com/help/pycharm/examining-suspended-program.html}{JetBrains 的运行现场检查说明}。
+
+\section{常用动作速查}
+
+下面列的是 Windows 默认键位中的常见绑定。读者可以在 Keymap 中按动作名称搜索，
+以当前方案为准。动作名称记住以后，换一套键位也能找回来。
+
+\begin{longtable}{@{}p{0.28\textwidth}p{0.26\textwidth}p{0.39\textwidth}@{}}
+\toprule
+\textbf{动作} & \textbf{常见绑定} & \textbf{用途}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{动作} & \textbf{常见绑定} & \textbf{用途}\\
+\midrule
+\endhead
+查找动作 & \code{Ctrl+Shift+A} & 直接按动作名找入口。\\
+全局搜索 & 双击 \code{Shift} & 找文件、设置和符号。\\
+查看类型 & \code{Ctrl+Shift+P} & 看表达式的推断类型。\\
+快速文档 & \code{Ctrl+Q} & 看签名、说明和定义信息。\\
+跳到声明 & \code{Ctrl+B} & 沿调用找到定义。\\
+查找用法 & \code{Alt+F7} & 看修改会影响哪些调用处。\\
+上下文操作 & \code{Alt+Enter} & 查看可用修复与意图操作。\\
+格式化 & \code{Ctrl+Alt+L} & 按项目代码样式整理。\\
+重命名 & \code{Shift+F6} & 让相关引用一起改名。\\
+切换断点 & \code{Ctrl+F8} & 在当前行设置或取消断点。\\
+查看断点 & \code{Ctrl+Shift+F8} & 查条件、异常断点和启用状态。\\
+Step Over & \code{F8} & 看当前函数的下一步。\\
+Step Into & \code{F7} & 进入选定的调用。\\
+Step Out & \code{Shift+F8} & 返回调用方继续观察。\\
+Evaluate Expression & \code{Alt+F8} & 核对当前栈帧中的表达式。\\
+Resume & \code{F9} & 继续到下一个暂停位置。\\
+\bottomrule
+\end{longtable}
+
+\section{异常断点把灯移到失败源头}
+
+错误在很深的调用里才被捕获时，可加一个指定类型的 Python 异常断点。
+第一次先停在异常抛出的位置，看看原始输入，再沿 Frames 回到自己的调用处。
+排查完就调整或关闭它，避免每次正常处理一个预期异常也被打断。
+
+断点始终不停时，检查四处，是否选了 Debug、断点有没有静音、
+运行配置是否指向这份文件，以及运行的代码是不是刚才编辑的版本。
+第 13 章的客户端还有超时，服务端在断点处停太久，会改变客户端看到的结果，
+所以也可把这件事记进复现步骤。
+
+\section{问题记录的必要信息}
+
+可保存一段最小输入、一张有当前栈帧与变量值的截图，
+再写一句“停在此行之前，值是什么”。截图可以删去与问题无关的目录和窗口，
+但保留代码行号、异常末行与必要的环境信息。
+读者和未来的自己，才有机会沿着同一条路走到这里。
+
+
+\chapter{常见报错字典}
+
+回溯记录了异常类型、调用路径及出错位置。先阅读末行，确认失败类型；再沿文件名和行号定位到项目代码，结合当时的输入缩小排查范围。
+
+这里的条目按现场分组。每条都有现象、原因、排查、修复和复验。
+“错误入口”是刻意保留的失败代码，旁边的修复版可以单独运行。
+源码分别在 \code{examples/appendixC}，错误入口用 \code{.py.txt} 保存，
+避免和正常脚本一起被误收集执行。
+
+\section{先把回溯读成路线图}
+
+先记住异常末行，再向上找最近一处属于自己项目的文件。
+如果异常经过包装，继续查看因果链里最初失败的位置。
+有时检测到错误的位置在下一行，语法问题还要向前核对括号、引号和缩进。
+
+如图~\ref{fig:appendix-diagnosis}，将问题先分到代码与数据、文件与环境、
+外部服务三层，再选具体动作。修复以后，原来失败的输入和原先正常的输入都要重跑。
+\begin{figure}[htbp]
+\centering
+\BookImage{diagnosis}{\linewidth}
+\caption{错误按代码与数据、文件与环境、外部服务三层定位。}
+\label{fig:appendix-diagnosis}
+\end{figure}
+
+\section*{排查记录清单}
+
+\begin{tabularx}{\textwidth}{@{}p{0.25\textwidth}X@{}}
+\toprule
+\textbf{记录项} & \textbf{写到什么程度}\\
+\midrule
+运行入口 & 脚本或命令、参数、工作目录与解释器路径。\\
+最小输入 & 能触发问题的最少记录，敏感数据换成同结构样本。\\
+完整回溯 & 保留异常类型、因果链以及自己代码的文件与行号。\\
+预期与实际 & 写出本来应该得到什么，以及现在真正出现什么。\\
+修复与复验 & 只改一个原因，再跑原输入和正常变体。\\
+\bottomrule
+\end{tabularx}\par
+
+\section{语法与名字}
+
+\Needspace{6\baselineskip}
+\subsection*{C01\enspace SyntaxError｜解释器还没开始运行}
+
+\CaseStep{现象}{把带提示符的交互代码整行粘进脚本，保存后立刻报语法错误。}
+
+\CaseStep{原因}{解析阶段无法把提示符当成合法语句。括号、引号或冒号缺失也会走到这里。}
+
+\CaseStep{排查}{先读文件名、行号和指示位置，再向前检查同一逻辑行。解析器标出的是发现问题的位置，根源可能在前一行。}
+
+\CaseStep{修复}{把交互提示符留在书页里，脚本只保存真正的语句。补齐结构后再运行。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_01_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+>>> print(2 + 3)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_01.py}}]
+# 修复后仍要核对原始需求。
+print(2 + 3)
+\end{lstlisting}
+
+\CaseStep{复验}{脚本应打印 5。原先的语法错误消失，程序才会进入实际执行。}
+
+\Needspace{6\baselineskip}
+\subsection*{C02\enspace IndentationError｜缩进层级没有接上}
+
+\CaseStep{现象}{函数定义下一行没有缩进，解释器提示需要一个缩进块。}
+
+\CaseStep{原因}{冒号开启了一个代码块，后面必须有属于它的语句。空行和注释不能单独承担这个块。}
+
+\CaseStep{排查}{打开编辑器的空白显示，检查四空格缩进和 Tab 是否混用，再看当前行应该属于哪个块。}
+
+\CaseStep{修复}{让函数体缩进到同一层。临时空实现可以写 pass，正式逻辑仍要补清楚。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_02_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+def add(a, b):
+return a + b
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_02.py}}]
+# 修复后仍要核对原始需求。
+def add(a, b):
+    # 函数体保持同一层四空格缩进。
+    return a + b
+
+print(add(2, 3))
+\end{lstlisting}
+
+\CaseStep{复验}{函数调用后输出 5。再改一个参数，确认返回语句仍在函数内部。}
+
+\Needspace{6\baselineskip}
+\subsection*{C03\enspace NameError｜这个名字还没有绑定}
+
+\CaseStep{现象}{打印 count 时，解释器说这个名字没有定义。}
+
+\CaseStep{原因}{名字拼错、赋值分支没有执行，或者使用位置早于赋值，都可能使当前作用域找不到它。}
+
+\CaseStep{排查}{回到赋值处，检查拼写、大小写与条件分支。断点里确认运行到当前行之前有没有建立绑定。}
+
+\CaseStep{修复}{先给本次流程需要的名字赋值，再使用。所有分支都要交代后续所需的值。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_03_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+print(book_count_missing)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_03.py}}]
+# 修复后仍要核对原始需求。
+# 先建立绑定，再交给后续语句。
+count = 3
+print(count)
+\end{lstlisting}
+
+\CaseStep{复验}{用正常输入和空输入各跑一次，保证两条路径都有可解释的结果。}
+
+\Needspace{6\baselineskip}
+\subsection*{C04\enspace UnboundLocalError｜函数里有同名赋值}
+
+\CaseStep{现象}{函数中想读模块里的 count，结果在赋值之前就报局部变量错误。}
+
+\CaseStep{原因}{函数里出现对这个名字的绑定，会让它按局部名字处理。读取发生在这次局部赋值之前。}
+
+\CaseStep{排查}{看整个函数里是否出现同名赋值。别只盯着报错的读取行。}
+
+\CaseStep{修复}{优先把值作为参数传入并返回新结果。确实要重新绑定外层变量时，再明确用 nonlocal 或 global。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_04_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+count = 3
+def broken():
+    print(count)
+    count = 4
+broken()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_04.py}}]
+# 修复后仍要核对原始需求。
+def increment(value):
+    # 状态通过参数与返回值流动。
+    return value + 1
+
+count = increment(3)
+print(count)
+\end{lstlisting}
+
+\CaseStep{复验}{同样的输入调用两次，核对结果和外部状态，确认变化由谁负责。}
+
+\section{类型与容器}
+
+\Needspace{6\baselineskip}
+\subsection*{C05\enspace TypeError｜文本和整数直接相加}
+
+\CaseStep{现象}{从输入框得到 3，与整数 1 相加时失败。}
+
+\CaseStep{原因}{输入返回的是字符串。加号看到的两个对象不支持这组加法。}
+
+\CaseStep{排查}{打印 type 或在变量面板查看对象。检查转换应该发生在输入边界还是业务函数里。}
+
+\CaseStep{修复}{业务需要数值时，先转换并处理转换失败。业务需要文字时，则明确构造字符串。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_05_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+"3" + 1
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_05.py}}]
+# 修复后仍要核对原始需求。
+# 把输入转换为业务需要的整数。
+raw = "3"
+print(int(raw) + 1)
+\end{lstlisting}
+
+\CaseStep{复验}{输入 3 应得到 4。再用无效输入确认转换错误有清楚反馈。}
+
+\Needspace{6\baselineskip}
+\subsection*{C06\enspace TypeError｜字符串不能按下标改写}
+
+\CaseStep{现象}{把 hello 的第一个字符换成 H，赋值这一行失败。}
+
+\CaseStep{原因}{字符串对象不可变。下标能读取字符，不能把某个位置换成新字符。}
+
+\CaseStep{排查}{确认对象实际是 str。检查需求是替换首字符、全量替换，还是需要可变的字符集合。}
+
+\CaseStep{修复}{构造新字符串，再让名字绑定过去。保留旧绑定可以核对原对象没有被改写。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_06_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+s = "hello"
+s[0] = "H"
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_06.py}}]
+# 修复后仍要核对原始需求。
+# 拼成新字符串，原值留作对照。
+s = "hello"
+original = s
+s = "H" + s[1:]
+print(s, original)
+\end{lstlisting}
+
+\CaseStep{复验}{新名字对应 Hello，原来的引用仍读到 hello。}
+
+\Needspace{6\baselineskip}
+\subsection*{C07\enspace TypeError｜列表不能作为字典键}
+
+\CaseStep{现象}{把主机和端口装进列表，再用它做键，创建字典时就失败。}
+
+\CaseStep{原因}{字典键必须可哈希。列表内容可以变化，内置列表不提供这种哈希约定。}
+
+\CaseStep{排查}{检查键中每一层。外面套了元组，里面仍有列表时，也不能因此变成可哈希键。}
+
+\CaseStep{修复}{用本身可哈希的字段组成元组，或选择稳定的业务标识。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_07_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+{["backup.local", 443]: "ok"}
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_07.py}}]
+# 修复后仍要核对原始需求。
+# 键中的字符串和整数都可哈希。
+target = ("backup.local", 443)
+records = {target: "ok"}
+print(records[target])
+\end{lstlisting}
+
+\CaseStep{复验}{按同样的主机与端口重新查询，应取到同一条记录。}
+
+\Needspace{6\baselineskip}
+\subsection*{C08\enspace ValueError｜形状对了，内容仍不合法}
+
+\CaseStep{现象}{用 int 转换 3.5 这段文本时失败。}
+
+\CaseStep{原因}{对象类型可以交给转换函数，但文本内容不是它接受的整数写法。}
+
+\CaseStep{排查}{先看原始输入的 repr，确认小数点、空白和单位。再问业务需要整数还是允许小数。}
+
+\CaseStep{修复}{允许小数时选择 float 或适当的十进制定点工具。要求整数时就拒绝小数，并给出输入规则。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_08_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+int("3.5")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_08.py}}]
+# 修复后仍要核对原始需求。
+# 业务允许小数，所以按小数解析。
+raw = "3.5"
+print(float(raw))
+\end{lstlisting}
+
+\CaseStep{复验}{修复例应得到 3.5。若业务只收整数，应改测明确的拒绝分支。}
+
+\Needspace{6\baselineskip}
+\subsection*{C09\enspace IndexError｜要取的位置不存在}
+
+\CaseStep{现象}{空列表取第一项，或把长度当作最后一个下标时出错。}
+
+\CaseStep{原因}{下标从零开始，合法范围由本次容器长度决定。空列表没有任何合法元素下标。}
+
+\CaseStep{排查}{核对 len、实际内容和下标来源。循环中修改容器时，也要检查下标是否已经失效。}
+
+\CaseStep{修复}{按业务处理空集合，或在遍历中直接取得元素。不要用统一的默认值掩盖上游漏数据。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_09_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+[][0]
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_09.py}}]
+# 修复后仍要核对原始需求。
+# 空输入在这里有独立的业务分支。
+files = []
+print(files[0] if files else "没有待处理文件")
+\end{lstlisting}
+
+\CaseStep{复验}{空清单应走空分支，有元素时再取第一项。}
+
+\Needspace{6\baselineskip}
+\subsection*{C10\enspace KeyError｜字段没有出现在这份记录里}
+
+\CaseStep{现象}{读 status 字段时，某条数据只有 name，按键访问失败。}
+
+\CaseStep{原因}{字典里没有这个键。也可能是大小写、空格或上游字段约定发生变化。}
+
+\CaseStep{排查}{打印 keys 与这条原始记录，核对字段名。区分必填字段缺失和允许省略的可选字段。}
+
+\CaseStep{修复}{可选字段用 get 给出业务默认值。必填字段应在输入校验处明确拒绝。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_10_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+{"name": "notes.md"}["status"]
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_10.py}}]
+# 修复后仍要核对原始需求。
+# status 在这个例子里是可选字段。
+record = {"name": "notes.md"}
+print(record.get("status", "unknown"))
+\end{lstlisting}
+
+\CaseStep{复验}{例子的缺失状态应显示 unknown。必填字段的测试另测拒绝结果。}
+
+\Needspace{6\baselineskip}
+\subsection*{C11\enspace AttributeError｜方法属于另一种对象}
+
+\CaseStep{现象}{拿到列表后调用 strip，解释器说没有这个属性。}
+
+\CaseStep{原因}{代码预期的是字符串，实际对象却是列表。返回值形状与调用处的理解没有对上。}
+
+\CaseStep{排查}{查看 type、产生这个对象的函数签名和实际返回值。确认要处理整个集合，还是集合中的每一项。}
+
+\CaseStep{修复}{逐项处理文本，或者修改上游返回值与调用约定。把真实形状写进测试。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_11_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+[" notes.md "].strip()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_11.py}}]
+# 修复后仍要核对原始需求。
+# 每条字符串各自清理，结果仍是一张列表。
+files = [" notes.md ", " todo.md "]
+print([name.strip() for name in files])
+\end{lstlisting}
+
+\CaseStep{复验}{两项文本都去掉首尾空白，列表结构仍保留。}
+
+\Needspace{6\baselineskip}
+\subsection*{C12\enspace ZeroDivisionError｜分母为零}
+
+\CaseStep{现象}{算平均耗时时，记录数为零，除法失败。}
+
+\CaseStep{原因}{空输入、筛选后无有效记录，或上游计数漏更新，都可能让分母变成零。}
+
+\CaseStep{排查}{先核对有效值数量，再看平均值的业务定义。总行数和有效耗时条数可能不同。}
+
+\CaseStep{修复}{无有效数据时明确返回缺失状态，或者按业务规则拒绝。不要凭空补一个看似正常的平均值。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_12_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+1 / 0
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_12.py}}]
+# 修复后仍要核对原始需求。
+# 空输入对应没有平均值这一状态。
+values = []
+average = sum(values) / len(values) if values else None
+print(average)
+\end{lstlisting}
+
+\CaseStep{复验}{空输入应显示 None，有两条有效记录时再核对平均值。}
+
+\section{文件、编码与环境}
+
+\Needspace{6\baselineskip}
+\subsection*{C13\enspace ModuleNotFoundError｜包装在另一个环境}
+
+\CaseStep{现象}{终端装包成功，项目运行时仍说找不到模块。}
+
+\CaseStep{原因}{当前解释器的搜索路径里没有目标模块。另一个环境的安装结果不会自动出现在这里。}
+
+\CaseStep{排查}{核对 sys.executable、pip --version 和模块来源，再看导入名与安装包名是否一致。}
+
+\CaseStep{修复}{用实际运行的解释器执行安装。下面用标准库代替一个刻意不存在的模块，先核对导入机制。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_13_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import book_missing_module_for_demo
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_13.py}}]
+# 修复后仍要核对原始需求。
+# 使用实际存在的标准库模块核对导入。
+import math
+print(math.sqrt(25))
+\end{lstlisting}
+
+\CaseStep{复验}{最小示例应打印 5.0。第三方包则还要查 spec.origin，确认导入位置。}
+
+\Needspace{6\baselineskip}
+\subsection*{C14\enspace ImportError｜模块找到了，名字没有}
+
+\CaseStep{现象}{从 math 导入一个不存在的名字，模块路径存在却仍导入失败。}
+
+\CaseStep{原因}{指定名称没有由该模块提供。真实项目也可能遇到版本差异或循环导入尚未完成初始化。}
+
+\CaseStep{排查}{看完整导入链和实际模块路径，查当前版本的公开接口。检查是否有同名本地文件遮住了真正模块。}
+
+\CaseStep{修复}{改用真实接口。循环导入则先梳理依赖，把共同定义移到能独立导入的位置。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_14_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+from math import book_missing_function
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_14.py}}]
+# 修复后仍要核对原始需求。
+# 核对公开接口名称，避免凭印象拼写。
+from math import sqrt
+print(sqrt(25))
+\end{lstlisting}
+
+\CaseStep{复验}{例子导入 sqrt 后应得到 5.0，且 traceback 中的模块路径符合预期。}
+
+\Needspace{6\baselineskip}
+\subsection*{C15\enspace FileNotFoundError｜相对地址从哪里出发}
+
+\CaseStep{现象}{同一脚本在终端能读文件，换到 IDE 就找不到。}
+
+\CaseStep{原因}{相对路径以当前工作目录解释。运行配置的工作目录与脚本文件目录可能不同。}
+
+\CaseStep{排查}{打印 Path.cwd() 与目标路径的绝对位置，再核对实际文件名、大小写和扩展名。}
+
+\CaseStep{修复}{明确路径基准，或把输入路径做成参数。下面先在临时目录创建自己需要的输入。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_15_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+with TemporaryDirectory() as folder:
+    (Path(folder) / "missing.txt").read_text()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_15.py}}]
+# 修复后仍要核对原始需求。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+# 输入在明确的目录创建，再从同一路径读取。
+with TemporaryDirectory() as folder:
+    path = Path(folder) / "note.txt"
+    path.write_text("ready", encoding="utf-8")
+    print(path.read_text(encoding="utf-8"))
+\end{lstlisting}
+
+\CaseStep{复验}{脚本应读到 ready。真实输入路径也要从实际运行入口再测一次。}
+
+\Needspace{6\baselineskip}
+\subsection*{C16\enspace PermissionError 与目录误读}
+
+\CaseStep{现象}{把文件夹当文件读取，或写入没有权限的位置时失败。}
+
+\CaseStep{原因}{目标可能不是普通文件，也可能被其他进程占用或受权限控制。具体异常子类和错误码依系统而异。}
+
+\CaseStep{排查}{核对路径对象的类型、父目录与完整 OSError 信息，再检查占用进程和实际权限。}
+
+\CaseStep{修复}{先确认读的是文件，写入到明确可写的工作目录。目录内容通过遍历取得。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_16_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+with TemporaryDirectory() as folder:
+    Path(folder).read_bytes()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_16.py}}]
+# 修复后仍要核对原始需求。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory() as folder:
+    path = Path(folder)
+    # 先按目标类型选择处理方式。
+    print("这是目录" if path.is_dir() else "这是文件")
+\end{lstlisting}
+
+\CaseStep{复验}{目录分支应显示目录提示，实际文件再走文件读取分支。}
+
+\Needspace{6\baselineskip}
+\subsection*{C17\enspace UnicodeDecodeError｜字节按错了编码解释}
+
+\CaseStep{现象}{读取一段字节时，解码器指出某个字节无法按 UTF-8 解释。}
+
+\CaseStep{原因}{这份数据不符合所选编码，或原始内容已经损坏。单纯改成忽略错误可能丢掉重要内容。}
+
+\CaseStep{排查}{先保留原始字节，查文件或接口的来源约定，再在小样本上核对编码。}
+
+\CaseStep{修复}{按真实编码解码。示例明确把样本定义为 Latin-1，实际项目不能靠试出不报错来认定编码。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_17_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+b"\xff".decode("utf-8")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_17.py}}]
+# 修复后仍要核对原始需求。
+# 样本的来源约定为 Latin-1。
+raw = b"\xff"
+text = raw.decode("latin-1")
+print(text)
+assert text.encode("latin-1") == raw
+\end{lstlisting}
+
+\CaseStep{复验}{应得到字符 ÿ。重新按原编码编码，应与原字节完全相同。}
+
+\Needspace{6\baselineskip}
+\subsection*{C18\enspace UnicodeEncodeError｜输出编码装不下这个字符}
+
+\CaseStep{现象}{中文输出到只收 ASCII 的目标时失败。}
+
+\CaseStep{原因}{字符串本身有效，但目标编码无法表示其中字符。控制台、文件和管道的编码也可能不同。}
+
+\CaseStep{排查}{看错误发生在 encode、写文件还是子进程管道，再核对输出端的编码约定。}
+
+\CaseStep{修复}{选能表示内容且接收方同意的编码。文件读写两端一起明确 UTF-8。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_18_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+"雪".encode("ascii")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_18.py}}]
+# 修复后仍要核对原始需求。
+# 两端约定 UTF-8，检查一次往返。
+text = "雪"
+print(text.encode("utf-8").decode("utf-8"))
+\end{lstlisting}
+
+\CaseStep{复验}{编码再解码后应得到原来的文字，不能只看错误是否消失。}
+
+\Needspace{6\baselineskip}
+\subsection*{C19\enspace JSONDecodeError｜内容不是合法 JSON}
+
+\CaseStep{现象}{文件后缀是 json，读入时却报解析错误。}
+
+\CaseStep{原因}{后缀不保证内容合法。单引号、尾随逗号、半截写入和空响应都可能导致解析失败。}
+
+\CaseStep{排查}{查看解析器的行列信息，保留原内容，再核对写入是否完整、网络状态与响应体是否符合约定。}
+
+\CaseStep{修复}{用 json 模块生成 JSON，在完整写好后再发布文件。读入失败时把原文件留给排查。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_19_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import json
+json.loads("{broken")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_19.py}}]
+# 修复后仍要核对原始需求。
+import json
+
+# 由序列化函数生成完整 JSON，再读回来。
+encoded = json.dumps({"name": "notes.md"})
+print(json.loads(encoded)["name"])
+\end{lstlisting}
+
+\CaseStep{复验}{往返后应取到 notes.md，损坏输入仍应走失败分支。}
+
+\section{数据与外部服务}
+
+\Needspace{6\baselineskip}
+\subsection*{C20\enspace sqlite3.OperationalError｜表没有建立}
+
+\CaseStep{现象}{连接数据库成功，查询时提示 no such table。}
+
+\CaseStep{原因}{当前连接指向的数据库里没有这张表。路径选错、初始化未执行或连了新的内存库，都可能造成这个结果。}
+
+\CaseStep{排查}{核对数据库路径和初始化步骤，再查询元数据。内存数据库的生命周期与连接有关。}
+
+\CaseStep{修复}{在约定的位置完成建表或迁移，然后使用同一业务数据库查询。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_20_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import sqlite3
+from contextlib import closing
+with closing(sqlite3.connect(":memory:")) as db:
+    db.execute("SELECT * FROM notes")
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_20.py}}]
+# 修复后仍要核对原始需求。
+import sqlite3
+from contextlib import closing
+
+with closing(sqlite3.connect(":memory:")) as db:
+    # 初始化后再读取同一数据库。
+    db.execute("CREATE TABLE notes (name TEXT)")
+    print(db.execute("SELECT count(*) FROM notes").fetchone()[0])
+\end{lstlisting}
+
+\CaseStep{复验}{空表应返回零条记录。重新打开持久化数据库时也要核对表仍在。}
+
+\Needspace{6\baselineskip}
+\subsection*{C21\enspace sqlite3.IntegrityError｜违反了数据约束}
+
+\CaseStep{现象}{重复插入唯一字段时失败。}
+
+\CaseStep{原因}{数据库在保护唯一性、非空或关联约束。先查后插也可能在并发时遇到同样冲突。}
+
+\CaseStep{排查}{看具体约束和本次输入，再决定重复是用户错误、可接受的重试，还是应更新已有记录。}
+
+\CaseStep{修复}{按业务定义处理冲突。示例把相同键视为幂等重试，真实项目还须核对已有内容是否一致。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_21_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import sqlite3
+from contextlib import closing
+with closing(sqlite3.connect(":memory:")) as db:
+    db.execute("CREATE TABLE notes (name TEXT UNIQUE)")
+    db.execute("INSERT INTO notes VALUES (?)", ("notes.md",))
+    db.execute("INSERT INTO notes VALUES (?)", ("notes.md",))
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_21.py}}]
+# 修复后仍要核对原始需求。
+import sqlite3
+from contextlib import closing
+
+with closing(sqlite3.connect(":memory:")) as db, db:
+    db.execute("CREATE TABLE notes (name TEXT UNIQUE)")
+    # 本例约定同名重试保留原记录。
+    for _ in range(2):
+        db.execute("INSERT OR IGNORE INTO notes VALUES (?)", ("notes.md",))
+    print(db.execute("SELECT count(*) FROM notes").fetchone()[0])
+\end{lstlisting}
+
+\CaseStep{复验}{连续两次登记后仍只有一条。若内容不一致，应另测明确的冲突反馈。}
+
+\Needspace{6\baselineskip}
+\subsection*{C22\enspace HTTPError｜收到了失败状态}
+
+\CaseStep{现象}{请求有响应，调用 \code{raise_for_status} 时抛出 HTTPError。}
+
+\CaseStep{原因}{网络通信完成不代表业务成功。4xx 与 5xx 需要结合接口约定和响应内容解释。}
+
+\CaseStep{排查}{记录状态码、请求目标和必要的响应信息，敏感字段不进入日志。再判断输入、权限、路径或服务端是否有问题。}
+
+\CaseStep{修复}{修正对应原因。下面离线构造成功和失败响应，只演练状态检查这一层。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_22_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import requests
+reply = requests.Response()
+reply.status_code = 404
+reply.url = "https://example.invalid/notes"
+reply.raise_for_status()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_22.py}}]
+# 修复后仍要核对原始需求。
+import requests
+
+# 离线构造响应，观察状态检查的行为。
+reply = requests.Response()
+reply.status_code = 200
+reply.raise_for_status()
+print(reply.status_code)
+\end{lstlisting}
+
+\CaseStep{复验}{成功响应应通过检查并显示 200，失败响应仍能被识别。}
+
+\Needspace{6\baselineskip}
+\subsection*{C23\enspace Timeout｜等不到约定时间内的响应}
+
+\CaseStep{现象}{客户端在连接或读取阶段等待超时。}
+
+\CaseStep{原因}{目标不可达、服务处理慢、代理异常或读数据迟迟不返回，都可能导致不同阶段的超时。}
+
+\CaseStep{排查}{区分连接等待与读取等待，记录目标、超时设置和服务端日志。调试断点也可能人为拉长等待。}
+
+\CaseStep{修复}{给请求明确超时，并把失败交给上层决定是否重试。重试还要看请求能否安全重复。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_23_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import socket
+import requests
+with socket.socket() as listener, requests.Session() as session:
+    session.trust_env = False
+    listener.bind(("127.0.0.1", 0))
+    listener.listen()
+    port = listener.getsockname()[1]
+    session.get(f"http://127.0.0.1:{port}/", timeout=0.05)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_23.py}}]
+# 修复后仍要核对原始需求。
+import socket
+import requests
+
+# 本机监听但不返回 HTTP，用来演练读取超时。
+with socket.socket() as listener, requests.Session() as session:
+    session.trust_env = False
+    listener.bind(("127.0.0.1", 0))
+    listener.listen()
+    port = listener.getsockname()[1]
+    try:
+        session.get(f"http://127.0.0.1:{port}/", timeout=0.05)
+    except requests.Timeout:
+        print("记录超时，交给上层处理")
+\end{lstlisting}
+
+\CaseStep{复验}{示例用只监听但不响应的本机端口复现读取等待，随后记录超时。}
+
+\Needspace{6\baselineskip}
+\subsection*{C24\enspace OSError｜服务端口已被占用}
+
+\CaseStep{现象}{本机服务启动时提示地址正在使用，常见错误码因系统不同而变化。}
+
+\CaseStep{原因}{同一个监听地址与端口已经被其他进程或上一次运行占用。}
+
+\CaseStep{排查}{先确认地址和进程身份，再看服务是否仍需要运行。不要只凭一个端口号结束不相关进程。}
+
+\CaseStep{修复}{停止自己已经确认的旧服务，或为本次测试分配可用端口。临时测试可以让操作系统分配端口。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_24_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import socket
+with socket.socket() as first, socket.socket() as second:
+    first.bind(("127.0.0.1", 0))
+    first.listen()
+    second.bind(first.getsockname())
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_24.py}}]
+# 修复后仍要核对原始需求。
+import socket
+
+# 端口 0 交给操作系统分配可用的临时端口。
+with socket.socket() as listener:
+    listener.bind(("127.0.0.1", 0))
+    print(listener.getsockname()[1] > 0)
+\end{lstlisting}
+
+\CaseStep{复验}{新监听端口应大于零，退出上下文后资源会关闭。}
+
+\section{迭代、递归与异步}
+
+\Needspace{6\baselineskip}
+\subsection*{C25\enspace StopIteration｜迭代器已经用完}
+
+\CaseStep{现象}{手动调用 next，取完所有元素后再次读取就抛出 StopIteration。}
+
+\CaseStep{原因}{这是迭代协议中的结束信号。生成器或迭代器已经消费完，不会自动回到开头。}
+
+\CaseStep{排查}{核对谁已经消费过它。调试求值、list 转换和循环都可能把一次性迭代器推进到末尾。}
+
+\CaseStep{修复}{正常遍历交给 for 处理结束信号，手动读取时可以给 next 一个符合业务的默认值。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_25_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+iterator = iter(["notes.md"])
+next(iterator)
+next(iterator)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_25.py}}]
+# 修复后仍要核对原始需求。
+# 用默认值明确表示这次已经读到结尾。
+iterator = iter(["notes.md"])
+print(next(iterator, "结束"))
+print(next(iterator, "结束"))
+\end{lstlisting}
+
+\CaseStep{复验}{先取到 notes.md，第二次读取显示结束。}
+
+\Needspace{6\baselineskip}
+\subsection*{C26\enspace RecursionError｜调用一层层长下去}
+
+\CaseStep{现象}{递归函数不断调用自己，最终超过解释器的递归深度限制。}
+
+\CaseStep{原因}{递归终止条件缺失、条件永远达不到，或输入深度超出这套实现的承受范围。}
+
+\CaseStep{排查}{先画出最小输入的调用链，确认每次递归怎样接近终点。别先把递归上限调大。}
+
+\CaseStep{修复}{修正终止条件，深链问题可改用显式栈或循环。下面用循环保留同样的累加意图。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_26_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+def broken():
+    return broken()
+broken()
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_26.py}}]
+# 修复后仍要核对原始需求。
+# 循环让进度和结束范围一眼可见。
+total = 0
+for value in range(1, 5):
+    total += value
+print(total)
+\end{lstlisting}
+
+\CaseStep{复验}{输入 4 应得到 10，再测 0，确认终止边界。}
+
+\Needspace{6\baselineskip}
+\subsection*{C27\enspace RuntimeError｜事件循环里又调用 asyncio.run}
+
+\CaseStep{现象}{在已经运行的协程里，再用 asyncio.run 启一个循环时失败。}
+
+\CaseStep{原因}{当前线程已经有运行中的事件循环。交互环境或异步框架也可能已经负责这个循环。}
+
+\CaseStep{排查}{确认调用发生在脚本最外层、协程内部，还是由框架托管的入口。查看完整调用栈。}
+
+\CaseStep{修复}{协程内部 await 子协程，脚本最外层才由 asyncio.run 启动一次。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_27_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+import asyncio
+async def broken():
+    task = asyncio.sleep(0)
+    try:
+        asyncio.run(task)
+    finally:
+        task.close()
+asyncio.run(broken())
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_27.py}}]
+# 修复后仍要核对原始需求。
+import asyncio
+
+async def main():
+    # 在当前循环内等待，不另开一个循环。
+    await asyncio.sleep(0)
+    print("ready")
+
+asyncio.run(main())
+\end{lstlisting}
+
+\CaseStep{复验}{修复版应打印 ready，且没有未等待协程的提示。}
+
+\section{没有异常，结果却不对}
+
+\Needspace{6\baselineskip}
+\subsection*{C28\enspace 赋值以后，备份也跟着变}
+
+\CaseStep{现象}{给 original 起一个新名字，修改原列表后备份也多了一项。}
+
+\CaseStep{原因}{两个名字绑定同一个列表，赋值本身没有复制对象。}
+
+\CaseStep{排查}{比较两边的 is 结果，再看改动发生在外层列表还是嵌套的内层对象。}
+
+\CaseStep{修复}{平面列表可以复制外层。嵌套容器要逐层判断哪些状态需要独立，不能只看外面的新列表。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_28_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+original = ["notes.md"]
+backup = original
+original.append("todo.md")
+print(len(backup))
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_28.py}}]
+# 修复后仍要核对原始需求。
+# 本例元素为字符串，复制外层足够保留名单。
+original = ["notes.md"]
+backup = original.copy()
+original.append("todo.md")
+print(len(original), len(backup))
+\end{lstlisting}
+
+\CaseStep{复验}{修复版原列表长度为 2，备份长度为 1。}
+
+\Needspace{6\baselineskip}
+\subsection*{C29\enspace 单元素元组少了一个逗号}
+
+\CaseStep{现象}{以为圆括号已经装出元组，结果拿到的还是字符串。}
+
+\CaseStep{原因}{圆括号也负责表达式分组。形成单元素元组的是逗号。}
+
+\CaseStep{排查}{看 type，尤其是把单个配置值交给需要序列的接口时，确认它没有被逐字符处理。}
+
+\CaseStep{修复}{保留尾随逗号，明确写成一个元素的元组。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_29_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+value = ("notes.md")
+print(type(value).__name__)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_29.py}}]
+# 修复后仍要核对原始需求。
+# 逗号使它成为一个元素的元组。
+value = ("notes.md",)
+print(type(value).__name__, len(value))
+\end{lstlisting}
+
+\CaseStep{复验}{类型名应为 tuple，长度应为 1。}
+
+\Needspace{6\baselineskip}
+\subsection*{C30\enspace 空花括号建出了字典}
+
+\CaseStep{现象}{准备一个空集合，却发现后续对象类型是 dict。}
+
+\CaseStep{原因}{空花括号属于空字典写法。非空集合可以用花括号列元素，空集合要调用 set。}
+
+\CaseStep{排查}{在初始化处检查 type，再看后续使用的是集合方法还是映射方法。}
+
+\CaseStep{修复}{用 set() 建空集合，再按业务添加成员。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_30_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+seen = {}
+print(type(seen).__name__)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_30.py}}]
+# 修复后仍要核对原始需求。
+# 空集合显式调用 set 创建。
+seen = set()
+seen.add("notes.md")
+print(type(seen).__name__, "notes.md" in seen)
+\end{lstlisting}
+
+\CaseStep{复验}{类型名为 set，添加后能找到成员。}
+
+\Needspace{6\baselineskip}
+\subsection*{C31\enspace sort 的返回值成了 None}
+
+\CaseStep{现象}{排序后把返回值赋给另一个名字，后续发现结果是 None。}
+
+\CaseStep{原因}{list.sort 原地修改列表并返回 None。返回值不是排序后的新列表。}
+
+\CaseStep{排查}{看原列表是否已变化，再查所用方法的返回约定。append 等原地修改方法也有类似边界。}
+
+\CaseStep{修复}{要新列表就用 sorted。要原地修改就单独调用 sort，然后继续使用原列表。}
+
+\textbf{错误入口，故意失败或产生错误结果}
+
+\begin{lstlisting}[title={\code{case_31_bad.py.txt}}]
+# 单独运行这一段，观察错误现场。
+files = ["todo.md", "notes.md"]
+result = files.sort()
+print(result)
+\end{lstlisting}
+
+\textbf{修复版本}
+
+\begin{lstlisting}[title={\code{case_31.py}}]
+# 修复后仍要核对原始需求。
+# sorted 返回新列表，原输入可留作核对。
+files = ["todo.md", "notes.md"]
+result = sorted(files)
+print(result)
+print(files)
+\end{lstlisting}
+
+\CaseStep{复验}{新列表按名字排序，原列表仍保留原先顺序。}
+
+
+\section{把一次修复留成自己的记录}
+
+以字符串索引赋值为例：原输入是 \code{"hello"}，预期得到首字母大写的文本，
+实际在下标赋值处抛了 TypeError。查到字符串不可变以后，改为构造新字符串，
+再用旧引用核对原值仍在。
+
+每份修复记录应明确一个原因及对应改动。遇到相似错误时，
+先核对实际类型，再决定能否原地修改。附录里每一条记录，都可以照这个办法往自己的项目里生根。
+
+\begin{pythonictip}
+复验时可保留三类输入。第一类是原来失败的那一条，第二类是一直正常的样本，
+第三类是与修复有关的边界，比如空值、重复项或不存在的路径。
+三类都能解释清楚，修复才算有了可以交接的证据。
+\end{pythonictip}
+\subsection*{把运行现场附到勘误里}
+
+最小复现还应附上解释器版本、解释器路径和工作目录：
+可在使用说明的诊断脚本中核对，遇到只在另一台机器出现的问题时，再把两边并排比较。
+
+\begin{tabularx}{\textwidth}{@{}p{0.30\textwidth}X@{}}
+\toprule
+\textbf{要留下什么} & \textbf{从哪里看}\\
+\midrule
+Python 版本 & \code{platform.python_version()}\\
+解释器位置 & \code{sys.executable}\\
+工作目录 & \code{Path.cwd()}\\
+\bottomrule
+\end{tabularx}\par
+
+修复记录最后再写一行，改动的是哪一处，复验用了哪些输入。
+再次遇到相同问题时，可依据这份记录复现输入并验证修复。
+
+% ===== END backmatter/appendices.tex =====
+
+
+
+% 请使用 XeLaTeX 编译两次以生成目录。
+\end{document}

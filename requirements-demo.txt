@@ -1,0 +1,12 @@
+requests
+beautifulsoup4
+SQLAlchemy
+pytest
+numpy
+pandas
+matplotlib
+openpyxl
+python-dotenv
+fastapi
+httpx
+uvicorn

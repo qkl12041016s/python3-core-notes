@@ -1,0 +1,189 @@
+\chapter{网络请求与基础爬虫}
+\label{ch:13-outline}
+
+网络请求可能返回成功、拒绝、等待或格式变化的内容。请求发出以后，还需依次检查状态码、响应格式与业务字段，不能只判断连接是否建立。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 13 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {HTTP 与 Session}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {HTML 表格}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {浏览器自动化}
+      };
+  \end{tikzpicture}
+  \caption*{HTTP 请求、HTML 解析与自动化等待。}
+\end{figure}
+
+
+\section{requests 核心用法}
+
+HTTP 请求像寄出一张带回邮地址的表单。方法说明动作，路径和查询参数说明目标，
+请求头携带协商信息，响应状态码和响应体再把处理结果送回来。
+
+用 Session 复用连接，给请求设置超时，先检查状态码再解析内容（图~\ref{fig:visual-ch13}）。
+requests 的 timeout 控制连接与读取等待，具体端到端耗时还受重试和业务处理影响。
+GET 重试可以按错误原因和服务端提示来决定，带副作用的请求则先考虑重复提交怎样识别。
+
+\subsection*{动手｜把第一次 HTTP 实验留在本机}
+
+在本机开一个短命的 HTTP 服务，先确认请求、状态码和 JSON 解析这条链路。地址和端口由本机分配，例子每次都有同一份响应。学会读响应以后，再把相同的检查搬到获准访问的端点。
+
+\begin{lstlisting}[title={\code{local_http.py}}]
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
+
+import requests
+
+
+class DemoHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # 用固定的本地样本练习 JSON 响应。
+        body = b'{"name": "notes.md"}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        # 输出留给客户端的状态码和字段值。
+        pass
+
+
+with ThreadingHTTPServer(("127.0.0.1", 0), DemoHandler) as server:
+    worker = Thread(target=server.serve_forever)
+    worker.start()
+    try:
+        host, port = server.server_address[:2]
+        with requests.Session() as session:
+            session.trust_env = False
+            response = session.get(f"http://{host}:{port}/", timeout=2)
+            response.raise_for_status()
+            print(response.status_code, response.json()["name"])
+    finally:
+        server.shutdown()
+        worker.join()
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 运行前安装 requests。脚本应打印状态码 200 和 notes.md，随后服务线程退出。客户端给出超时，并先检查状态码，再解析响应。
+
+\section[解析 HTML]{解析 HTML（BeautifulSoup）}
+
+拿到 HTML 后，将解析树当成一张可按标签找格子的表格。
+BeautifulSoup 先把文本变成节点，再用选择器找到表、行和单元格。
+字段提取之后还要核对列数与含义，网页多了装饰元素时尤其如此。
+
+下面在本地 HTML 上练习。找到目标表后，再取每一行的单元格文字，
+最后用 csv 模块处理分隔与引号。与网络请求分开跑，能分清是哪一步出的问题。
+
+
+\begin{lstlisting}[title={\code{extract_table.py}}]
+import csv
+import io
+
+from bs4 import BeautifulSoup
+
+html = """<table id="files">
+<tr><th>name</th><th>status</th></tr>
+<tr><td>notes.md</td><td>done</td></tr>
+</table>"""
+soup = BeautifulSoup(html, "html.parser")
+stream = io.StringIO(newline="")
+writer = csv.writer(stream, lineterminator="\n")
+
+# 逐行提取，CSV 模块负责转义和分隔。
+for row in soup.select("#files tr"):
+    cells = row.select("th, td")
+    writer.writerow([cell.get_text(strip=True) for cell in cells])
+
+print(stream.getvalue(), end="")
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+name,status
+notes.md,done
+\end{lstlisting}
+
+\par
+
+
+\section{自动化与边界}
+
+浏览器自动化像坐到另一台电脑前操作页面。Selenium 驱动浏览器执行点击与输入，
+页面脚本什么时候把元素放好，需要显式等待对应条件。
+
+先在本地演示页上验证等待条件。实际访问时按站点规则、robots.txt 和服务端提示控制速率，
+把失败记录下来。固定 sleep 可以用于节流，判断页面是否就绪则用等待条件。
+下面的例子需要可用的 Chrome、驱动与 Selenium，先用 data 页面演示一个元素的定位。
+
+
+\begin{lstlisting}[title={\code{browser_demo.py}}]
+from urllib.parse import quote
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as conditions
+from selenium.webdriver.support.ui import WebDriverWait
+
+# 使用内存 HTML，先核对定位与等待。
+html = '<p id="status">ready</p>'
+options = webdriver.ChromeOptions()
+options.add_argument("--headless=new")
+with webdriver.Chrome(options=options) as browser:
+    browser.get("data:text/html," + quote(html))
+    element = WebDriverWait(browser, 5).until(
+        conditions.visibility_of_element_located((By.ID, "status"))
+    )
+    print(element.text)
+\end{lstlisting}
+
+
+\textbf{运行条件}\enspace 需要 Selenium、可用浏览器及驱动。本次先完成代码语法检查，页面交互须在对应环境中复核。
+
+\begin{myunderstanding}
+请求得到字节，解析得到字段，字段再进入存储。每一步都留出输入与输出，出错时能定位到这一层。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+本地服务的处理函数和客户端分别设断点。服务端停住会影响客户端超时，可把这个影响记在验证结果里。
+\end{pycharmpractice}
+
+\begin{pitfall}
+能收到响应还要检查状态码和内容格式。重试前先分清请求能否重复执行，避免一次失败变成多次业务动作。
+\end{pitfall}
+图~\ref{fig:chapter-13-flow} 把请求、处理、响应与解析接在一起，每段都留出核对点。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {客户端请求};
+    \node[python flow step,text width=25mm,right=of a] (b) {服务端处理};
+    \node[python flow step,text width=25mm,right=of b] (c) {状态码与响应体};
+    \node[python flow step,text width=25mm,right=of c] (d) {解析并存储};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{先核对状态与内容格式，再把提取的字段交给后续处理。}
+  \label{fig:chapter-13-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+状态码、响应头和响应体要相互核对。200 也可能带来一份 HTML 提示页，解析 JSON 失败时先留住原响应。Session 使用结束及时关闭，流式响应也要走到明确的退出位置。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{http}{\linewidth}
+\caption{HTTP 请求与响应链路：先检查状态，再解析内容。}
+\label{fig:visual-ch13}
+\end{figure}

@@ -1,0 +1,202 @@
+\chapter{迭代、生成器与装饰器}
+\label{ch:06-outline}
+
+生成器按需执行，装饰器在定义阶段完成包装，上下文管理器负责进入和离开资源。理解这些工具，关键在于区分定义、调用、暂停与清理的时机。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 6 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {迭代与生成}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {装饰时与调用时}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {资源清理}
+      };
+  \end{tikzpicture}
+  \caption*{迭代取值、装饰器包装与上下文资源管理。}
+\end{figure}
+
+
+\section{迭代器与生成器}
+
+列表像一整车砖，生成器像传送带。
+\code{iter()} 提供迭代器，\code{next()} 取下一项，用完会抛出
+\code{StopIteration}。\code{for} 会自动处理这个结束信号。
+
+函数里写了 \code{yield} 后，调用先得到生成器对象。第一次取值才开始执行，
+每次产出后暂停，下一次从上次的位置继续。下面先用批次日志看执行时机，
+再产出前几个斐波那契数。生成器保留当前状态，若把所有结果再收进列表，
+那份结果仍然要占内存。
+
+
+\begin{lstlisting}[title={\code{fibonacci.py}}]
+def fibonacci(count):
+    # 只保留相邻两项，用它们计算下一项。
+    left, right = 0, 1
+    for _ in range(count):
+        yield left
+        left, right = right, left + right
+
+
+print(list(fibonacci(7)))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+[0, 1, 1, 2, 3, 5, 8]
+\end{lstlisting}
+
+\par
+
+\subsection*{动手｜拆开生成与消费}
+
+要观察生成器何时推进，可在每次交出一批前输出一条消息。调用生成器函数只创建生成器对象；请求下一项时，函数才执行到 yield。每次取走一批，下一次都从上次暂停的位置继续。
+
+\begin{lstlisting}[title={\code{iter_batches.py}}]
+# 每次只取出当前一批文件。
+def iter_batches(files, size):
+    for start in range(0, len(files), size):
+        print("准备第", start // size + 1, "批")
+        yield files[start : start + size]
+
+
+# 依次拉取两批，观察日志和结果的顺序。
+batches = iter_batches(["notes.md", "todo.md", "draft.md"], 2)
+print("生成器已建立")
+print(next(batches))
+print(next(batches))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 第一行应先出现“生成器已建立”，随后每次取一批才出现准备消息。把第二个 next 删除，准备第二批的消息也随之消失。
+
+\section{装饰器}
+
+装饰器像给函数套一个手机壳。原函数还在，调用入口已经换成外层包装函数。
+装饰语法执行时就调用装饰器（图~\ref{fig:visual-ch6}），把原函数交进去。等以后调用函数名，
+包装函数才开始计时，再把参数交给原函数。
+
+用 \code{wraps} 把原函数的名称、文档等元信息带到包装函数上。
+计时用 \code{perf_counter()}，收尾写在 \code{finally}，这样原函数抛异常时
+也能记下经过的时间。耗时会波动，只验证顺序和返回值。
+
+
+\begin{lstlisting}[title={\code{timed_call.py}}]
+from functools import wraps
+from time import perf_counter
+
+
+def timer(function):
+    @wraps(function)
+    def wrapped(*args, **kwargs):
+        started = perf_counter()
+        try:
+            return function(*args, **kwargs)
+        finally:
+            print("耗时已记录", perf_counter() >= started)
+    return wrapped
+
+
+@timer
+def add(left, right):
+    # 原函数继续负责计算。
+    return left + right
+
+
+print(add(2, 3))
+print(add.__name__)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+耗时已记录 True
+5
+add
+\end{lstlisting}
+
+\par
+
+
+\section{上下文管理器与 with}
+
+将 with 想成借书时一起办好的归还手续。进入时拿到资源，
+离开时统一执行退出动作。代码块里出错，退出动作仍有机会清理资源，
+具体异常是否继续抛出由上下文管理器的实现决定。
+
+用 \code{contextmanager} 写小型管理器时，\code{yield} 前面是准备过程，
+后面用 \code{finally} 放清理。下面先用打印标出顺序，第 9 章再换成文件资源。
+
+
+\begin{lstlisting}[title={\code{managed_demo.py}}]
+from contextlib import contextmanager
+
+
+@contextmanager
+def checked_resource():
+    print("取得资源")
+    try:
+        yield "notes.md"
+    finally:
+        # 离开 with 时统一收尾。
+        print("归还资源")
+
+
+with checked_resource() as name:
+    print("处理", name)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+取得资源
+处理 notes.md
+归还资源
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+先区分创建与执行。生成器在取值时推进，装饰器在定义时包装，包装后的函数则在调用时执行。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在装饰器和包装函数各设一个断点，重启脚本，看两个断点分别在定义阶段和调用阶段停下。
+\end{pycharmpractice}
+
+\begin{pitfall}
+生成器消费完后再遍历会直接结束。需要重复处理时，重新创建生成器，或者在输入规模允许时保存结果。
+\end{pitfall}
+图~\ref{fig:chapter-6-flow} 把装饰时与调用时接起来，断点也沿这条路线设置。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {定义原函数};
+    \node[python flow step,text width=25mm,right=of a] (b) {调用装饰器};
+    \node[python flow step,text width=25mm,right=of b] (c) {返回包装函数};
+    \node[python flow step,text width=25mm,right=of c] (d) {调用时再计时};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{装饰时完成包装，后续调用才进入计时逻辑并执行原函数。}
+  \label{fig:chapter-6-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+迭代器常常只能消费一遍。将一次取值看成往前迈一步，调试时的 list 转换也会把它走到尽头。要再处理一遍，就重新创建输入，或者在合适的规模下保留已经生成的结果。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{decorator}{\linewidth}
+\caption{定义阶段完成装饰器包装；调用阶段执行包装函数及原函数。}
+\label{fig:visual-ch6}
+\end{figure}

@@ -1,0 +1,9 @@
+# 故意失败的入口。
+import socket
+import requests
+with socket.socket() as listener, requests.Session() as session:
+    session.trust_env = False
+    listener.bind(("127.0.0.1", 0))
+    listener.listen()
+    port = listener.getsockname()[1]
+    session.get(f"http://127.0.0.1:{port}/", timeout=0.05)

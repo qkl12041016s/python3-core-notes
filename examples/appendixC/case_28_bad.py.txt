@@ -1,0 +1,5 @@
+# 故意失败的入口。
+original = ["notes.md"]
+backup = original
+original.append("todo.md")
+print(len(backup))

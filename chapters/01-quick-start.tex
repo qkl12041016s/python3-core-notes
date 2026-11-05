@@ -1,0 +1,140 @@
+\chapter{快速起步}
+\label{ch:quick-start}
+
+第一段脚本先回答三个问题：从哪里启动，接收什么输入，产生什么结果。确认这些运行条件以后，才能把语言问题与环境问题分开排查。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[book mindmap,level 1 concept/.append style={minimum size=19mm,text width=15mm,font=\sffamily\bfseries\footnotesize}]
+    \node[text=white,minimum size=23mm,text width=17mm,font=\sffamily\bfseries\small] {第一章\\快速起步}
+      child[grow=180,level distance=33mm,concept color=DeepBlue] {
+        node[text=white] {01\\输出函数}
+      }
+      child[grow=0,level distance=33mm,concept color=PythonYellow] {
+        node {02\\项目环境}
+      }
+      child[grow=-90,level distance=23mm,concept color=DeepBlue!20!white] {
+        node {03\\读懂报错}
+      };
+  \end{tikzpicture}
+  \caption*{起步路线：输出、运行环境与错误定位。}
+\end{figure}
+
+\section{Python 编程第一步}
+
+\begin{myunderstanding}
+将 \code{print()} 当成小票机。要核对结果，可用它把手里的东西显示出来。
+拿到 \code{return} 交回的值，还能继续用它做计算。
+\end{myunderstanding}
+
+\code{print()} 是 Python 的内置函数。默认情况下，它把传入的对象转换成文本，
+用空格分隔多个对象，并在末尾换行。将下面这段保存为 \code{main.py}，
+运行后先看到 \code{Hello, Python!}，下一行是 \code{5}。
+签名里的 \code{a: int} 和 \code{b: int} 标注参数的预期类型，
+\code{-> int} 标注返回值的预期类型。
+
+\begin{lstlisting}[title={\ttfamily main.py}]
+def add(a: int, b: int) -> int:
+    return a + b  # 把结果交给调用方。
+
+
+print("Hello, Python!")
+print(add(2, 3))
+\end{lstlisting}
+
+\begin{pythonictip}
+让 \code{add()} 只管算，把显示交给调用方。这样写测试时，可以直接比较
+\code{add(2, 3)} 的结果和 \code{5}。类型注解则留给读代码的人、编辑器和静态检查工具。
+\end{pythonictip}
+
+
+\section{在 PyCharm 里怎么跑脚本}
+
+将项目和解释器想成工具箱和工位。脚本都在工具箱里，选中的工位才决定用哪套工具。
+新项目通常建一个 \code{.venv}，再把里面的 Python 选成项目解释器。
+首次运行时，右键单击编辑区中的 \code{main.py}，选择运行该文件，并在运行窗口里核对输出。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \node[python flow step,text width=25mm] (python) {安装\\Python 3};
+    \node[python flow step,text width=25mm,right=5mm of python] (venv)
+      {创建项目\\与 \code{.venv}};
+    \node[python flow step,text width=25mm,right=5mm of venv] (interpreter)
+      {选择项目\\解释器};
+    \node[python flow step,text width=25mm,right=5mm of interpreter] (run)
+      {运行\\\code{main.py}};
+    \draw[python flow arrow] (python) -- (venv);
+    \draw[python flow arrow] (venv) -- (interpreter);
+    \draw[python flow arrow] (interpreter) -- (run);
+  \end{tikzpicture}
+  \caption*{创建虚拟环境、选择解释器并运行脚本的配置流程。}
+\end{figure}
+
+\begin{pycharmpractice}
+碰到导入失败时，先用下面的脚本打印 \code{sys.executable}。
+在 PyCharm 和终端各跑一次，再比较两边的解释器路径。
+\end{pycharmpractice}
+
+\begin{lstlisting}[title={\code{check_interpreter.py}}]
+import sys
+
+# 打印当前进程所用的 Python 解释器路径。
+print(sys.executable)
+\end{lstlisting}
+
+\begin{pycharmtip}
+想少挪一次鼠标时，可双击 \code{Shift} 打开全局搜索，输入 \code{Run} 找到运行操作。
+如果改过键位，就到 \code{Keymap} 查实际绑定。
+\end{pycharmtip}
+
+运行前，可按图~\ref{fig:pycharm-interpreter} 的关系核对解释器路径。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{interpreter}{\linewidth}
+  \caption{项目与终端选用同一虚拟环境，解释器路径应与 \code{sys.executable} 一致。}
+  \label{fig:pycharm-interpreter}
+\end{figure}
+
+
+\section{第一眼先看报错的哪一行}
+
+将回溯当成一张倒着读的路线单。先看末尾的异常类型和错误消息，再往上找最近一处
+属于自己脚本的文件名和行号。这样可以直接回到当时出问题的那次调用。
+
+\begin{pitfall}
+从控制台抄代码时，最容易顺手把 \code{>>>} 也带上。把
+\code{>>> print(2 + 3)} 整行贴进脚本，会得到 \code{SyntaxError}。
+保存到 \code{.py} 文件时，只留右侧的 \code{print(2 + 3)}。
+\end{pitfall}
+
+\begin{pybug}
+将调用改成 \code{add("2", 3)} 时，错误会在函数里的加法处暴露出来。
+注解给了一个预期，实际传进来的仍是一个字符串和一个整数。
+如果这个字符串来自输入框，先在读取输入的地方用 \code{int()} 转换，
+再把整数交给 \code{add()}。
+\end{pybug}
+
+图~\ref{fig:pycharm-traceback} 把异常末行与代码位置连起来，方便沿回溯走回现场。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{traceback}{\linewidth}
+  \caption{\code{add("2", 3)} 在加法处触发 \code{TypeError}，回溯记录函数位置与异常类型。}
+  \label{fig:pycharm-traceback}
+\end{figure}
+
+\subsection*{两分钟动手演练}
+
+先把 \code{add(2, 3)} 改成 \code{add(-2, 3)}，在运行前猜一下结果。
+接着恢复原例，再故意传入字符串 \code{"2"}，按上面的路线读一遍回溯。
+最后改成 \code{add(int("2"), 3)}，看看程序又打印了什么。
+
+\subsection*{快速起步的验收}
+
+在 \code{return a + b} 这一行设断点，确认参数值是 \code{2} 和 \code{3}，
+再继续运行，检查输出是否为 \code{5}。如果运行窗口和断点里的值对不上，
+先检查当前运行配置指向哪个脚本，再检查解释器路径。
+
+\subsection*{进阶边界演练}
+可复制一份运行配置，把脚本换成另一个同名文件，再观察解释器路径和文件路径。这个练习说明，编辑器里打开的那份文件，和运行按钮真正启动的文件，需要用现场信息核对。

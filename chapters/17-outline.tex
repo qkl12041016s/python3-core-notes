@@ -1,0 +1,119 @@
+\chapter{工程化收束：打包与部署}
+\label{ch:17-outline}
+
+交付需要摆脱开发机器上的隐含条件。包能安装、入口能运行、输入能复现，才说明路径、依赖与配置已被明确记录。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 17 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {项目元数据}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {构建与安装}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {容器运行}
+      };
+  \end{tikzpicture}
+  \caption*{元数据与依赖声明连接源码、构建产物和运行环境。}
+\end{figure}
+
+
+\section{项目依赖与构建}
+
+将项目元数据想成包裹上的运单。名称、版本和运行依赖告诉使用者里面是什么，
+构建系统再根据配置产出可安装的 wheel。项目里的包目录是源码，
+安装后的环境才是用户真正运行的现场。
+
+\code{pyproject.toml} 的构建依赖、运行依赖和工具配置各有位置。
+下面先把最小包构建好，再离开源码目录测试导入。
+版本约束根据实际支持范围声明，验收时把解释器和构建结果记下来。
+
+\subsection*{动手｜把一个小包构建成 wheel}
+
+将构建当作一次打包寄送。先把包名、版本和构建后端写清，再检查收件人能不能在干净环境里安装。
+样例放在项目压缩包的 \code{examples/ch17}，里面有下面这份配置和一个最小包。
+
+\begin{lstlisting}[language={},title={\code{pyproject.toml}}]
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "notes-demo"
+version = "0.1.0"
+description = "A small package for Python notes"
+
+[tool.setuptools]
+packages = ["notes_demo"]
+\end{lstlisting}
+
+在样例目录运行 \code{python -m pip wheel --no-deps . -w dist}，再在干净环境中安装（图~\ref{fig:visual-ch17}）
+\code{dist} 里的 wheel。换到样例目录以外运行 \code{python -m notes_demo}，
+应看到「笔记：notes.md」。换目录能避开源码目录碰巧被直接导入的情况。
+
+\section{Docker 极简部署}
+
+容器像把运行工具一起放进一个可重复准备的工位。
+镜像描述基础环境和安装步骤，容器启动时再执行命令。
+先在本机把样例 wheel 跑通，再把同一份包复制到镜像里安装。
+
+下面 Dockerfile 放在第 17 章样例根目录，构建上下文中需先准备好
+\code{dist} 里的 wheel。执行 \code{docker build -t notes-demo .}，
+随后用 \code{docker run --rm notes-demo} 核对输出。
+基础镜像和依赖版本在发布时一起记录，文件输入则通过明确的挂载路径传入。
+
+\begin{myunderstanding}
+构建把源码变成安装包，安装把它放进环境，运行再检验入口。三步分别记录结果，才能发现源码路径带来的误判。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+用新建的虚拟环境安装 wheel，再把工作目录切到源码外。这样可以核对导入的包来自安装位置。
+\end{pycharmpractice}
+
+\begin{pitfall}
+在源码目录里运行成功，可能只是刚好导入了本地文件。交付前换目录，并核对包的 \code{__file__}。
+\end{pitfall}
+图~\ref{fig:chapter-17-flow} 给交付过程留下四个核对点，换环境时逐步重走一遍。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {源码与配置};
+    \node[python flow step,text width=25mm,right=of a] (b) {构建 wheel};
+    \node[python flow step,text width=25mm,right=of b] (c) {安装到新环境};
+    \node[python flow step,text width=25mm,right=of c] (d) {运行与核对};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{构建、安装与运行各有产物，交付时逐步检查。}
+  \label{fig:chapter-17-flow}
+\end{figure}
+
+\subsection*{容器构建文件}
+下面文件与 \code{pyproject.toml} 放在同一目录，先生成 \code{dist} 里的 wheel。
+本次已检查文件内容，容器构建与启动需要 Docker 环境复核。
+\begin{lstlisting}[language={},title={\code{Dockerfile}}]
+# 在本章样例目录构建，先生成 dist 里的 wheel。
+FROM python:3.12-slim
+WORKDIR /app
+COPY dist/ /wheels/
+RUN python -m pip install --no-cache-dir /wheels/*.whl
+CMD ["python", "-m", "notes_demo"]
+\end{lstlisting}
+
+\subsection*{进阶边界演练}
+构建完成后，可保留 wheel 的名称与版本，再换工作目录、换新环境核对。程序若需要随包分发的数据文件，还要检查它们确实进入产物。最后把启动命令、输入约定和输出位置写在一起。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{package}{\linewidth}
+\caption{源码构建为 wheel，再由新环境安装并验证入口。}
+\label{fig:visual-ch17}
+\end{figure}

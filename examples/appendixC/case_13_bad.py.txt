@@ -1,0 +1,2 @@
+# 故意失败的入口。
+import book_missing_module_for_demo

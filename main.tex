@@ -1,0 +1,98 @@
+% !TeX program = xelatex
+% !TeX encoding = UTF-8
+\documentclass[UTF8,a4paper,oneside,openany,fontset=none,11pt]{ctexbook}
+\input{preamble}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\input{frontmatter/cover}
+
+\frontmatter
+\hypersetup{pageanchor=true}
+\input{frontmatter/roadmap}
+\input{frontmatter/preface}
+\input{frontmatter/acknowledgments}
+\input{frontmatter/usage}
+\input{frontmatter/symbols}
+\tableofcontents
+
+\mainmatter
+
+\BookPart{语言基石}
+  {第一行代码可以很短。要是它罢工，先看看是不是点错了运行按钮。}
+  {\textbf{把脚本跑起来。} 在 PyCharm 中选好解释器，运行第一个脚本。碰到报错，先读回溯末行，再定位出错的代码。
+
+   \textbf{把数据放对地方。} 用字符串拼接输出，按访问需求选择列表、元组、字典或集合。通过修改和复制操作，观察哪些名字指向同一个对象。
+
+   \textbf{把规则写清楚。} 用分支和循环筛选记录，用异常和日志保留失败原因，再把重复逻辑收进有明确参数和返回值的函数。}
+  {看清数据怎么走，再决定代码怎么写。}
+\input{chapters/01-quick-start}
+\input{chapters/02-variables-strings}
+\input{chapters/03-outline}
+\input{chapters/04-outline}
+
+\BookPart{进阶核心与工程化}
+  {代码会跑只是第一关。每改一行都要祈祷，下一步就该写测试了。}
+  {\textbf{组织对象与执行过程。} 用类管理实例状态，用属性校验输入。区分迭代器何时取值、生成器何时暂停、装饰器何时包装，以及上下文管理器何时清理资源。
+
+   \textbf{拆分模块，固定预期。} 将可复用代码拆进模块和包，用参数化测试覆盖不同输入，再用 Mock 模拟外部接口的返回结果。
+
+   \textbf{定位问题，保留改动。} 用断点查看状态，用性能分析定位耗时，再通过格式化、静态检查与 Git 检查并记录变更。}
+  {让测试守住约定，让每次修改都有凭据。}
+\input{chapters/05-outline}
+\input{chapters/06-outline}
+\input{chapters/07-outline}
+\input{chapters/08-outline}
+
+\BookPart{文件、数据与系统交互}
+  {文件不会迷路。点下运行时，程序可能站在另一个目录里。}
+  {\textbf{找对文件，读对内容。} 用 \code{pathlib} 处理路径，核对工作目录与字符编码，再通过上下文管理器完成读写。
+
+   \textbf{选好存储方式。} 比较 JSON、CSV 的数据表示，整理配置项，并用 SQLite 保存和查询记录。写入后重新读回，检查字段、类型和数量。
+
+   \textbf{让脚本接得住输入。} 处理时区与时间戳，从日志中提取字段，并用命令行参数指定输入路径和运行选项。}
+  {写入只是半程，读回才能对账。}
+\input{chapters/09-outline}
+\input{chapters/10-outline}
+\input{chapters/11-outline}
+
+\BookPart{并发、网络与基础爬虫}
+  {同时派十个任务去取数据，也得先说清谁拿钥匙、谁等回信。}
+  {\textbf{选择并发方式。} 对比线程、进程和协程的执行与交接方式。练习加锁、传递结果、等待任务完成，并安排异常与退出路径。
+
+   \textbf{读懂一次 HTTP 往返。} 用本机服务练习发送请求、设置超时和检查状态码，再按响应内容选择 JSON 或 HTML 解析方式。
+
+   \textbf{处理网页中的变化。} 用标签和属性定位字段，检查字段缺失的情况，并在本地演示页验证浏览器自动化的等待条件。}
+  {让等待有期限，让任务有交代。}
+\input{chapters/12-outline}
+\input{chapters/13-outline}
+
+\BookPart{扩展生态与工程化收束}
+  {程序最挑的环境，往往就是离开开发者电脑之后的第一个环境。}
+  {\textbf{连接数据与界面。} 了解数据库连接和事务，用参数绑定处理输入，并把业务规则从按钮回调中拆出来，方便独立验证。
+
+   \textbf{把表变成可核对的结果。} 用 NumPy 处理数组，用 Pandas 清理和汇总记录，再用 Matplotlib 出图。导出工作簿后复核缺失值、行数和统计口径。
+
+   \textbf{在新环境中重走安装。} 声明依赖和构建配置，生成并安装 wheel，核对命令入口，再了解如何用 Docker 固定运行环境。}
+  {交付的起点，是另一台机器上的第一次运行。}
+\input{chapters/14-outline}
+\input{chapters/15-outline}
+\input{chapters/16-outline}
+\input{chapters/17-outline}
+
+\BookPart{项目实战}
+  {演示总挑最乖的输入。验收记得请重名联系人、坏链接和空表也来坐坐。}
+  {\textbf{通讯录与批量下载。} 先完成能新增、查询、修改和删除的本地通讯录，验证重启后数据仍可读。再做多线程下载器，记录每个任务的成功、超时或失败结果。
+
+   \textbf{清洗数据并生成报表。} 统一 Excel 或 CSV 的字段与缺失值口径，输出清洗表、工作簿和图，并核对各文件中的关键数字。
+
+   \textbf{完成综合挑战。} 从 PyQt 资料管理器与 FastAPI 本地服务中选择一条路线，明确业务规则与数据存储方式，用正常输入和错误输入验收。}
+  {把演示走过的路，留给下一位运行程序的人。}
+\input{projects/stages}
+
+\appendix
+\input{backmatter/appendices}
+
+
+% 请使用 XeLaTeX 编译两次以生成目录。
+\end{document}

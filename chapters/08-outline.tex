@@ -1,0 +1,124 @@
+\chapter{调试、代码质量与 Git}
+\label{ch:08-outline}
+
+断点呈现某一时刻的状态，性能分析记录调用次数与耗时。先固定输入并缩小问题范围，再修改实现，最后复验结果与性能。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 8 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {断点与剖析}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {格式与静态检查}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {Git 与分支}
+      };
+  \end{tikzpicture}
+  \caption*{断点和性能分析定位问题，质量工具与 Git 记录改动。}
+\end{figure}
+
+
+\section{PyCharm 断点调试与性能分析}
+
+断点用于观察某个时刻的值，剖析器把一段运行里的调用和耗时列成账单。
+先用条件断点停在目标任务上，再用监视表达式看状态变化。
+确认结果正确以后，才去比同一份输入上的累计耗时。
+
+\code{cProfile} 会给程序增加测量开销。耗时差距很小时，可多跑几轮，
+把输入规模、解释器和依赖版本一起记下。
+下面这份列表查找练习正好能接上第 2 章的集合索引。
+
+\subsection*{动手｜先核对结果，再找耗时位置}
+
+剖析器像一张记账单。先把输入固定，跑出能核对的结果，再看哪几个函数累积耗时高。表里时间随机器和当时的负载变化，在同样输入下重复比较，单次数字只负责指路。
+
+\begin{lstlisting}[title={\code{profile_lookup.py}}]
+import cProfile
+import pstats
+
+
+def count_matches(files, queries):
+    # 反复在列表里查名字，保留同一份输入。
+    return sum(name in files for name in queries)
+
+
+files = [f"file-{i}.md" for i in range(1000)]
+queries = ["file-999.md", "missing.md"] * 1000
+profiler = cProfile.Profile()
+hits = profiler.runcall(count_matches, files, queries)
+print("命中数", hits)
+
+# 按累计耗时排序，显示前四条记录。
+pstats.Stats(profiler).sort_stats("cumulative").print_stats(4)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 固定输入应得到 1000 次命中，剖析表里能找到 \code{count_matches}。把 query 数量改小后先核对命中数，再看调用次数变化。
+
+\section{代码格式化与静态检查}
+
+格式化像整理桌面，静态检查像出门前点一遍工具。
+在项目里写下规则，再让命令行和编辑器用同一份配置。
+Black 管代码排版，Ruff 和 Flake8 都能报一部分代码问题，具体启用哪些规则由项目统一决定。
+
+下面的例子把 Ruff 用于检查，把 Black 用于格式化。先运行
+\code{python -m black --check .} 和 \code{python -m ruff check .}，
+看到差异后再运行格式化命令。Flake8 的项目可以用同样方式单独检查，
+避免重复规则把一处问题报很多次。
+
+
+\section{Git 基础与版本管理}
+
+将 Git 的提交当成能退回去的存档点。先用 diff 看改了什么，
+再把这次要保存的文件加入暂存区，提交说明写出改动目的。
+新分支给一段工作留出独立路线，合并前再检查结果。
+
+在 PyCharm 的提交窗口逐个看文件差异，再提交。
+\code{push} 会把本地提交送到配置好的远端，第一次使用要先核对远端地址和分支。
+练习从空的本地仓库开始，先保存一份文件，再改一行观察 diff。
+
+\begin{myunderstanding}
+正确结果是比较性能的前提。将输入固定，先查调用次数，再看耗时分布，最后用同样样本复测改动。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+条件断点只在指定任务停下，监视表达式记录关键状态。性能表中的累计耗时可用于定位调用链上的瓶颈。
+\end{pycharmpractice}
+
+\begin{pitfall}
+格式化和静态检查采用项目统一配置。先看 diff，再提交配置变更，避免排版差异盖住功能改动。
+\end{pitfall}
+
+\subsection*{同一份规则交给编辑器和终端}
+下面的配置位于 \code{pyproject.toml}。
+先核对格式化结果，再检查代码问题。
+\par\noindent\code{python -m black --check style_demo.py}\par
+\noindent\code{python -m ruff check style_demo.py}\par
+
+\begin{lstlisting}[language={},title={\code{pyproject.toml}}]
+# 用同一份配置描述本项目的排版与检查。
+[tool.black]
+line-length = 79
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+\end{lstlisting}
+本地提交可分三步完成：
+\begin{enumerate}
+  \item 执行 \code{git init}，创建练习仓库。
+  \item 执行 \code{git add style_demo.py}，暂存目标文件。
+  \item 执行 \code{git diff --cached}，核对差异后再提交。
+\end{enumerate}
+推送前确认目标分支与远端配置。
+
+\subsection*{进阶边界演练}
+性能表里，单独看自身耗时和连同子调用的累计耗时，会得到不同线索。递归与重复调用还会影响次数。记录输入规模后再比较，优化前后的结果也要相同，才能谈节省了多少工作。

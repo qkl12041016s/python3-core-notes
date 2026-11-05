@@ -1,0 +1,6 @@
+# 故意失败的入口。
+count = 3
+def broken():
+    print(count)
+    count = 4
+broken()

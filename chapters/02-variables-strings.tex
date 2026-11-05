@@ -1,0 +1,425 @@
+\chapter{核心数据结构}
+\label{ch:variables-strings-containers}
+
+容器的选择取决于要回答的问题：名单需要顺序，记录需要按字段查找，成员判断只关心某个值是否存在。先明确访问方式，再选择列表、字典或集合。
+
+
+% 本节参考 Matthes《Python 编程：从入门到实践》第 3 版第 2 章，
+% Ramalho《流畅的 Python》第 8.1 节，以及菜鸟教程的基本数据类型、
+% 字符串和类型注解三篇。书中的代码示例可独立运行。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=18mm}
+  ]
+    \node[text=white,minimum size=26mm,text width=22mm] {第2章\\核心数据结构}
+      child[grow=154,level distance=36mm,concept color=DeepBlue] {
+        node[text=white] {01\\变量与命名}
+      }
+      child[grow=26,level distance=36mm,concept color=PythonYellow] {
+        node {02\\字符串与\\格式化}
+      }
+      child[grow=-26,level distance=36mm,concept color=PythonBlue] {
+        node[text=white] {03\\列表与元组}
+      }
+      child[grow=-154,level distance=36mm,concept color=PythonYellow!46!white] {
+        node {04\\字典与集合}
+      };
+  \end{tikzpicture}
+  \caption*{变量绑定、字符串格式化及四类常用容器。}
+\end{figure}
+
+执行 \code{backup = items} 不会复制列表。向 \code{items} 添加元素后，\code{backup} 也能看到变化，因为两个名字绑定的是同一个对象。判断容器操作时，先确认引用关系，再区分原地修改与创建新对象。
+
+\section{变量与字符串}
+\label{sec:variables-and-strings}
+
+将变量名想成贴在对象上的便利贴。执行 \code{retries = 3} 时，Python 先求出右侧的值，
+再把名字 \code{retries} 绑定到整数对象 \code{3}。写 \code{retries = 4} 就是把贴纸换个地方。
+两张贴纸也能贴在同一个对象上，开头那份“备份”就是这么来的。
+
+按内容挑引号。单引号和双引号都能写出 \code{str}，三引号可以保留源码里的换行。
+要把值填进一句话，可用 \code{f} 开头的字符串，把表达式放进花括号。
+
+
+\begin{lstlisting}[title={\ttfamily variables.py},aboveskip=6pt,belowskip=6pt]
+retries: int = 3  # 重试次数用整数。
+task = '同步 "笔记"'  # 单引号保留双引号。
+status = "It's ready."  # 双引号保留撇号。
+notes = """已检查文件
+等待开始同步"""  # 三引号保留换行。
+
+# 花括号里的表达式先求值，再放进字符串。
+summary = f"{task}，最多重试 {retries} 次。"
+# 用换行符分隔传给 print() 的三段文字。
+print(summary, status, notes, sep="\n")
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+C 语言通常要求先声明变量类型。Python 执行赋值时即可建立名字与对象的绑定，
+用到这个名字时，解释器根据它指向的对象来处理操作。
+\code{retries: int = 3} 里的 \code{: int} 是写给读者和检查工具的约定。
+右侧得到什么对象，运行时就绑定什么对象。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+将光标放在最后一行的 \code{summary} 上。
+在 Windows 默认键位下，按 \code{Ctrl+Shift+P}，也可以用菜单里的
+\texttt{View > Type Info}。如果出现表达式列表，就选 \code{summary}。
+这里看到的 \code{str} 是编辑器推断的类型。要核对运行时的对象，
+可在脚本末尾临时加一行 \code{print(type(summary))} 再运行一次。
+
+\href{https://www.jetbrains.com/help/pycharm/python-code-insight.html\#show-expression-type}
+  {JetBrains 文档中的表达式类型查看操作}
+\end{pycharmpractice}
+
+\begin{pitfall}
+若要将 \code{"hello"} 的首字母改成大写，直接执行 \code{s[0] = 'H'}，
+解释器回了一个 \code{TypeError}。字符串一旦建好，里面的字符就固定了。
+先用 \code{s[1:]} 取出从第二个字符到末尾的 \code{"ello"}，
+再在前面拼一个 \code{"H"}，最后让 \code{s} 指向拼好的新字符串。
+\end{pitfall}
+
+
+\begin{lstlisting}[title={\code{fix_greeting.py}}]
+# 两个名字起初都指向同一个字符串。
+s = "hello"
+original = s
+
+# 单独取消下一行注释，可以复现 TypeError。
+# s[0] = 'H'
+
+# 拼出新字符串，再把 s 绑过去。
+s = "H" + s[1:]
+
+# 对照输出，检查原来的字符串。
+print(s)         # Hello
+print(original)  # hello
+\end{lstlisting}
+
+
+图~\ref{fig:pycharm-type-inference} 对照静态类型推断与本次运行的变量值。
+\begin{figure}[htbp]
+  \centering
+  \BookImage{type-info}{\linewidth}
+  
+  \caption{在 PyCharm 中查看变量的类型推断。}
+  \label{fig:pycharm-type-inference}
+\end{figure}
+
+\subsection*{把换行和小数位写清楚}
+
+给日志拼一行文字时，用 \texttt{\textbackslash t} 隔开列，用
+\texttt{\textbackslash n} 换行。排查对齐问题时，用 \code{repr()} 把这些字符
+显出来。打印耗时时，可用 \code{.2f} 约定两位小数。
+
+
+\begin{lstlisting}[title={\code{format_log.py}}]
+# 用 repr 显示实际的制表符和换行符。
+line = "notes.md\tok\n"
+print(repr(line))  # 'notes.md\tok\n'
+
+# 格式化只决定显示效果，原数值仍可参与计算。
+seconds = 1.236
+print(f"{seconds:.2f} s")  # 1.24 s
+\end{lstlisting}
+
+
+\section{列表与元组}
+\label{sec:lists-and-tuples}
+
+同步脚本中，文件清单需要增删，适合放进列表，类似可以调整格子的抽屉；目标主机与端口通常成对传递，适合组成元组。元组固定的是元素位置，不保证其引用的对象也不可变。
+
+列表用方括号写，元组常用圆括号包住用逗号分隔的元素。两者都按顺序放东西，
+所以可以用 \code{files[0]} 取第一项。写 \code{files[:2]} 时，Python 从开头取到
+索引 \code{2} 之前，得到一个新列表。先留好预览，再继续给原列表加任务。
+
+
+\begin{lstlisting}[title={\code{sync_queue.py}}]
+# 先留一份只含前两个文件的预览。
+files = ["notes.md", "todo.md"]
+preview = files[:2]
+
+# 给待同步列表加一项，再核对首项和预览。
+files.append("ideas.md")
+print(files[0])  # notes.md
+print(preview)   # ['notes.md', 'todo.md']
+
+# 主机和端口总是成对使用，按顺序拆开。
+target = ("backup.local", 443)
+host, port = target
+print(f"{host}:{port}")  # backup.local:443
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+可分两层看。列表允许增加位置，也允许把某个位置换成另一个对象。
+元组创建时就定下了位置和每个位置引用的对象。如果某个位置装的是一个列表，
+仍能改那个列表的内容。快递盒封住的是格位，格位里的抽屉照样能拉开。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在 \code{files.append("ideas.md")} 左侧点一下，设个断点，然后用 Debug 运行。
+程序停在这一行时，先在变量面板展开 \code{files} 和 \code{preview}。
+按 \code{F8}（Step Over）执行这一行后，\code{files} 多了第三项，
+\code{preview} 还是原来两项。键位改过的话，直接点调试工具栏的 Step Over。
+
+\href{https://www.jetbrains.com/help/pycharm/stepping-through-the-program.html}
+  {JetBrains 的单步调试说明}
+\end{pycharmpractice}
+
+\begin{pitfall}
+将同步任务分批后，\code{preview = batches[:]} 只复制外层列表（图~\ref{fig:visual-ch2}）。向预览中的第一批添加文件，原列表的同一批也会变化。
+切片只复制外层列表，两边的第一个位置仍指向同一份内层列表。
+这个例子只有一批，将这一批也切片一次，才得到可以单独修改的预览。
+\end{pitfall}
+
+
+\begin{lstlisting}[title={\code{copy_batch.py}}]
+# 只复制外层，第一批文件仍被两个列表共享。
+batches = [["notes.md"]]
+preview = batches[:]
+preview[0].append("todo.md")
+print(batches)  # [['notes.md', 'todo.md']]
+
+# 重新做预览，这次把第一批也复制一份。
+preview = [batches[0][:]]
+preview[0].append("ideas.md")
+print(batches)  # [['notes.md', 'todo.md']]
+print(preview)  # [['notes.md', 'todo.md', 'ideas.md']]
+\end{lstlisting}
+
+
+列表追加与切片预览的对照见图~\ref{fig:pycharm-sync-queue}，先看两边的项数，再看引用的层次。
+\begin{figure}[htbp]
+  \centering
+  % 素材就绪后，将截图保存到下列路径。
+  \IfFileExists{figures/pycharm-sync-queue.png}{%
+    \includegraphics[width=0.90\linewidth]{figures/pycharm-sync-queue.png}%
+  }{%
+    \BookImage{list-preview}{\linewidth}%
+  }
+  \caption{追加元素后，\code{files} 增加第三项，切片 \code{preview} 保留前两项。}
+  \label{fig:pycharm-sync-queue}
+\end{figure}
+
+\subsection*{给文件编号，再配上状态}
+
+用 \code{enumerate()} 给文件编号，用 \code{zip()} 把文件名与状态按位置配对。
+普通 \code{zip()} 会在最短的一列结束时停下，所以先核对两边的条数。
+同步清单里也会遇到更新和删除。知道位置时用下标赋值，想移除已处理的末项时用
+\code{pop()} 取走它。
+
+
+\begin{lstlisting}[title={\code{number_tasks.py}}]
+# 改正文件名，移走队尾已经处理的条目。
+files = ["note.md", "todo.md", "done.md"]
+files[0] = "notes.md"
+files.pop()
+states = ["ok", "retry"]
+
+# 一一配对，再给每条结果编号。
+for number, (name, state) in enumerate(
+    zip(files, states), start=1
+):
+    print(number, name, state)
+\end{lstlisting}
+
+
+\section{字典与集合}
+\label{sec:dicts-and-sets}
+
+列表适合按位置取值；按文件名查询同步状态时，可用字典建立索引，以文件名为键、同步状态为值。
+
+例如，\code{status_by_file["notes.md"]} 直接查询该文件对应的状态。
+
+有时只需知道“服务器上有没有这个名字”。这时用集合，像拿一张只勾名字的签到表。
+将待同步清单交给 \code{set()} 去重，再用 \code{-} 减掉服务器已有的文件名。
+\code{&} 则留下两边都有的名字。最后用 \code{sorted()} 排好输出，
+这样示意图中的顺序每次都一样。
+
+
+\begin{lstlisting}[title={\code{sync_index.py}}]
+# 用文件名查状态。缺失的键显示 unknown。
+status_by_file = {"notes.md": "done"}
+status_by_file["todo.md"] = "queued"
+print(status_by_file["notes.md"])  # done
+print(status_by_file.get("draft.md", "unknown"))  # unknown
+
+# 集合折叠重复文件名，再和服务器名单对照。
+requested = ["notes.md", "todo.md", "todo.md"]
+wanted = set(requested)
+remote = {"notes.md"}
+print("todo.md" in wanted)       # True
+print(sorted(wanted & remote))  # ['notes.md']
+print(sorted(wanted - remote))  # ['todo.md']
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+将哈希值想成取件码。字典查键、集合查成员时，先用哈希值缩小查找范围。
+哈希值相同，还要看对象是否相等。手里只有文件名时，这比从列表头挨个核对更合适。
+要是手里已经有下标，直接取 \code{files[0]} 就很顺手。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在 \code{sync_index.py} 最后一行设断点，用 Debug 运行。
+暂停后，展开 \code{wanted} 与 \code{remote}，核对两份名单。
+
+按 \code{Alt+F8} 打开求值窗口，计算下面的表达式：
+\begin{center}
+  \code{sorted(wanted - remote)}
+\end{center}
+结果应为 \code{['todo.md']}。修改过键位时，从调试菜单打开求值操作。
+
+\href{https://www.jetbrains.com/help/pycharm/examining-suspended-program.html}
+  {JetBrains 的调试求值说明}
+\end{pycharmpractice}
+
+\begin{pitfall}
+前一节将主机与端口配为一对。若把这两个值放进列表，再用列表作为字典键，
+结果刚建字典就遇到 \code{TypeError}。字典键和集合成员都得可哈希。
+哈希值要在对象的生命周期内保持稳定，相等的对象也要有相同的哈希值。
+这次用字符串和整数组成的元组就行。元组里要是塞了列表，照样会报错。
+\end{pitfall}
+
+
+\begin{lstlisting}[title={\code{target_key.py}}]
+# 取消下一行的注释，可以复现 TypeError。
+# target_names = {["backup.local", 443]: "内网备份"}
+
+# 字符串和整数都可哈希，这个元组可以作键。
+target = ("backup.local", 443)
+target_names = {target: "内网备份"}
+print(target_names[target])  # 内网备份
+\end{lstlisting}
+
+
+图~\ref{fig:pycharm-sync-difference} 把请求名单与已有名单并排，待同步结果从差集中取出。
+\begin{figure}[htbp]
+  \centering
+  \IfFileExists{figures/pycharm-sync-difference.png}{%
+    \includegraphics[width=0.90\linewidth]{figures/pycharm-sync-difference.png}%
+  }{%
+    \BookImage{set-difference}{\linewidth}%
+  }
+  \caption{\code{sorted(wanted - remote)} 的结果为待同步文件 \code{todo.md}。}
+  \label{fig:pycharm-sync-difference}
+\end{figure}
+
+\subsection*{合并两份名单}
+
+需要汇总两台机器上的文件名时，用 \code{|} 取并集。两个集合都出现的名字只留一次，
+所以可以先合并再排序，得到一份方便核对的总清单。
+
+
+\begin{lstlisting}[title={\code{merge_names.py}}]
+# 合并两台机器的文件名，再按名字显示。
+local = {"notes.md", "todo.md"}
+remote = {"notes.md", "archive.md"}
+print(sorted(local | remote))
+\end{lstlisting}
+
+
+\section{推导式与 collections 四大金刚}
+\label{sec:comprehensions-collections}
+
+将推导式当成一台流水线打包机。同步日志进来，先写清楚要留下哪些记录，
+再决定每条记录要打包成什么样子。下面的 \code{[name for name, state in events if state == "retry"]}
+把重试记录的文件名装成列表。要保留重复出现的文件名，列表就派得上用场。
+要找的是出现过重试的不同文件时，再把结果交给 \code{set()}。
+
+
+\begin{lstlisting}[title={\code{sync_report.py}}]
+from collections import Counter, defaultdict
+
+# 每条日志记录文件名和同步状态。
+events = [
+    ("notes.md", "ok"),
+    ("todo.md", "retry"),
+    ("draft.md", "retry"),
+]
+# 先筛选重试记录，再统计各状态出现的次数。
+retry_files = [
+    name for name, state in events if state == "retry"
+]
+states = [state for name, state in events]
+counts = Counter(states)
+print(retry_files)          # ['todo.md', 'draft.md']
+print(counts["retry"])      # 2
+
+# 每种状态用自己的列表收集文件名。
+files_by_state = defaultdict(list)
+for name, state in events:
+    files_by_state[state].append(name)
+print(files_by_state["ok"])  # ['notes.md']
+\end{lstlisting}
+
+
+\begin{myunderstanding}
+让 \code{Counter} 负责数票，让 \code{defaultdict(list)} 负责分筐。
+\code{Counter} 给出某个状态出现几次，分筐则留下这些状态对应的文件名。
+这两个结果都来自同一份日志，回答的问题不同。
+\end{myunderstanding}
+
+\begin{pitfall}
+只需判断某类状态是否已有记录时，使用 \code{files_by_state.get("failed")}。
+直接取 \code{files_by_state["failed"]} 会在键缺失时调用 \code{list()}，
+再把得到的空列表存进去。此后遍历分组时，多出来的这个空组也会出现。
+\end{pitfall}
+
+计数和分组解决了报表问题。真要一条条重试时，将任务放进 \code{deque}，
+从左端取第一件。用 \code{namedtuple} 给任务字段起名，拿到任务后可以直接读
+\code{job.name}，顺着上一节元组的写法又往前走了一步。
+
+
+\begin{lstlisting}[title={\code{retry_queue.py}}]
+from collections import deque, namedtuple
+
+# 给原先靠位置区分的两个字段起名。
+Job = namedtuple("Job", ["name", "state"])
+queue = deque([Job("todo.md", "retry")])
+
+# 新任务从右边排进来，最早的任务从左边取出。
+queue.append(Job("draft.md", "retry"))
+job = queue.popleft()
+print(job.name)  # todo.md
+\end{lstlisting}
+
+
+\begin{pycharmpractice}
+在脚本最后一行设断点，用 Debug 运行。变量面板里先展开 \code{counts} 看次数，
+再展开 \code{files_by_state} 对照文件名。也可求值
+\code{files_by_state.get("failed")}，然后看分组里有没有多出一个键。
+\end{pycharmpractice}
+
+计数和分组的区别画在图~\ref{fig:pycharm-sync-report}，同一份日志可以交出两种答案。
+\begin{figure}[htbp]
+  \centering
+  \IfFileExists{figures/pycharm-sync-report.png}{%
+    \includegraphics[width=0.90\linewidth]{figures/pycharm-sync-report.png}%
+  }{%
+    \BookImage{grouping}{\linewidth}%
+  }
+  \caption{\code{counts} 统计各状态次数，\code{files_by_state} 保存对应文件名。}
+  \label{fig:pycharm-sync-report}
+\end{figure}
+
+\subsection*{用同一份清单核对容器}
+
+给 \code{sync_report.py} 再添一条 \code{("todo.md", "retry")}。
+重试记录多一条，计数也多一次。若问题换成“有几个不同的文件需要重试”，
+就看 \code{set(retry_files)} 的长度。先分清问题，再挑返回列表、计数或集合。
+
+\subsection*{进阶边界演练}
+字段名应表达业务含义，避免通过位置暗示用途。字典里的 True 与 1 会按相等键处理。若要分别表达开关和次数，可用明确的字段名，把布尔值与计数放在不同字段里。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{references}{\linewidth}
+\caption{浅拷贝仅复制外层列表，内层列表仍由两份外层列表共同引用。}
+\label{fig:visual-ch2}
+\end{figure}

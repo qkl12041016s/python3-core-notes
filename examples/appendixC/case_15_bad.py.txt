@@ -1,0 +1,5 @@
+# 故意失败的入口。
+from pathlib import Path
+from tempfile import TemporaryDirectory
+with TemporaryDirectory() as folder:
+    (Path(folder) / "missing.txt").read_text()

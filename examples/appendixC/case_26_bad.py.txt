@@ -1,0 +1,4 @@
+# 故意失败的入口。
+def broken():
+    return broken()
+broken()

@@ -1,0 +1,127 @@
+\chapter{GUI 与本地工具开发}
+\label{ch:15-outline}
+
+界面负责接收输入与展示结果，业务层负责校验和处理。把两者分开，才能独立测试规则，并避免按钮回调承担过多职责。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 15 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {窗口和事件}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {业务逻辑}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {界面与测试}
+      };
+  \end{tikzpicture}
+  \caption*{事件回调连接界面输入与独立业务函数。}
+\end{figure}
+
+
+\section{PyQt / Tkinter 入门}
+
+窗口像一张带按钮的工作台。布局决定东西放在哪里，事件循环等用户动作，
+回调只在动作到来时执行。先用标准库 Tkinter 做最小输入窗口，
+PyQt 则把同样的链路组织成控件、信号和槽。
+
+按钮里做耗时下载会让界面失去响应。可把业务处理放进独立函数，
+需要后台执行时再用线程或任务把结果交回界面线程。
+下面先只接输入和显示，运行需要能打开窗口的桌面环境。
+
+
+\begin{lstlisting}[title={\code{window_demo.py}}]
+import tkinter as tk
+from tkinter import ttk
+
+
+def greet():
+    # 回调只取输入并更新显示。
+    text = entry.get().strip()
+    result.set(f"你好，{text}" if text else "请先输入名字")
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("笔记问候")
+    entry = ttk.Entry(root)
+    entry.pack(padx=16, pady=8)
+    result = tk.StringVar(value="等待输入")
+    ttk.Button(root, text="问候", command=greet).pack()
+    ttk.Label(root, textvariable=result).pack(pady=8)
+    root.mainloop()
+\end{lstlisting}
+
+\textbf{运行条件}\enspace 需要可显示窗口的桌面环境。本次完成代码语法检查，窗口操作须在桌面环境中复核。
+
+
+\section{逻辑与界面分离}
+
+将界面当舞台，处理规则当剧本。用户点按钮时，
+回调把输入交给函数，再把返回结果放到控件上。
+这样搜索规则能在终端里先验证，换一个界面也能沿用。
+
+下面的函数只依赖传入的数据，测试时可以直接给列表和查询词。
+接到窗口以后，在回调设置断点，先核对输入，再单步进入处理函数。
+
+\subsection*{动手｜先跑通脱离窗口的处理函数}
+
+窗口像舞台，搜索逻辑才是剧本。先把处理函数写到能单独运行，再让按钮把输入框的值交给它。以后换成命令行或者另一个窗口时，同一个搜索结果还能原样核对。
+
+\begin{lstlisting}[title={\code{search_titles.py}}]
+def search_titles(titles, query):
+    # 界面传来的输入先去空格，再统一比较大小写。
+    key = query.strip().casefold()
+    return [title for title in titles if key in title.casefold()]
+
+
+# 没有窗口时也可以核对搜索结果。
+if __name__ == "__main__":
+    titles = ["notes.md", "todo.md", "old_notes.md"]
+    print(search_titles(titles, " NOTES "))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 独立运行应输出 notes.md 和 \code{old_notes.md}。把查询改成带多余空格的字符串，结果应一致。GUI 的回调只负责取输入、调用函数和显示返回值。
+
+\begin{myunderstanding}
+界面收输入并展示结果，业务函数处理规则。让函数能脱离窗口运行，测试和复用会顺很多。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在按钮回调设置断点，先看控件读出的值，再单步进入业务函数，最后核对返回结果怎样显示。
+\end{pycharmpractice}
+
+\begin{pitfall}
+耗时工作放进界面回调会堵住事件循环。后台任务完成后，要按框架约定把更新交回界面线程。
+\end{pitfall}
+图~\ref{fig:chapter-15-flow} 把输入送到业务函数，再把结果送回显示层。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {用户输入};
+    \node[python flow step,text width=25mm,right=of a] (b) {界面回调};
+    \node[python flow step,text width=25mm,right=of b] (c) {业务函数};
+    \node[python flow step,text width=25mm,right=of c] (d) {更新显示};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{界面把输入交给业务函数，再把结果显示在控件中。}
+  \label{fig:chapter-15-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+窗口关闭也是一次退出流程。正在进行的任务需要知道如何结束，错误要回到界面上让使用者看见。业务层可独立测试（图~\ref{fig:visual-ch15}）；随后，再逐项走一遍输入、取消、重复提交和重新打开程序的路径。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{architecture}{\linewidth}
+\caption{界面与 API 共用业务规则，持久化层管理数据与事务。}
+\label{fig:visual-ch15}
+\end{figure}

@@ -1,0 +1,6 @@
+# 故意失败的入口。
+import socket
+with socket.socket() as first, socket.socket() as second:
+    first.bind(("127.0.0.1", 0))
+    first.listen()
+    second.bind(first.getsockname())

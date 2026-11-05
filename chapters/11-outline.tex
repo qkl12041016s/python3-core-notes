@@ -1,0 +1,149 @@
+\chapter{时间、正则与命令行工具}
+\label{ch:11-outline}
+
+时间、日志和命令行参数都连接着外部输入。明确时区、格式与字段约定，才能把一段临时脚本整理成可重复运行的工具。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 11 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {时间与时区}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {正则与日志}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {命令行与定时}
+      };
+  \end{tikzpicture}
+  \caption*{时间与时区、日志字段提取及命令行参数。}
+\end{figure}
+
+
+\section[时间处理]{时间处理（datetime）}
+
+时间点和钟面上的字样是两回事。将 UTC 时间当成统一坐标，
+展示时再换成本地时区。带时区的 datetime 才能明确说明一个钟面数字对应哪个时刻，
+两个地区的同一瞬间可以显示不同的小时。
+
+存储和跨系统传递时，保留偏移或统一用 UTC。
+\code{timestamp()} 配合带时区对象使用，读回时也明确传入时区。
+夏令时地区需要用 zoneinfo 的地区规则，固定偏移只描述一个偏移量。
+
+
+\begin{lstlisting}[title={\code{time_point.py}}]
+from datetime import datetime, timedelta, timezone
+
+# 同一时刻，分别显示 UTC 与固定的东八区偏移。
+utc = datetime(2026, 1, 1, tzinfo=timezone.utc)
+local = utc.astimezone(timezone(timedelta(hours=8)))
+print(utc.isoformat())
+print(local.isoformat())
+print(utc.timestamp() == local.timestamp())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+2026-01-01T00:00:00+00:00
+2026-01-01T08:00:00+08:00
+True
+\end{lstlisting}
+
+\par
+
+
+\section[正则表达式实战]{正则表达式（Re）实战}
+
+正则像文字筛子，先给它规定日志长什么样，再把字段挑出来。
+命名组让取值处能直接写字段名。原始字符串写法 \code{r"..."} 能减少反斜杠转义的负担。
+
+正则匹配到“像 IP 的一串字”以后，地址是否合法仍交给专门的解析器。
+下面保留原日志，再用 ipaddress 核对地址。规则越写越长时，先拆字段，
+把每一层需要判断的事写清楚。
+
+
+\begin{lstlisting}[title={\code{parse_address.py}}]
+import ipaddress
+import re
+
+# 正则先找字段，合法性再交给 IP 解析器。
+line = "at=2026-01-01T00:00:00Z ip=192.0.2.1"
+match = re.search(r"ip=(?P<address>\S+)", line)
+if match is not None:
+    address = ipaddress.ip_address(match.group("address"))
+    print(address)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+192.0.2.1
+\end{lstlisting}
+
+\par
+
+
+\section[脚本工具化]{脚本工具化（argparse）}
+
+命令行参数像工具面板。路径、输出位置和开关放在入口解析，
+业务函数拿到明确的值再处理。这样一份脚本就能处理不同文件，
+也能让定时任务用相同命令复现。
+
+argparse 负责显示帮助和缺少参数的提示；业务代码仍须检查路径与字段是否合法。
+定时执行时，工作目录、解释器、时区和日志位置都写明确。
+下面用一份固定日志跑通输入路径到解析结果的过程。
+
+\subsection*{动手｜给日志脚本加一个输入入口}
+
+将输入路径从代码里挪到参数里，再从日志行提取时间和 IP 字段。读到格式不符的行就跳过，方便用同一条命令跑不同日志。这里的正则负责找字段，时间解析交给 datetime。
+
+\begin{lstlisting}[title={\code{scan_log.py}}]
+import argparse
+from datetime import datetime, timezone
+from pathlib import Path
+import re
+
+# 只提取约定格式的时间字段和 IP 字段。
+pattern = re.compile(r"^(\S+)\s+ip=(\S+)$")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=Path, required=True)
+    args = parser.parse_args()
+
+    for line in args.input.read_text(encoding="utf-8").splitlines():
+        match = pattern.fullmatch(line)
+        if match is None:
+            continue
+        stamp, address = match.groups()
+        moment = datetime.fromisoformat(stamp)
+        print(moment.astimezone(timezone.utc).isoformat(), address)
+
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 先进入 \code{examples/ch11}，再运行下列命令。\par\noindent\code{python scan_log.py --input sample.log}\par 程序应输出一条 UTC 时间和地址。省略 \code{--input} 时，argparse 会显示用法并结束。
+
+\begin{myunderstanding}
+时间点、显示格式和时区分开处理。正则先提字段，字段是否合法交给对应的解析函数核对。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在运行配置的参数栏填写 --input sample.log，再检查工作目录。终端复现时用同样参数。
+\end{pycharmpractice}
+
+\begin{pitfall}
+没有时区的时间戳转换会依赖运行机器的本地配置。给存储时间和转换入口明确写出时区。
+\end{pitfall}
+
+\subsection*{进阶边界演练}
+时间戳要同时交代单位与时区语境。秒和毫秒混用时，结果可能跳到完全不合理的年份。正则提取完字段后，再用日期或 IP 解析器做校验，免得一段像样的文字冒充有效数据。

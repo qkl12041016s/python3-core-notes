@@ -1,0 +1,48 @@
+\begin{titlepage}
+  \thispagestyle{empty}%
+  \begin{tikzpicture}[remember picture,overlay]
+    \begin{scope}[shift={(current page.north west)},x=1cm,y=-1cm]
+      \fill[CoverDark] (0,0) rectangle (21,29.7);
+      \fill[PythonBlue] (0,0) rectangle (15.2,2.2);
+      \fill[PythonYellow] (15.2,0) rectangle (21,2.2);
+
+      \fill[EditorDark] (2.2,4.1) rectangle (18.8,22.2);
+      \draw[EditorLine,line width=0.8pt] (2.2,4.1) rectangle (18.8,22.2);
+      \draw[EditorLine,line width=0.8pt] (2.2,5.5) -- (18.8,5.5);
+      \fill[PythonYellow] (2.75,4.8) circle[radius=0.09];
+      \fill[PythonBlue!75!white] (3.11,4.8) circle[radius=0.09];
+      \fill[CodeLine] (3.47,4.8) circle[radius=0.09];
+      \node[anchor=west,text=CodeLine,font=\small\ttfamily]
+        at (3.8,4.8) {main.py};
+      \node[anchor=east,text=CodeLine,font=\small\ttfamily]
+        at (18.2,4.8) {PYTHON 3};
+
+      \node[anchor=west,text=PythonYellow,font=\ttfamily\bfseries\LARGE]
+        at (3.2,7.3) {\code{>>>}};
+      \node[anchor=west,text=white,font=\sffamily\bfseries\fontsize{55}{63}\selectfont]
+        at (3.1,9.45) {\BookTitlePrefix};
+      \node[anchor=west,text=white,font=\sffamily\bfseries\fontsize{29}{37}\selectfont]
+        at (3.2,11.75) {\BookTitleText};
+      \fill[PythonYellow] (3.3,13.15) rectangle (6.5,13.24);
+      \node[anchor=west,text=CodeLine,font=\sffamily\Large]
+        at (3.2,14.35) {\BookSubtitle};
+
+      \node[anchor=west,text=EditorLine,font=\ttfamily\fontsize{83}{83}\selectfont]
+        at (3.15,18.75) {\code{{}}};
+      \node[anchor=east,text=EditorLine,font=\ttfamily\fontsize{72}{72}\selectfont]
+        at (17.8,19.75) {\code{< >}};
+
+      \draw[EditorLine,line width=0.8pt] (2.2,25.0) -- (18.8,25.0);
+      \node[anchor=west,text=CodeLine,font=\small\sffamily] at (2.2,25.8) {作者};
+      \node[anchor=west,text=white,font=\large\sffamily\bfseries]
+        at (2.2,26.75) {\BookAuthor};
+      \node[anchor=west,text=CodeLine,font=\small\sffamily] at (8.2,25.8) {版本};
+      \node[anchor=west,text=PythonYellow,font=\large\ttfamily\bfseries]
+        at (8.2,26.75) {\BookVersion};
+      \node[anchor=west,text=CodeLine,font=\small\sffamily] at (12.9,25.8) {日期};
+      \node[anchor=west,text=white,font=\large\sffamily]
+        at (12.9,26.75) {\BookDate};
+    \end{scope}
+  \end{tikzpicture}%
+  \null
+\end{titlepage}

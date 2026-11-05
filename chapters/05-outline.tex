@@ -1,0 +1,156 @@
+\chapter[面向对象编程]{面向对象编程（OOP）}
+\label{ch:05-outline}
+
+设计类时，先确定对象需要保存的状态和提供的操作，再考虑继承关系。实例属性、类属性与协作对象各有职责，不能只凭语法相似就混用。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 5 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {类与实例}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {属性与封装}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {继承与共享状态}
+      };
+  \end{tikzpicture}
+  \caption*{实例状态、属性校验与继承协作。}
+\end{figure}
+
+
+\section{类与对象}
+
+类像模具，实例是做出的某一块饼干。在 \code{__init__} 里设置实例属性。
+\code{__str__} 用于日常显示，\code{__repr__} 为调试提供对象的可辨识表示。
+
+方法里的 \code{self} 就是这一次调用对应的实例。它让同一段方法代码操作各自的状态。
+下面用一条联系人记录对照两种显示，随后用同步任务检查实例属性。
+
+
+\begin{lstlisting}[title={\code{contact_repr.py}}]
+class Contact:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        # 日常显示用简洁名字。
+        return self.name
+
+    def __repr__(self):
+        # 调试时保留类型名和字符串边界。
+        return f"Contact(name={self.name!r})"
+
+
+person = Contact("小雪")
+print(person)
+print(repr(person))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+小雪
+Contact(name='小雪')
+\end{lstlisting}
+
+\par
+
+
+\section{封装与 @property}
+
+将 property 当成属性前面的一道门。调用处照常写 \code{job.name = value}，
+门内统一处理去空格和校验。访问属性时可以通过 getter 返回整理后的值，
+赋值时则经过 setter。属性内部用另一个名字存储，避免再次调用同一个 setter。
+
+单下划线是内部使用的约定。它方便读代码的人识别边界，具体校验仍由代码执行。
+在 PyCharm 中先找属性的使用处，再检查改名或添加校验会影响哪些调用。
+
+\subsection*{动手｜让两个实例各管各的状态}
+
+用两个同步任务检查属性放在哪里。任务名经过同一个属性入口清理，日志列表在初始化时创建。这样只给第一个任务记一条消息，第二个任务的列表就会保持为空。
+
+\begin{lstlisting}[title={\code{sync_jobs.py}}]
+class SyncJob:
+    def __init__(self, name):
+        self.name = name
+        # 每个实例在初始化时建自己的日志。
+        self.log = []
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("任务名不能为空")
+        self._name = cleaned
+
+
+# 给一个实例写日志，再检查另一个实例。
+first = SyncJob(" notes.md ")
+second = SyncJob("todo.md")
+first.log.append("queued")
+print(first.name, first.log)
+print(second.name, second.log)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 正常输出两行，notes.md 后面有一条日志，todo.md 后面是空列表。把任务名换成只含空格的字符串，可以复现校验失败。
+
+\section{继承与常见设计误区}
+
+类属性像挂在模具旁边的一张共享纸条。实例属性则写在每块饼干自己的标签上。
+若把日志列表写在类体里，所有实例都可能看到同一份列表。
+上节把列表放进 \code{__init__}，就让每次创建对象时各建一份。
+
+继承时，先找真正共用的行为。\code{super()} 按方法解析顺序把调用交给后面的类。
+多继承的协作要求各类保持能衔接的参数和调用约定，先用单继承把路径看清。
+
+
+\begin{lstlisting}[title={\code{inherit_name.py}}]
+class Job:
+    def label(self):
+        return "sync"
+
+
+class NamedJob(Job):
+    def label(self):
+        # super 取父层行为，再补当前层的信息。
+        return super().label() + ":notes.md"
+
+
+print(NamedJob().label())
+print([cls.__name__ for cls in NamedJob.__mro__])
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+sync:notes.md
+['NamedJob', 'Job', 'object']
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+实例属性给每个对象自己的状态，类属性适合真正共享的配置。继承共用行为时，要让每层的职责和参数能接起来。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在属性 setter 设断点，给实例赋值后观察输入和内部存储字段。查找用法可以帮助核对属性更名的影响。
+\end{pycharmpractice}
+
+\begin{pitfall}
+在 setter 里再次赋值给同一个属性，会递归调用自己。用另一个内部字段保存校验后的值。
+\end{pitfall}
+
+\subsection*{进阶边界演练}
+给类增加字段前，先问这个字段属于每个实例，还是整类共享。需要组合另一种能力时，也可以让实例持有一个协作对象。遇到多继承，再查看 MRO，把每一次 super 的去向画出来。

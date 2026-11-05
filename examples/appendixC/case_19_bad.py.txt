@@ -1,0 +1,3 @@
+# 故意失败的入口。
+import json
+json.loads("{broken")

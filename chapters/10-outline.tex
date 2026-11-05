@@ -1,0 +1,170 @@
+\chapter{数据持久化与格式转换}
+\label{ch:10-outline}
+
+持久化的验收标准是重新启动后仍能读回正确数据。写入以后应核对字段、类型与数量，格式转换尤其要检查缺失值和文本表示。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 10 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {JSON CSV 与 Pickle}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {配置与环境}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {SQLite 持久化}
+      };
+  \end{tikzpicture}
+  \caption*{文件格式转换、配置读取与 SQLite 持久化。}
+\end{figure}
+
+
+\section{常用数据格式}
+
+将数据格式当成不同形状的信封。JSON 适合有层次的字典和列表，
+CSV 适合一行一条记录的表。写出去以后，可读回来再核对字段和值的类型。
+
+CSV 用 \code{newline=""} 交给 csv 模块处理换行，数字列在读入后明确转换。
+JSON 不能直接表示任意 Python 对象，需要先变成约定的数据结构。
+Pickle 可保存更多 Python 对象，但加载会执行对象重建逻辑，只应加载可信来源的数据。
+
+\subsection*{动手｜读回数据后查一次类型}
+
+只比较显示内容容易遗漏类型变化。例如数字 3 写入 CSV 后，再读出的内容可能是字符串。这个练习用同一份记录走两种格式，读回后立刻核对类型。
+
+\begin{lstlisting}[title={\code{round_trip.py}}]
+import csv
+import io
+import json
+
+row = {"name": "notes.md", "retries": 3}
+
+# JSON 的数字字段读回后仍是整数。
+json_row = json.loads(json.dumps(row))
+
+# CSV 默认读回字符串，先在内存里跑通读写。
+stream = io.StringIO(newline="")
+writer = csv.DictWriter(stream, fieldnames=["name", "retries"])
+writer.writeheader()
+writer.writerow(row)
+stream.seek(0)
+csv_row = next(csv.DictReader(stream))
+
+print(type(json_row["retries"]).__name__)
+print(type(csv_row["retries"]).__name__)
+\end{lstlisting}
+
+\textbf{运行核对}\enspace JSON 一路保留整数，默认 CSV 读取返回文本。若后续要做加法，就在 CSV 读入后的字段转换处用 int() 明确处理。
+
+\section{配置文件处理}
+
+配置像工具箱里的刻度旋钮。让默认值、配置文件和环境变量有明确的先后顺序，
+然后把最终值转换成业务需要的类型。环境变量读出来通常是字符串，
+所以端口和重试次数要有独立的转换与校验。
+
+\code{configparser} 负责 INI 格式。\code{.env} 是一个文件名约定，
+先用加载器读文件，再从环境里取值。
+下面用内存 INI 演练优先级，项目包另给 python-dotenv 的加载示例。
+
+
+\begin{lstlisting}[title={\code{config_order.py}}]
+import configparser
+import os
+from unittest.mock import patch
+
+# 默认配置来自 INI，再让环境中的同名值覆盖。
+config = configparser.ConfigParser()
+config.read_string("[sync]\nretries = 2\n")
+
+with patch.dict(os.environ, {"SYNC_RETRIES": "4"}):
+    raw = os.getenv("SYNC_RETRIES", config["sync"]["retries"])
+    print(int(raw))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+4
+\end{lstlisting}
+
+\par
+
+
+\section{SQLite 轻量级数据库入门}
+
+SQLite 像一本带检索功能的本地账本。连接选定文件，建表定义字段，
+SQL 写清筛选条件，事务把一组改动收成一次提交。
+连接的 \code{with} 管提交和回滚（图~\ref{fig:visual-ch10}），再用 closing 明确关闭连接。
+
+将输入放在占位符对应的参数里，避免把用户内容拼进 SQL。
+下面故意在事务里抛一次异常，重新查询时应该看不到那条未提交的记录。
+
+
+\begin{lstlisting}[title={\code{rollback_demo.py}}]
+from contextlib import closing
+import sqlite3
+
+with closing(sqlite3.connect(":memory:")) as db:
+    db.execute("CREATE TABLE notes (name TEXT)")
+    try:
+        with db:
+            db.execute("INSERT INTO notes VALUES (?)", ("notes.md",))
+            raise ValueError("取消本次写入")
+    except ValueError:
+        # 事务块离开时已回滚，再查一次。
+        print(db.execute("SELECT count(*) FROM notes").fetchone()[0])
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+0
+\end{lstlisting}
+
+\par
+
+\begin{myunderstanding}
+格式转换会改变可以表达的类型。落盘后重新读取，再看类型和数量，比只核对文本外观更可靠。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+在提交事务前设断点，核对参数值。继续执行后换一个连接查询，检查提交是否真的完成。
+\end{pycharmpractice}
+
+\begin{pitfall}
+sqlite3 连接的上下文管理器负责事务，关闭连接还要单独安排。用 closing 可以把退出路径写在同一处。
+\end{pitfall}
+
+\subsection*{显式加载环境文件}
+在本章样例目录，把 \code{.env.example} 复制为 \code{.env}。
+安装 python-dotenv 后运行下面脚本，应输出 3。
+当前环境里若已设置同名变量，\code{override=False} 会保留它。
+
+
+\begin{lstlisting}[title={\code{load_env.py}}]
+import os
+
+from dotenv import load_dotenv
+
+# 显式加载 .env，不覆盖当前已经存在的环境变量。
+load_dotenv(".env", override=False)
+print(int(os.getenv("SYNC_RETRIES", "2")))
+\end{lstlisting}
+
+\par
+
+\subsection*{进阶边界演练}
+JSON 的 null 读成 None，CSV 的空单元格则要按读取器和业务规则解释。SQL 的 NULL 参与比较也有自己的规则。格式之间转换时，可把缺失、空文本和零各留一个样本，不让它们挤成同一种状态。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{transaction}{\linewidth}
+\caption{事务成功时提交，发生异常时回滚，随后释放连接。}
+\label{fig:visual-ch10}
+\end{figure}

@@ -1,0 +1,9 @@
+# 故意失败的入口。
+import asyncio
+async def broken():
+    task = asyncio.sleep(0)
+    try:
+        asyncio.run(task)
+    finally:
+        task.close()
+asyncio.run(broken())

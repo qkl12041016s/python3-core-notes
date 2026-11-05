@@ -1,0 +1,183 @@
+\chapter{并发编程基础}
+\label{ch:12-outline}
+
+并发会同时改变执行顺序和状态交接方式。先确定数据归属、结果传递与退出路径，再选择线程、进程或协程。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 12 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {线程与锁}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {进程与队列}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {异步任务}
+      };
+  \end{tikzpicture}
+  \caption*{线程共享状态、进程隔离数据、协程协作等待。}
+\end{figure}
+
+
+\section{多线程与 GIL}
+
+线程像同一间工作室里的几位工人，能共享桌上的数据，也容易同时伸手改同一份记录。
+用锁把一组必须连着完成的状态修改围起来，再用队列或返回值交接结果。
+
+启用 GIL 的 CPython 同一时刻由一个线程执行受它保护的 Python 代码，
+等待 I/O 时线程仍有用处。自由线程构建和会释放 GIL 的扩展有不同表现，
+判断性能前，先核对解释器与任务类型。GIL 也不能代替业务上的共享状态保护。三种并发方式的交接机制见图~\ref{fig:visual-ch12}。
+
+
+\begin{lstlisting}[title={\code{locked_count.py}}]
+from threading import Lock, Thread
+
+total = 0
+lock = Lock()
+
+
+def count():
+    global total
+    for _ in range(1000):
+        # 把读、加、写作为一段受保护的操作。
+        with lock:
+            total += 1
+
+
+workers = [Thread(target=count) for _ in range(2)]
+for worker in workers:
+    worker.start()
+for worker in workers:
+    worker.join()
+print(total)
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+2000
+\end{lstlisting}
+
+\par
+
+
+\section{多进程基础}
+
+进程像另外开一间工作室。各自有内存，任务和结果要经过可传递的边界。
+将工作函数放在模块顶层，传入简单数据，再把结果交回主进程。
+启动新进程会有成本，先把任务分到合适大小，再比较并行是否划算。
+
+Windows 常用 spawn 启动方式，会重新导入入口模块。
+创建进程池的动作放进入口守卫，
+在 PyCharm 里也从这份脚本入口运行。
+下面用同一批数字核对进程池返回结果的顺序。
+
+
+\begin{lstlisting}[title={\code{process_squares.py}}]
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import get_context
+
+
+def square(value):
+    # 顶层函数便于子进程导入。
+    return value * value
+
+
+if __name__ == "__main__":
+    with ProcessPoolExecutor(
+        max_workers=2, mp_context=get_context("spawn")
+    ) as pool:
+        print(list(pool.map(square, [2, 3, 4])))
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+[4, 9, 16]
+\end{lstlisting}
+
+\par
+
+
+\section[异步 I/O]{异步 I/O（asyncio 极简入门）}
+
+异步像点菜后拿着号码去做别的事。事件循环安排协程推进，
+协程碰到可等待的操作时用 await 让出执行权。
+这要求所等的操作也配合异步接口，直接在协程里做耗时的同步调用仍会卡住循环。
+
+\code{gather()} 可以一起等多个协程。失败、取消和超时都要在调用边界想清楚，
+清理放进 finally 或异步上下文管理器。下面先只观察完成顺序和结果顺序，
+接着再用本地网络练习处理状态。
+
+\subsection*{动手｜对照完成顺序与结果顺序}
+
+异步任务类似按单号取餐：完成顺序可能不同于提交顺序，但可以按原任务顺序整理返回结果。这里用短暂的异步等待模拟两份检查，便于专心看任务顺序。
+
+\begin{lstlisting}[title={\code{async_checks.py}}]
+import asyncio
+
+
+async def check(name, delay):
+    # 等待时让出事件循环，其他任务可以继续。
+    await asyncio.sleep(delay)
+    print("完成", name)
+    return name
+
+
+async def main():
+    # gather 按传入顺序返回各自结果。
+    results = await asyncio.gather(
+        check("slow", 0.05),
+        check("fast", 0.0),
+    )
+    print(results)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+\end{lstlisting}
+
+\textbf{运行核对}\enspace fast 应先完成，gather 返回的列表仍按传入顺序排列。把其中的异步等待换成阻塞睡眠，再对照这两种顺序。
+
+\begin{myunderstanding}
+线程共享内存，进程通过传递数据协作，协程在等待处交还执行权。先看任务在等什么，再选并发方式。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+多进程脚本从带入口守卫的文件运行。调试线程时先看当前选中的线程，再检查共享变量和锁的位置。
+\end{pycharmpractice}
+
+\begin{pitfall}
+协程里直接调用同步阻塞函数会拖住事件循环。异步代码也要检查所调用函数是否真正提供异步接口。
+\end{pitfall}
+协程暂停与恢复的顺序见图~\ref{fig:chapter-12-flow}，等待时仍有其他任务可以推进。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {提交协程};
+    \node[python flow step,text width=25mm,right=of a] (b) {运行到 await};
+    \node[python flow step,text width=25mm,right=of b] (c) {等待外部完成};
+    \node[python flow step,text width=25mm,right=of c] (d) {恢复协程};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{协程在异步等待处让出执行权，事件循环可以推进其他就绪任务。}
+  \label{fig:chapter-12-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+取消任务也要走完清理路径。协程里的 finally 适合归还已经取得的资源。一次任务失败以后，其他任务是否仍继续，要按所用的 gather、TaskGroup 或线程池接口来核对，不能只凭相似名字推断。
+
+\begin{figure}[htbp]
+\centering
+\BookImage{concurrency}{\linewidth}
+\caption{线程、进程和协程的交接机制示意，条带长度不表示实测耗时。}
+\label{fig:visual-ch12}
+\end{figure}

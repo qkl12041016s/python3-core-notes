@@ -1,0 +1,3 @@
+# 故意失败的入口。
+seen = {}
+print(type(seen).__name__)

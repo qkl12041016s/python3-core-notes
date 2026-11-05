@@ -1,0 +1,4 @@
+# 故意失败的入口。
+iterator = iter(["notes.md"])
+next(iterator)
+next(iterator)

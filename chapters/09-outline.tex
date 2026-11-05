@@ -1,0 +1,125 @@
+\chapter{文件 I/O 与路径管理}
+\label{ch:09-outline}
+
+文件操作同时涉及路径、字节与编码。先明确文件位置和读写约定，再开展批处理，避免把路径错误误判为内容错误。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    book mindmap,
+    level 1 concept/.append style={minimum size=22mm,text width=21mm}
+  ]
+    \node[text=white,minimum size=25mm,text width=19mm] {第 9 章}
+      child[grow=163,level distance=38mm,concept color=DeepBlue] {
+        node[text=white] {文本与编码}
+      }
+      child[grow=17,level distance=38mm,concept color=PythonYellow] {
+        node {路径与工作目录}
+      }
+      child[grow=-90,level distance=28mm,concept color=PythonBlue!22!white] {
+        node {批量文件操作}
+      };
+  \end{tikzpicture}
+  \caption*{路径定位文件，编码解释字节，资源管理保证关闭。}
+\end{figure}
+
+
+\section{文件读写与上下文管理}
+
+磁盘上放的是字节，在 Python 里处理的字符串要经过解码。
+将编码想成翻译时使用的字典。读写双方用同一套编码，中文才能对得上。
+这里显式写 \code{encoding="utf-8"}，也方便读代码的人知道文件约定。
+
+\code{with open(...)} 离开代码块就关闭文件。文本读写用字符串，
+二进制模式则读写 bytes。遇到解码失败，先核对来源编码，
+再看文件是否混入了另一种格式。
+
+
+\begin{lstlisting}[title={\code{utf8_roundtrip.py}}]
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory() as folder:
+    # 先写 UTF-8，再按同样编码读回。
+    path = Path(folder) / "note.txt"
+    with path.open("w", encoding="utf-8") as stream:
+        stream.write("雪落长安无声")
+
+    with path.open("r", encoding="utf-8") as stream:
+        print(stream.read())
+\end{lstlisting}
+
+
+\textbf{运行核对}\enspace 预期输出：
+\begin{lstlisting}[language={},numbers=none]
+雪落长安无声
+\end{lstlisting}
+
+\par
+
+
+\section[现代路径操作]{现代路径操作（pathlib）}
+
+路径像快递地址，当前工作目录决定相对地址从哪里出发。
+\code{Path.cwd()} 返回进程的工作目录，\code{Path(__file__).parent}
+则指向脚本文件所在目录。先选清楚基准，再拼子路径。
+
+批处理前，列出匹配到的文件和目标路径，确认命名冲突怎样处理。
+先用 \code{mkdir()} 准备目录，把 \code{parents} 和 \code{exist_ok} 设为真，
+复制与移动的行为交给 shutil，练习先放在临时目录里反复跑。
+
+\subsection*{动手｜在临时目录里走一遍文件流程}
+
+文件批处理像搬箱子。先确定源文件的位置，再建好目标目录，最后才搬。练习用临时目录装一份自己生成的小文件，便于反复检查路径和编码。
+
+\begin{lstlisting}[title={\code{copy_note.py}}]
+from pathlib import Path
+from shutil import copy2
+from tempfile import TemporaryDirectory
+
+# 在临时目录造一份 UTF-8 样本。
+with TemporaryDirectory() as folder:
+    root = Path(folder)
+    source = root / "notes.txt"
+    source.write_text("同步完成", encoding="utf-8")
+
+    # 先建目标目录，再把文件复制过去。
+    destination = root / "backup" / source.name
+    destination.parent.mkdir()
+    copy2(source, destination)
+    print(destination.relative_to(root).as_posix())
+    print(destination.read_text(encoding="utf-8"))
+\end{lstlisting}
+
+\textbf{运行核对}\enspace 输出应包含 backup/notes.txt 和同步完成。路径输出统一用 \code{as_posix()}，因此 Windows 也显示斜杠。文件名里的中文或空格可继续做变体练习。
+
+\begin{myunderstanding}
+路径是地址，工作目录是地址的起点。编码则决定字节怎样变成文本，两件事各核对一次。
+\end{myunderstanding}
+
+\begin{pycharmpractice}
+运行配置里查看 Working directory，再打印 \code{Path.cwd()}。从编辑器运行和从终端运行时，对照它们的值。
+\end{pycharmpractice}
+
+\begin{pitfall}
+覆盖写入前要明确目标文件。批处理先用临时目录练习，并把实际命中的文件名显示出来。
+\end{pitfall}
+文件读取的两层约定见图~\ref{fig:chapter-9-flow}，先找地址，再按编码理解字节。
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[python flow step,text width=25mm] (a) {路径与工作目录};
+    \node[python flow step,text width=25mm,right=of a] (b) {读取字节};
+    \node[python flow step,text width=25mm,right=of b] (c) {按编码解码};
+    \node[python flow step,text width=25mm,right=of c] (d) {得到字符串};
+    \draw[python flow arrow] (a) -- (b);
+    \draw[python flow arrow] (b) -- (c);
+    \draw[python flow arrow] (c) -- (d);
+  \end{tikzpicture}
+  \caption{路径决定读哪个文件，编码决定怎样解释里面的字节。}
+  \label{fig:chapter-9-flow}
+\end{figure}
+
+\subsection*{进阶边界演练}
+写结果文件时，先把完整内容放进同目录的临时文件，成功后再替换目标。这样失败现场与已发布结果各有位置。若需要并发写入或断电级别的保证，还要按存储和平台的约定进一步设计。
