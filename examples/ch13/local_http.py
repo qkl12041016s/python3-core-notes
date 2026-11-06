@@ -1,4 +1,7 @@
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import (
+    BaseHTTPRequestHandler,
+    ThreadingHTTPServer,
+)
 from threading import Thread
 
 import requests
@@ -25,7 +28,9 @@ with ThreadingHTTPServer(("127.0.0.1", 0), DemoHandler) as server:
         host, port = server.server_address[:2]
         with requests.Session() as session:
             session.trust_env = False
-            response = session.get(f"http://{host}:{port}/", timeout=2)
+            response = session.get(
+                f"http://{host}:{port}/", timeout=2
+            )
             response.raise_for_status()
             print(response.status_code, response.json()["name"])
     finally:

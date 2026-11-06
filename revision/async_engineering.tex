@@ -1,0 +1,20 @@
+\section{异步任务的生命周期：启动、超时与取消}\label{rev:python:async}
+调用 async 函数只会生成协程对象。await 表示等待可等待对象，create\_task 才把协程安排为任务。事件循环在任务主动让出执行权时调度其他任务。
+
+脚本入口使用 \code{asyncio.run(main())}。它创建事件循环，并在退出时关闭。已有事件循环的笔记本环境应在顶层使用 await，不能嵌套调用 run。
+
+\subsection{结构化并发与任务收尾}
+TaskGroup 的上下文退出前会等待它创建的任务。某任务以 CancelledError 以外的异常失败时，组会取消其余任务并在收尾后汇总异常；需要按组处理时在外层使用 except*。默认 gather 的第一个异常向调用者传播时，其他任务不保证被取消，不能把两个接口当成完全相同的清理语义。
+\code{asyncio.timeout} 限制上下文耗时，在超时边界外捕获 TimeoutError。任务取消通过 CancelledError 在可中断点传递；资源释放应放进 finally 或 async with。一般不吞掉 CancelledError，若显式调用 cancel，应继续 await 任务收集退出结果。
+\lstinputlisting[title={\code{examples/revision/async_lifecycle.py}}]{examples/revision/async_lifecycle.py}
+预期输出 fast 为 ok、slow 为 timeout，最后显示取消已收集。这里用 sleep 模拟等待，不请求外部服务。真实并发还要用 Semaphore 限制在途任务，并为连接池、队列长度和响应体大小设置边界。
+
+\begin{pitfall}
+在协程里调用阻塞的 requests 或 time.sleep 会阻塞事件循环。可改用异步客户端，或对适合在线程执行的阻塞 I/O 使用 asyncio.to\_thread。CPU 密集任务应另行评估进程或原生扩展，并发任务数不是越大越好。
+\end{pitfall}
+API 与取消语义以 \href{https://docs.python.org/3.11/library/asyncio-task.html}{Python asyncio 任务文档} 为准。
+
+\section{自由线程构建：版本、扩展与共享状态}
+Python 3.13 首次提供实验性的自由线程构建；Python 3.14 将该构建列为正式支持，仍是可选构建，不能据此说普通 CPython 已默认去掉 GIL。使用时检查解释器的构建信息和扩展兼容性；不支持自由线程的扩展可能重新启用 GIL。
+自由线程不等于业务操作自动具有原子性：例如“先判断键是否存在，再写入”的组合仍需锁或其他同步机制。线程是否加速取决于任务、扩展、共享数据竞争与运行环境，应以实际基准测试判断。
+版本依据见 \href{https://docs.python.org/3.14/whatsnew/3.14.html}{Python 3.14 官方版本说明}。

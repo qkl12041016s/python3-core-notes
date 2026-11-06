@@ -8,7 +8,7 @@
 [![书稿许可](https://img.shields.io/badge/书稿-CC_BY--NC_4.0-FFD43B)](LICENSE)
 [![示例代码许可](https://img.shields.io/badge/代码-MIT-3776AB)](LICENSE)
 
-[下载最新版 PDF](../../releases/latest) · [查看示例运行方法](RUN_EXAMPLES.md) · [自行编译](#自行编译)
+[下载最新版 PDF](https://github.com/qkl12041016s/python3-core-notes/releases/latest) · [查看示例运行方法](RUN_EXAMPLES.md) · [自行编译](#自行编译)
 
 </div>
 
@@ -20,6 +20,17 @@
 - **示例可以动手复现。** 从输入、执行过程与输出对照入手，再用断点、回溯和小样本验证边界。
 - **四阶段项目练习。** 通讯录、批量下载、自动报表，以及 PyQt 资料管理器或 FastAPI 本地服务。
 - **遇到报错有地方查。** 符号表收录 59 项，排错附录收录 31 条记录，附有错误入口和修复版。
+
+## 2026-11-07 内容修订 · v1.1.0
+
+书名保持不变，新版127页。
+
+- 五个长脚本改为合法短行/括号换行，正文与 `.py` 同步；代码续行箭头仅作阅读提示。
+- 终端命令明确标为非Python脚本，31组故意错误示例使用红底警示，修复版保留正常样式。
+- 补充match-case、联合类型、异常组、TaskGroup、超时取消、自由线程构建和uv锁文件说明。
+- `revision/` 是新增正文，`examples/revision/` 是可运行示例；原稿已有的pyproject.toml构建内容继续保留。
+
+31组错误与修复均通过复验。新增现代语法和异步脚本采用Python3.12运行；Python3.11特性另作版本提示。详见[修订记录](docs/revision-20261107.md)。
 
 ## 自行编译
 

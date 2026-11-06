@@ -1,8 +1,7 @@
 % !TeX program = xelatex
 % !TeX encoding = UTF-8
 \documentclass[UTF8,a4paper,oneside,openany,fontset=none,11pt]{ctexbook}
-
-% ===== preamble.tex =====
+% BEGIN preamble
 \usepackage[a4paper,top=25mm,bottom=25mm,left=27mm,right=27mm,
             headheight=17pt,headsep=8mm,footskip=12mm]{geometry}
 \usepackage{xcolor}
@@ -26,7 +25,7 @@
 \newcommand{\BookSubtitle}{基于 PyCharm 与现代工程化实践}
 % 封面与 PDF 作者字段共用以下设置。
 \newcommand{\BookAuthor}{雪落长安无声}
-\newcommand{\BookVersion}{v1.0}
+\newcommand{\BookVersion}{2026-11-07 修订版}
 % 默认使用编译日期。出版时可在这里填写固定日期。
 \newcommand{\BookDate}{\today}
 
@@ -194,7 +193,7 @@
   stringstyle=\color{CodeString},
   commentstyle=\itshape\color{CodeComment},
   deletekeywords={print,exec},
-  morekeywords={async,await,nonlocal},
+  morekeywords={async,await,nonlocal,match,case},
   emph={print,len,range,enumerate,zip,open,int,str,list,dict,set,tuple},
   emphstyle=\color{DeepBlue},
   numbers=left,
@@ -213,6 +212,10 @@
   showstringspaces=false,
   tabsize=4,
   breaklines=true,
+  breakatwhitespace=true,
+  prebreak=\mbox{\textcolor{Muted}{$\hookleftarrow$}},
+  postbreak=\mbox{\textcolor{Muted}{$\hookrightarrow$}\space},
+  breakindent=1.5em,
   upquote=true,
   aboveskip=12pt,
   belowskip=12pt
@@ -596,13 +599,13 @@
 \captionsetup*[table]{font={small,captionink},labelfont=bf,
   justification=centering,singlelinecheck=false,position=bottom,skip=9pt}
 
-% ===== END preamble.tex =====
+\lstdefinestyle{errorcode}{style=python,backgroundcolor=\color{PitfallRed!7},rulecolor=\color{PitfallRed}}
 
+% END preamble
 
 \begin{document}
 \hypersetup{pageanchor=false}
-
-% ===== frontmatter/cover.tex =====
+% BEGIN frontmatter/cover
 \begin{titlepage}
   \thispagestyle{empty}%
   \begin{tikzpicture}[remember picture,overlay]
@@ -652,13 +655,11 @@
   \null
 \end{titlepage}
 
-% ===== END frontmatter/cover.tex =====
-
+% END frontmatter/cover
 
 \frontmatter
 \hypersetup{pageanchor=true}
-
-% ===== frontmatter/roadmap.tex =====
+% BEGIN frontmatter/roadmap
 \chapter{全书路线图}
 
 {\sffamily\bfseries\color{Ink}\BookTitle}\par
@@ -697,10 +698,8 @@
   \label{fig:book-mindmap}
 \end{figure}
 
-% ===== END frontmatter/roadmap.tex =====
-
-
-% ===== frontmatter/preface.tex =====
+% END frontmatter/roadmap
+% BEGIN frontmatter/preface
 \chapter{前言与学习路线}
 
 写出几个能运行的例子以后，新的问题往往接踵而来：终端能找到的库，为什么在 PyCharm 中导入失败？代码拆成多个文件以后，应当从哪个入口启动？这些问题连接着语言规则、运行环境与工程组织，也构成了本书的学习主线。
@@ -720,10 +719,8 @@
   {\Large\sffamily\color{PyBlue}把想法写成代码，让每一步都经得起运行。}
 \end{center}
 
-% ===== END frontmatter/preface.tex =====
-
-
-% ===== frontmatter/acknowledgments.tex =====
+% END frontmatter/preface
+% BEGIN frontmatter/acknowledgments
 \chapter{致谢与参考}
 
 {\color{PyBlue}\rule{\textwidth}{0.9pt}}
@@ -777,10 +774,8 @@
 \end{tcolorbox}
 \endgroup
 
-% ===== END frontmatter/acknowledgments.tex =====
-
-
-% ===== frontmatter/usage.tex =====
+% END frontmatter/acknowledgments
+% BEGIN frontmatter/usage
 \chapter{使用说明}
 
 阅读时可将示例与编辑器并排放置：先按原样运行，再修改一项输入，记录结果与原因。练习的目标是能够独立复现并解释行为。
@@ -881,10 +876,10 @@ print(Path.cwd())
 改了哪个输入，以及哪条报错以后想一眼认出来。
 久而久之，熟练就从这些有来路的细节里长出来。
 
-% ===== END frontmatter/usage.tex =====
+\paragraph{本次代码修订说明} 灰色折行箭头表示版面续行，不属于 Python 语法。五个较长示例已改成括号内合法换行或中间变量，随书 examples 中的源文件与正文同步。PDF 复制仍可能带入行号、箭头或改变缩进，请优先从随书 .py 文件运行。红底代码为故意失败或产生错误结果的反例，对应修复版本使用普通底色。
 
-
-% ===== frontmatter/symbols.tex =====
+% END frontmatter/usage
+% BEGIN frontmatter/symbols
 \chapter{Python 特色符号表}
 
 本表可用于对照代码中的符号与上下文。符号本身很短，含义却常由它站的位置决定。
@@ -984,8 +979,7 @@ print(Path.cwd())
 比背下一串互不相连的定义更容易用到真实代码里。
 \end{myunderstanding}
 
-% ===== END frontmatter/symbols.tex =====
-
+% END frontmatter/symbols
 \tableofcontents
 
 \mainmatter
@@ -998,8 +992,7 @@ print(Path.cwd())
 
    \textbf{把规则写清楚。} 用分支和循环筛选记录，用异常和日志保留失败原因，再把重复逻辑收进有明确参数和返回值的函数。}
   {看清数据怎么走，再决定代码怎么写。}
-
-% ===== chapters/01-quick-start.tex =====
+% BEGIN chapters/01-quick-start
 \chapter{快速起步}
 \label{ch:quick-start}
 
@@ -1141,10 +1134,8 @@ print(sys.executable)
 \subsection*{进阶边界演练}
 可复制一份运行配置，把脚本换成另一个同名文件，再观察解释器路径和文件路径。这个练习说明，编辑器里打开的那份文件，和运行按钮真正启动的文件，需要用现场信息核对。
 
-% ===== END chapters/01-quick-start.tex =====
-
-
-% ===== chapters/02-variables-strings.tex =====
+% END chapters/01-quick-start
+% BEGIN chapters/02-variables-strings
 \chapter{核心数据结构}
 \label{ch:variables-strings-containers}
 
@@ -1252,7 +1243,7 @@ print(original)  # hello
 \begin{figure}[htbp]
   \centering
   \BookImage{type-info}{\linewidth}
-  
+
   \caption{在 PyCharm 中查看变量的类型推断。}
   \label{fig:pycharm-type-inference}
 \end{figure}
@@ -1571,10 +1562,8 @@ print(job.name)  # todo.md
 \label{fig:visual-ch2}
 \end{figure}
 
-% ===== END chapters/02-variables-strings.tex =====
-
-
-% ===== chapters/03-outline.tex =====
+% END chapters/02-variables-strings
+% BEGIN chapters/03-outline
 \chapter{流程控制与异常处理}
 \label{ch:03-outline}
 
@@ -1773,10 +1762,24 @@ True
 \subsection*{进阶边界演练}
 把异常换成更贴合业务的类型时，可用 raise from 保留原始原因。只看最终那一句话有时会漏掉最早的失败，回溯里的因果链值得从头走一遍。附录 C 留了从错误入口到复验的完整记录。
 
-% ===== END chapters/03-outline.tex =====
+% BEGIN revision/modern_language
+\section{版本补充：模式匹配与联合类型}\label{rev:python:language}
+本节的模式匹配与竖线联合类型从 Python 3.10 起可用；后面的异常组、TaskGroup 和 timeout 示例要求 Python 3.11 或更新版本。随书示例的本次运行环境为 Python 3.12。读者可先用 \code{python --version} 核对版本。
 
+\code{match} 按顺序尝试模式，可同时检查结构并绑定字段。字典模式默认允许额外键；普通名字通常是捕获变量，不是与同名常量比较。条件守卫用 \code{if} 追加判断。由于 \code{bool} 是 \code{int} 的子类，示例先匹配布尔值，避免把 True 当作整数一。
+\lstinputlisting[title={\code{examples/revision/modern_match.py}}]{examples/revision/modern_match.py}
+预期输出依次为 \code{nonnegative: 7}、\code{note: Calculus}、\code{boolean}。形如 \code{int | str} 的联合类型表达“允许多种类型”，并不会自动转换输入，也不会代替运行时校验。本例把字典也列入参数类型，是为了与实际接收的数据结构一致；更细的工程接口可用 TypedDict 表达字段约定。
 
-% ===== chapters/04-outline.tex =====
+\subsection{异常组与 except*：按异常类型分派}
+Python 3.11 引入 ExceptionGroup，用于把多项独立失败一起报告。\code{except*} 对匹配的子组处理，多个分支可在同一次异常处理中执行；未匹配部分仍会传播，不能认为处理一个子组就处理了全部失败。同一 try 不混写普通 except 与 except*，except* 子句中也不能用 return、break 或 continue。
+\lstinputlisting[title={\code{examples/revision/exception_groups.py}}]{examples/revision/exception_groups.py}
+脚本显式捕获两类问题，输出两行计数一。它是受控的异常组演示，与附录中故意无法正确执行的错误脚本分开。
+语言细节可查 \href{https://docs.python.org/3/reference/compound_stmts.html}{Python 复合语句官方文档}。
+
+% END revision/modern_language
+
+% END chapters/03-outline
+% BEGIN chapters/04-outline
 \chapter{函数与作用域}
 \label{ch:04-outline}
 
@@ -1953,8 +1956,7 @@ print(counter())
 \label{fig:visual-ch4}
 \end{figure}
 
-% ===== END chapters/04-outline.tex =====
-
+% END chapters/04-outline
 
 \BookPart{进阶核心与工程化}
   {代码会跑只是第一关。每改一行都要祈祷，下一步就该写测试了。}
@@ -1964,8 +1966,7 @@ print(counter())
 
    \textbf{定位问题，保留改动。} 用断点查看状态，用性能分析定位耗时，再通过格式化、静态检查与 Git 检查并记录变更。}
   {让测试守住约定，让每次修改都有凭据。}
-
-% ===== chapters/05-outline.tex =====
+% BEGIN chapters/05-outline
 \chapter[面向对象编程]{面向对象编程（OOP）}
 \label{ch:05-outline}
 
@@ -2123,10 +2124,8 @@ sync:notes.md
 \subsection*{进阶边界演练}
 给类增加字段前，先问这个字段属于每个实例，还是整类共享。需要组合另一种能力时，也可以让实例持有一个协作对象。遇到多继承，再查看 MRO，把每一次 super 的去向画出来。
 
-% ===== END chapters/05-outline.tex =====
-
-
-% ===== chapters/06-outline.tex =====
+% END chapters/05-outline
+% BEGIN chapters/06-outline
 \chapter{迭代、生成器与装饰器}
 \label{ch:06-outline}
 
@@ -2330,10 +2329,8 @@ with checked_resource() as name:
 \label{fig:visual-ch6}
 \end{figure}
 
-% ===== END chapters/06-outline.tex =====
-
-
-% ===== chapters/07-outline.tex =====
+% END chapters/06-outline
+% BEGIN chapters/07-outline
 \chapter{模块、包与测试入门}
 \label{ch:07-outline}
 
@@ -2487,10 +2484,8 @@ if __name__ == "__main__":
 \subsection*{进阶边界演练}
 给导入问题留三项信息，模块来源、入口文件和工作目录。导入会使用模块缓存，修改文件后若结果像没更新，先确认进程是否重新启动，再看是否读到了另一份同名模块。
 
-% ===== END chapters/07-outline.tex =====
-
-
-% ===== chapters/08-outline.tex =====
+% END chapters/07-outline
+% BEGIN chapters/08-outline
 \chapter{调试、代码质量与 Git}
 \label{ch:08-outline}
 
@@ -2616,8 +2611,7 @@ select = ["E4", "E7", "E9", "F"]
 \subsection*{进阶边界演练}
 性能表里，单独看自身耗时和连同子调用的累计耗时，会得到不同线索。递归与重复调用还会影响次数。记录输入规模后再比较，优化前后的结果也要相同，才能谈节省了多少工作。
 
-% ===== END chapters/08-outline.tex =====
-
+% END chapters/08-outline
 
 \BookPart{文件、数据与系统交互}
   {文件不会迷路。点下运行时，程序可能站在另一个目录里。}
@@ -2627,8 +2621,7 @@ select = ["E4", "E7", "E9", "F"]
 
    \textbf{让脚本接得住输入。} 处理时区与时间戳，从日志中提取字段，并用命令行参数指定输入路径和运行选项。}
   {写入只是半程，读回才能对账。}
-
-% ===== chapters/09-outline.tex =====
+% BEGIN chapters/09-outline
 \chapter{文件 I/O 与路径管理}
 \label{ch:09-outline}
 
@@ -2755,10 +2748,8 @@ with TemporaryDirectory() as folder:
 \subsection*{进阶边界演练}
 写结果文件时，先把完整内容放进同目录的临时文件，成功后再替换目标。这样失败现场与已发布结果各有位置。若需要并发写入或断电级别的保证，还要按存储和平台的约定进一步设计。
 
-% ===== END chapters/09-outline.tex =====
-
-
-% ===== chapters/10-outline.tex =====
+% END chapters/09-outline
+% BEGIN chapters/10-outline
 \chapter{数据持久化与格式转换}
 \label{ch:10-outline}
 
@@ -2875,11 +2866,17 @@ with closing(sqlite3.connect(":memory:")) as db:
     db.execute("CREATE TABLE notes (name TEXT)")
     try:
         with db:
-            db.execute("INSERT INTO notes VALUES (?)", ("notes.md",))
+            db.execute(
+                "INSERT INTO notes VALUES (?)",
+                ("notes.md",),
+            )
             raise ValueError("取消本次写入")
     except ValueError:
         # 事务块离开时已回滚，再查一次。
-        print(db.execute("SELECT count(*) FROM notes").fetchone()[0])
+        count = db.execute(
+            "SELECT count(*) FROM notes"
+        ).fetchone()[0]
+        print(count)
 \end{lstlisting}
 
 
@@ -2930,10 +2927,8 @@ JSON 的 null 读成 None，CSV 的空单元格则要按读取器和业务规则
 \label{fig:visual-ch10}
 \end{figure}
 
-% ===== END chapters/10-outline.tex =====
-
-
-% ===== chapters/11-outline.tex =====
+% END chapters/10-outline
+% BEGIN chapters/11-outline
 \chapter{时间、正则与命令行工具}
 \label{ch:11-outline}
 
@@ -3054,13 +3049,15 @@ def main():
     parser.add_argument("--input", type=Path, required=True)
     args = parser.parse_args()
 
-    for line in args.input.read_text(encoding="utf-8").splitlines():
+    content = args.input.read_text(encoding="utf-8")
+    for line in content.splitlines():
         match = pattern.fullmatch(line)
         if match is None:
             continue
         stamp, address = match.groups()
         moment = datetime.fromisoformat(stamp)
-        print(moment.astimezone(timezone.utc).isoformat(), address)
+        utc_stamp = moment.astimezone(timezone.utc).isoformat()
+        print(utc_stamp, address)
 
 
 if __name__ == "__main__":
@@ -3084,8 +3081,7 @@ if __name__ == "__main__":
 \subsection*{进阶边界演练}
 时间戳要同时交代单位与时区语境。秒和毫秒混用时，结果可能跳到完全不合理的年份。正则提取完字段后，再用日期或 IP 解析器做校验，免得一段像样的文字冒充有效数据。
 
-% ===== END chapters/11-outline.tex =====
-
+% END chapters/11-outline
 
 \BookPart{并发、网络与基础爬虫}
   {同时派十个任务去取数据，也得先说清谁拿钥匙、谁等回信。}
@@ -3095,8 +3091,7 @@ if __name__ == "__main__":
 
    \textbf{处理网页中的变化。} 用标签和属性定位字段，检查字段缺失的情况，并在本地演示页验证浏览器自动化的等待条件。}
   {让等待有期限，让任务有交代。}
-
-% ===== chapters/12-outline.tex =====
+% BEGIN chapters/12-outline
 \chapter{并发编程基础}
 \label{ch:12-outline}
 
@@ -3281,10 +3276,32 @@ if __name__ == "__main__":
 \label{fig:visual-ch12}
 \end{figure}
 
-% ===== END chapters/12-outline.tex =====
+% BEGIN revision/async_engineering
+\section{异步任务的生命周期：启动、超时与取消}\label{rev:python:async}
+调用 async 函数只会生成协程对象。await 表示等待可等待对象，create\_task 才把协程安排为任务。事件循环在任务主动让出执行权时调度其他任务。
 
+脚本入口使用 \code{asyncio.run(main())}。它创建事件循环，并在退出时关闭。已有事件循环的笔记本环境应在顶层使用 await，不能嵌套调用 run。
 
-% ===== chapters/13-outline.tex =====
+\subsection{结构化并发与任务收尾}
+TaskGroup 的上下文退出前会等待它创建的任务。某任务以 CancelledError 以外的异常失败时，组会取消其余任务并在收尾后汇总异常；需要按组处理时在外层使用 except*。默认 gather 的第一个异常向调用者传播时，其他任务不保证被取消，不能把两个接口当成完全相同的清理语义。
+\code{asyncio.timeout} 限制上下文耗时，在超时边界外捕获 TimeoutError。任务取消通过 CancelledError 在可中断点传递；资源释放应放进 finally 或 async with。一般不吞掉 CancelledError，若显式调用 cancel，应继续 await 任务收集退出结果。
+\lstinputlisting[title={\code{examples/revision/async_lifecycle.py}}]{examples/revision/async_lifecycle.py}
+预期输出 fast 为 ok、slow 为 timeout，最后显示取消已收集。这里用 sleep 模拟等待，不请求外部服务。真实并发还要用 Semaphore 限制在途任务，并为连接池、队列长度和响应体大小设置边界。
+
+\begin{pitfall}
+在协程里调用阻塞的 requests 或 time.sleep 会阻塞事件循环。可改用异步客户端，或对适合在线程执行的阻塞 I/O 使用 asyncio.to\_thread。CPU 密集任务应另行评估进程或原生扩展，并发任务数不是越大越好。
+\end{pitfall}
+API 与取消语义以 \href{https://docs.python.org/3.11/library/asyncio-task.html}{Python asyncio 任务文档} 为准。
+
+\section{自由线程构建：版本、扩展与共享状态}
+Python 3.13 首次提供实验性的自由线程构建；Python 3.14 将该构建列为正式支持，仍是可选构建，不能据此说普通 CPython 已默认去掉 GIL。使用时检查解释器的构建信息和扩展兼容性；不支持自由线程的扩展可能重新启用 GIL。
+自由线程不等于业务操作自动具有原子性：例如“先判断键是否存在，再写入”的组合仍需锁或其他同步机制。线程是否加速取决于任务、扩展、共享数据竞争与运行环境，应以实际基准测试判断。
+版本依据见 \href{https://docs.python.org/3.14/whatsnew/3.14.html}{Python 3.14 官方版本说明}。
+
+% END revision/async_engineering
+
+% END chapters/12-outline
+% BEGIN chapters/13-outline
 \chapter{网络请求与基础爬虫}
 \label{ch:13-outline}
 
@@ -3326,7 +3343,10 @@ GET 重试可以按错误原因和服务端提示来决定，带副作用的请�
 在本机开一个短命的 HTTP 服务，先确认请求、状态码和 JSON 解析这条链路。地址和端口由本机分配，例子每次都有同一份响应。学会读响应以后，再把相同的检查搬到获准访问的端点。
 
 \begin{lstlisting}[title={\code{local_http.py}}]
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import (
+    BaseHTTPRequestHandler,
+    ThreadingHTTPServer,
+)
 from threading import Thread
 
 import requests
@@ -3353,7 +3373,9 @@ with ThreadingHTTPServer(("127.0.0.1", 0), DemoHandler) as server:
         host, port = server.server_address[:2]
         with requests.Session() as session:
             session.trust_env = False
-            response = session.get(f"http://{host}:{port}/", timeout=2)
+            response = session.get(
+                f"http://{host}:{port}/", timeout=2
+            )
             response.raise_for_status()
             print(response.status_code, response.json()["name"])
     finally:
@@ -3475,8 +3497,7 @@ with webdriver.Chrome(options=options) as browser:
 \label{fig:visual-ch13}
 \end{figure}
 
-% ===== END chapters/13-outline.tex =====
-
+% END chapters/13-outline
 
 \BookPart{扩展生态与工程化收束}
   {程序最挑的环境，往往就是离开开发者电脑之后的第一个环境。}
@@ -3486,8 +3507,7 @@ with webdriver.Chrome(options=options) as browser:
 
    \textbf{在新环境中重走安装。} 声明依赖和构建配置，生成并安装 wheel，核对命令入口，再了解如何用 Docker 固定运行环境。}
   {交付的起点，是另一台机器上的第一次运行。}
-
-% ===== chapters/14-outline.tex =====
+% BEGIN chapters/14-outline
 \chapter{数据库交互实战}
 \label{ch:14-outline}
 
@@ -3662,10 +3682,8 @@ with closing(sqlite3.connect(":memory:")) as db:
 \subsection*{进阶边界演练}
 可把唯一约束当成最后一层核对。先查询再插入仍可能遇到并发冲突，冲突后该重试、读取已有记录还是报错，要由业务语义决定。参数化保护字段值，表名和列名则由程序自己的允许范围来选。
 
-% ===== END chapters/14-outline.tex =====
-
-
-% ===== chapters/15-outline.tex =====
+% END chapters/14-outline
+% BEGIN chapters/15-outline
 \chapter{GUI 与本地工具开发}
 \label{ch:15-outline}
 
@@ -3794,10 +3812,8 @@ if __name__ == "__main__":
 \label{fig:visual-ch15}
 \end{figure}
 
-% ===== END chapters/15-outline.tex =====
-
-
-% ===== chapters/16-outline.tex =====
+% END chapters/15-outline
+% BEGIN chapters/16-outline
 \chapter[数据处理与可视化初探]{数据处理与可视化初探（边界限定）}
 \label{ch:16-outline}
 
@@ -3904,7 +3920,9 @@ import matplotlib.pyplot as plt
 
 days = [1, 2, 3]
 counts = [2, 4, 3]
-figure, axes = plt.subplots(1, 2, figsize=(7, 3), layout="constrained")
+figure, axes = plt.subplots(
+    1, 2, figsize=(7, 3), layout="constrained"
+)
 axes[0].plot(days, counts, marker="o", label="synced")
 axes[0].set(xlabel="Day", ylabel="Files")
 axes[0].legend()
@@ -3953,7 +3971,10 @@ with TemporaryDirectory() as folder:
 
     # 重新读文件，核对表头后的两行。
     restored = load_workbook(path, read_only=True)
-    print(restored["Summary"].max_row, restored["Summary"]["B3"].value)
+    print(
+        restored["Summary"].max_row,
+        restored["Summary"]["B3"].value,
+    )
     restored.close()
 \end{lstlisting}
 
@@ -4009,10 +4030,8 @@ with TemporaryDirectory() as folder:
 \label{fig:visual-quality}
 \end{figure}
 
-% ===== END chapters/16-outline.tex =====
-
-
-% ===== chapters/17-outline.tex =====
+% END chapters/16-outline
+% BEGIN chapters/17-outline
 \chapter{工程化收束：打包与部署}
 \label{ch:17-outline}
 
@@ -4133,8 +4152,26 @@ CMD ["python", "-m", "notes_demo"]
 \label{fig:visual-ch17}
 \end{figure}
 
-% ===== END chapters/17-outline.tex =====
+% BEGIN revision/packaging
+\section{补充：项目元数据、锁文件与 uv}\label{rev:python:packaging}
+前文已经给出 pyproject.toml，本节进一步区分三类信息：build-system 声明构建后端及其依赖；project 按 PEP 621 声明名称、版本、运行依赖和解释器范围；tool 下的设置由各工具解释。声明“允许哪些版本”的范围，不等于已经固定每一项传递依赖的具体版本。
 
+下面是一套在新建练习项目中使用的 uv 命令，属于终端操作，不保存到 .py 脚本。运行前应按 uv 官方安装说明安装工具，并进入独立的练习目录。
+\begin{lstlisting}[language={},title={终端：创建与同步练习项目}]
+uv init --python 3.12 notes-lab
+cd notes-lab
+uv add requests
+uv lock
+uv sync --locked
+uv run --locked python -c "import requests; print(requests.__version__)"
+\end{lstlisting}
+pyproject.toml 是项目声明，uv.lock 是解析结果，.venv 是本地环境。把声明和锁文件共同纳入版本管理；修改声明后更新锁文件，在复现环境中使用 --locked 检查二者一致性。锁定版本仍需核对操作系统、Python 版本、私有源和原生库等条件，不能保证任意平台都存在可安装的同一 wheel。
+Poetry 也是项目与依赖管理方案，可按团队现有工具选择；同一项目应明确由哪个工具维护锁文件，避免混杂生成结果。开发应用的锁文件与发布给其他用户的库依赖范围用途不同，不要把本机环境逐行冻结后机械地当作库的兼容声明。
+元数据与命令语义参见 \href{https://packaging.python.org/en/latest/guides/writing-pyproject-toml/}{Python Packaging 官方指南}、\href{https://docs.astral.sh/uv/concepts/projects/sync/}{uv 锁定与同步文档}。
+
+% END revision/packaging
+
+% END chapters/17-outline
 
 \BookPart{项目实战}
   {演示总挑最乖的输入。验收记得请重名联系人、坏链接和空表也来坐坐。}
@@ -4144,8 +4181,7 @@ CMD ["python", "-m", "notes_demo"]
 
    \textbf{完成综合挑战。} 从 PyQt 资料管理器与 FastAPI 本地服务中选择一条路线，明确业务规则与数据存储方式，用正常输入和错误输入验收。}
   {把演示走过的路，留给下一位运行程序的人。}
-
-% ===== projects/stages.tex =====
+% BEGIN projects/stages
 \chapter*{项目一 本地通讯录管理系统}
 \addcontentsline{toc}{chapter}{\protect\numberline{}项目一 本地通讯录管理系统}
 
@@ -4220,7 +4256,7 @@ def read_contacts(path):
 失败记录带着编号回到结果队列，主线程按编号汇总。
 
 源码在 \code{projects/02-downloader/download.py}。在资源地址已确认可下载的前提下运行
-\par\noindent\code{python download.py --urls urls.txt --output downloads}\par 
+\par\noindent\code{python download.py --urls urls.txt --output downloads}\par
 返回 JSON 中每项包含编号、成功与否，以及保存名或错误消息。
 目标文件已经存在时，这一项会报告失败，便于核对重跑的影响。
 
@@ -4311,7 +4347,7 @@ summary = cleaned.groupby("team", as_index=False).agg(
 业务层可以脱离界面测试，界面本身仍需在桌面环境中检查输入与反馈。
 
 路线 B 的接口在 \code{api.py}。安装 FastAPI 与 Uvicorn 后，在该目录运行
-\par\noindent\code{python -m uvicorn api:create_app --factory}\par 
+\par\noindent\code{python -m uvicorn api:create_app --factory}\par
 启动后在本地服务的 \code{/docs} 页面发送请求。
 创建成功返回 201，重复路径返回 409，缺失记录返回 404，
 字段无效由模型校验给出 422。
@@ -4330,12 +4366,10 @@ def get_note(note_id: int):
 接口测试额外检查空白输入与重复路径。
 扩展练习从标签字段开始，先定迁移与查询规则，再把它接进界面或 API。
 
-% ===== END projects/stages.tex =====
-
+% END projects/stages
 
 \appendix
-
-% ===== backmatter/appendices.tex =====
+% BEGIN backmatter/appendices
 \chapter{第三方库安装与国内镜像加速配置}
 
 安装软件包前，先确认实际使用的解释器。终端能用的库，未必在 PyCharm 选定的解释器里。
@@ -4344,7 +4378,7 @@ def get_note(note_id: int):
 
 \section{先确认安装位置}
 
-下面的诊断脚本只读取信息。运行后，将解释器路径和 pip 显示的路径放在一起比较。
+下面的诊断脚本只读取信息。只有第一个代码块保存为 inspect\_install.py；随后标注“终端”或“PowerShell”的命令在终端单独执行，不写入 Python 脚本。运行后，将解释器路径和 pip 显示的路径放在一起比较。
 如果两边属于不同环境，就用目标解释器的完整路径执行安装命令。
 \begin{lstlisting}[title={\code{inspect_install.py}}]
 import importlib.util
@@ -4357,7 +4391,7 @@ spec = importlib.util.find_spec("requests")
 print("requests:", None if spec is None else spec.origin)
 \end{lstlisting}
 
-\begin{lstlisting}[language={},title={\texttt{terminal}}]
+\begin{lstlisting}[language={},title={终端命令（非Python脚本）}]
 # 用本次运行的解释器调用 pip。
 python -m pip --version
 # 已安装包的版本和位置。
@@ -4375,7 +4409,7 @@ python -m pip check
 为练习建立 \code{.venv}，把自己的代码留在环境目录外。
 在 Windows PowerShell 中可以直接调用环境里的解释器，
 让命令指向哪里一目了然。下面命令在项目目录执行。
-\begin{lstlisting}[language={},title={\texttt{PowerShell}}]
+\begin{lstlisting}[language={},title={PowerShell终端（非Python脚本）}]
 # 创建隔离环境。
 python -m venv .venv
 # 核对环境里的 Python 和 pip。
@@ -4681,7 +4715,7 @@ Resume & \code{F9} & 继续到下一个暂停位置。\\
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_01_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_01_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 >>> print(2 + 3)
 \end{lstlisting}
@@ -4708,7 +4742,7 @@ print(2 + 3)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_02_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_02_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 def add(a, b):
 return a + b
@@ -4740,7 +4774,7 @@ print(add(2, 3))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_03_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_03_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 print(book_count_missing)
 \end{lstlisting}
@@ -4769,7 +4803,7 @@ print(count)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_04_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_04_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 count = 3
 def broken():
@@ -4807,7 +4841,7 @@ print(count)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_05_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_05_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 "3" + 1
 \end{lstlisting}
@@ -4836,7 +4870,7 @@ print(int(raw) + 1)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_06_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_06_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 s = "hello"
 s[0] = "H"
@@ -4868,7 +4902,7 @@ print(s, original)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_07_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_07_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 {["backup.local", 443]: "ok"}
 \end{lstlisting}
@@ -4898,7 +4932,7 @@ print(records[target])
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_08_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_08_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 int("3.5")
 \end{lstlisting}
@@ -4927,7 +4961,7 @@ print(float(raw))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_09_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_09_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 [][0]
 \end{lstlisting}
@@ -4956,7 +4990,7 @@ print(files[0] if files else "没有待处理文件")
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_10_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_10_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 {"name": "notes.md"}["status"]
 \end{lstlisting}
@@ -4985,7 +5019,7 @@ print(record.get("status", "unknown"))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_11_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_11_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 [" notes.md "].strip()
 \end{lstlisting}
@@ -5014,7 +5048,7 @@ print([name.strip() for name in files])
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_12_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_12_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 1 / 0
 \end{lstlisting}
@@ -5046,7 +5080,7 @@ print(average)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_13_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_13_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import book_missing_module_for_demo
 \end{lstlisting}
@@ -5075,7 +5109,7 @@ print(math.sqrt(25))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_14_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_14_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 from math import book_missing_function
 \end{lstlisting}
@@ -5104,7 +5138,7 @@ print(sqrt(25))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_15_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_15_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -5141,7 +5175,7 @@ with TemporaryDirectory() as folder:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_16_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_16_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -5177,7 +5211,7 @@ with TemporaryDirectory() as folder:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_17_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_17_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 b"\xff".decode("utf-8")
 \end{lstlisting}
@@ -5208,7 +5242,7 @@ assert text.encode("latin-1") == raw
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_18_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_18_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 "雪".encode("ascii")
 \end{lstlisting}
@@ -5237,7 +5271,7 @@ print(text.encode("utf-8").decode("utf-8"))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_19_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_19_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import json
 json.loads("{broken")
@@ -5271,7 +5305,7 @@ print(json.loads(encoded)["name"])
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_20_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_20_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import sqlite3
 from contextlib import closing
@@ -5307,7 +5341,7 @@ with closing(sqlite3.connect(":memory:")) as db:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_21_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_21_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import sqlite3
 from contextlib import closing
@@ -5347,7 +5381,7 @@ with closing(sqlite3.connect(":memory:")) as db, db:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_22_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_22_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import requests
 reply = requests.Response()
@@ -5384,7 +5418,7 @@ print(reply.status_code)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_23_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_23_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import socket
 import requests
@@ -5430,7 +5464,7 @@ with socket.socket() as listener, requests.Session() as session:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_24_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_24_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import socket
 with socket.socket() as first, socket.socket() as second:
@@ -5468,7 +5502,7 @@ with socket.socket() as listener:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_25_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_25_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 iterator = iter(["notes.md"])
 next(iterator)
@@ -5500,7 +5534,7 @@ print(next(iterator, "结束"))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_26_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_26_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 def broken():
     return broken()
@@ -5533,7 +5567,7 @@ print(total)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_27_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_27_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import asyncio
 async def broken():
@@ -5576,7 +5610,7 @@ asyncio.run(main())
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_28_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_28_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 original = ["notes.md"]
 backup = original
@@ -5610,7 +5644,7 @@ print(len(original), len(backup))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_29_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_29_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 value = ("notes.md")
 print(type(value).__name__)
@@ -5640,7 +5674,7 @@ print(type(value).__name__, len(value))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_30_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_30_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 seen = {}
 print(type(seen).__name__)
@@ -5671,7 +5705,7 @@ print(type(seen).__name__, "notes.md" in seen)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_31_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_31_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 files = ["todo.md", "notes.md"]
 result = files.sort()
@@ -5724,8 +5758,7 @@ Python 版本 & \code{platform.python_version()}\\
 修复记录最后再写一行，改动的是哪一处，复验用了哪些输入。
 再次遇到相同问题时，可依据这份记录复现输入并验证修复。
 
-% ===== END backmatter/appendices.tex =====
-
+% END backmatter/appendices
 
 
 % 请使用 XeLaTeX 编译两次以生成目录。

@@ -29,3 +29,16 @@
 通讯录、下载器、报表、资料存储和 FastAPI 测试覆盖正常与失败路径。
 浏览器例子、外部 MySQL/MongoDB 客户端、Tkinter/PyQt 界面完成语法检查，
 实际交互需要对应运行环境复核。Dockerfile 的构建和容器启动需要 Docker 环境。
+
+## v1.1.0 新增示例
+
+以下均在Python3.11+可运行，本轮实测Python3.12：
+
+```sh
+python examples/revision/modern_match.py
+python examples/revision/exception_groups.py
+python examples/revision/async_lifecycle.py
+python examples/appendixA/inspect_install.py
+```
+
+uv命令是终端操作，不写入.py脚本。原始源文件是运行入口，PDF行号与折行箭头不属于Python语法。

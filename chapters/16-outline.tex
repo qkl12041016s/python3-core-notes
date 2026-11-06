@@ -104,7 +104,9 @@ import matplotlib.pyplot as plt
 
 days = [1, 2, 3]
 counts = [2, 4, 3]
-figure, axes = plt.subplots(1, 2, figsize=(7, 3), layout="constrained")
+figure, axes = plt.subplots(
+    1, 2, figsize=(7, 3), layout="constrained"
+)
 axes[0].plot(days, counts, marker="o", label="synced")
 axes[0].set(xlabel="Day", ylabel="Files")
 axes[0].legend()
@@ -153,7 +155,10 @@ with TemporaryDirectory() as folder:
 
     # 重新读文件，核对表头后的两行。
     restored = load_workbook(path, read_only=True)
-    print(restored["Summary"].max_row, restored["Summary"]["B3"].value)
+    print(
+        restored["Summary"].max_row,
+        restored["Summary"]["B3"].value,
+    )
     restored.close()
 \end{lstlisting}
 

@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 
 days = [1, 2, 3]
 counts = [2, 4, 3]
-figure, axes = plt.subplots(1, 2, figsize=(7, 3), layout="constrained")
+figure, axes = plt.subplots(
+    1, 2, figsize=(7, 3), layout="constrained"
+)
 axes[0].plot(days, counts, marker="o", label="synced")
 axes[0].set(xlabel="Day", ylabel="Files")
 axes[0].legend()

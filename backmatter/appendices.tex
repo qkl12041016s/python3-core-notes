@@ -6,7 +6,7 @@
 
 \section{先确认安装位置}
 
-下面的诊断脚本只读取信息。运行后，将解释器路径和 pip 显示的路径放在一起比较。
+下面的诊断脚本只读取信息。只有第一个代码块保存为 inspect\_install.py；随后标注“终端”或“PowerShell”的命令在终端单独执行，不写入 Python 脚本。运行后，将解释器路径和 pip 显示的路径放在一起比较。
 如果两边属于不同环境，就用目标解释器的完整路径执行安装命令。
 \begin{lstlisting}[title={\code{inspect_install.py}}]
 import importlib.util
@@ -19,7 +19,7 @@ spec = importlib.util.find_spec("requests")
 print("requests:", None if spec is None else spec.origin)
 \end{lstlisting}
 
-\begin{lstlisting}[language={},title={\texttt{terminal}}]
+\begin{lstlisting}[language={},title={终端命令（非Python脚本）}]
 # 用本次运行的解释器调用 pip。
 python -m pip --version
 # 已安装包的版本和位置。
@@ -37,7 +37,7 @@ python -m pip check
 为练习建立 \code{.venv}，把自己的代码留在环境目录外。
 在 Windows PowerShell 中可以直接调用环境里的解释器，
 让命令指向哪里一目了然。下面命令在项目目录执行。
-\begin{lstlisting}[language={},title={\texttt{PowerShell}}]
+\begin{lstlisting}[language={},title={PowerShell终端（非Python脚本）}]
 # 创建隔离环境。
 python -m venv .venv
 # 核对环境里的 Python 和 pip。
@@ -343,7 +343,7 @@ Resume & \code{F9} & 继续到下一个暂停位置。\\
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_01_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_01_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 >>> print(2 + 3)
 \end{lstlisting}
@@ -370,7 +370,7 @@ print(2 + 3)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_02_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_02_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 def add(a, b):
 return a + b
@@ -402,7 +402,7 @@ print(add(2, 3))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_03_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_03_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 print(book_count_missing)
 \end{lstlisting}
@@ -431,7 +431,7 @@ print(count)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_04_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_04_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 count = 3
 def broken():
@@ -469,7 +469,7 @@ print(count)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_05_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_05_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 "3" + 1
 \end{lstlisting}
@@ -498,7 +498,7 @@ print(int(raw) + 1)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_06_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_06_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 s = "hello"
 s[0] = "H"
@@ -530,7 +530,7 @@ print(s, original)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_07_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_07_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 {["backup.local", 443]: "ok"}
 \end{lstlisting}
@@ -560,7 +560,7 @@ print(records[target])
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_08_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_08_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 int("3.5")
 \end{lstlisting}
@@ -589,7 +589,7 @@ print(float(raw))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_09_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_09_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 [][0]
 \end{lstlisting}
@@ -618,7 +618,7 @@ print(files[0] if files else "没有待处理文件")
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_10_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_10_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 {"name": "notes.md"}["status"]
 \end{lstlisting}
@@ -647,7 +647,7 @@ print(record.get("status", "unknown"))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_11_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_11_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 [" notes.md "].strip()
 \end{lstlisting}
@@ -676,7 +676,7 @@ print([name.strip() for name in files])
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_12_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_12_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 1 / 0
 \end{lstlisting}
@@ -708,7 +708,7 @@ print(average)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_13_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_13_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import book_missing_module_for_demo
 \end{lstlisting}
@@ -737,7 +737,7 @@ print(math.sqrt(25))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_14_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_14_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 from math import book_missing_function
 \end{lstlisting}
@@ -766,7 +766,7 @@ print(sqrt(25))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_15_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_15_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -803,7 +803,7 @@ with TemporaryDirectory() as folder:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_16_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_16_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -839,7 +839,7 @@ with TemporaryDirectory() as folder:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_17_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_17_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 b"\xff".decode("utf-8")
 \end{lstlisting}
@@ -870,7 +870,7 @@ assert text.encode("latin-1") == raw
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_18_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_18_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 "雪".encode("ascii")
 \end{lstlisting}
@@ -899,7 +899,7 @@ print(text.encode("utf-8").decode("utf-8"))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_19_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_19_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import json
 json.loads("{broken")
@@ -933,7 +933,7 @@ print(json.loads(encoded)["name"])
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_20_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_20_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import sqlite3
 from contextlib import closing
@@ -969,7 +969,7 @@ with closing(sqlite3.connect(":memory:")) as db:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_21_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_21_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import sqlite3
 from contextlib import closing
@@ -1009,7 +1009,7 @@ with closing(sqlite3.connect(":memory:")) as db, db:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_22_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_22_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import requests
 reply = requests.Response()
@@ -1046,7 +1046,7 @@ print(reply.status_code)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_23_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_23_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import socket
 import requests
@@ -1092,7 +1092,7 @@ with socket.socket() as listener, requests.Session() as session:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_24_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_24_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import socket
 with socket.socket() as first, socket.socket() as second:
@@ -1130,7 +1130,7 @@ with socket.socket() as listener:
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_25_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_25_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 iterator = iter(["notes.md"])
 next(iterator)
@@ -1162,7 +1162,7 @@ print(next(iterator, "结束"))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_26_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_26_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 def broken():
     return broken()
@@ -1195,7 +1195,7 @@ print(total)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_27_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_27_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 import asyncio
 async def broken():
@@ -1238,7 +1238,7 @@ asyncio.run(main())
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_28_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_28_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 original = ["notes.md"]
 backup = original
@@ -1272,7 +1272,7 @@ print(len(original), len(backup))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_29_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_29_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 value = ("notes.md")
 print(type(value).__name__)
@@ -1302,7 +1302,7 @@ print(type(value).__name__, len(value))
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_30_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_30_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 seen = {}
 print(type(seen).__name__)
@@ -1333,7 +1333,7 @@ print(type(seen).__name__, "notes.md" in seen)
 
 \textbf{错误入口，故意失败或产生错误结果}
 
-\begin{lstlisting}[title={\code{case_31_bad.py.txt}}]
+\begin{lstlisting}[style=errorcode,title={错误复现（故意失败或错误结果）：\code{case_31_bad.py.txt}}]
 # 单独运行这一段，观察错误现场。
 files = ["todo.md", "notes.md"]
 result = files.sort()

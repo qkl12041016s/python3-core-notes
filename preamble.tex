@@ -21,7 +21,7 @@
 \newcommand{\BookSubtitle}{基于 PyCharm 与现代工程化实践}
 % 封面与 PDF 作者字段共用以下设置。
 \newcommand{\BookAuthor}{雪落长安无声}
-\newcommand{\BookVersion}{v1.0}
+\newcommand{\BookVersion}{2026-11-07 修订版}
 % 默认使用编译日期。出版时可在这里填写固定日期。
 \newcommand{\BookDate}{\today}
 
@@ -189,7 +189,7 @@
   stringstyle=\color{CodeString},
   commentstyle=\itshape\color{CodeComment},
   deletekeywords={print,exec},
-  morekeywords={async,await,nonlocal},
+  morekeywords={async,await,nonlocal,match,case},
   emph={print,len,range,enumerate,zip,open,int,str,list,dict,set,tuple},
   emphstyle=\color{DeepBlue},
   numbers=left,
@@ -208,6 +208,10 @@
   showstringspaces=false,
   tabsize=4,
   breaklines=true,
+  breakatwhitespace=true,
+  prebreak=\mbox{\textcolor{Muted}{$\hookleftarrow$}},
+  postbreak=\mbox{\textcolor{Muted}{$\hookrightarrow$}\space},
+  breakindent=1.5em,
   upquote=true,
   aboveskip=12pt,
   belowskip=12pt
@@ -590,3 +594,5 @@
 % 图与表的题注均放在内容下方，长题注也按居中方式排版。
 \captionsetup*[table]{font={small,captionink},labelfont=bf,
   justification=centering,singlelinecheck=false,position=bottom,skip=9pt}
+
+\lstdefinestyle{errorcode}{style=python,backgroundcolor=\color{PitfallRed!7},rulecolor=\color{PitfallRed}}

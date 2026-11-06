@@ -1,0 +1,29 @@
+{
+  "version": "v1.1.0",
+  "date": "2026-11-07",
+  "pages": {
+    "python": 127
+  },
+  "validation_scope": "Targeted new formulas and examples; not a new proof audit of every original exercise.",
+  "pdf_checks": {
+    "python": {
+      "pages": 127,
+      "overfull_hbox": 0,
+      "overfull_vbox": 0,
+      "missing_glyph": 0,
+      "undefined_references": false,
+      "placeholder_double_question_marks": 0
+    }
+  },
+  "error_dictionary_pairs_passed": 31,
+  "independent_checkout_builds": {
+    "python": {
+      "pages": 127,
+      "clean_log": true,
+      "all_page_text_matches_reviewed_pdf": true
+    }
+  },
+  "readme_and_revision_local_links_ok": true,
+  "python_source_syntax_passed": 92,
+  "repository_and_book_names_unchanged": true
+}

@@ -39,7 +39,10 @@ GET 重试可以按错误原因和服务端提示来决定，带副作用的请�
 在本机开一个短命的 HTTP 服务，先确认请求、状态码和 JSON 解析这条链路。地址和端口由本机分配，例子每次都有同一份响应。学会读响应以后，再把相同的检查搬到获准访问的端点。
 
 \begin{lstlisting}[title={\code{local_http.py}}]
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import (
+    BaseHTTPRequestHandler,
+    ThreadingHTTPServer,
+)
 from threading import Thread
 
 import requests
@@ -66,7 +69,9 @@ with ThreadingHTTPServer(("127.0.0.1", 0), DemoHandler) as server:
         host, port = server.server_address[:2]
         with requests.Session() as session:
             session.trust_env = False
-            response = session.get(f"http://{host}:{port}/", timeout=2)
+            response = session.get(
+                f"http://{host}:{port}/", timeout=2
+            )
             response.raise_for_status()
             print(response.status_code, response.json()["name"])
     finally:

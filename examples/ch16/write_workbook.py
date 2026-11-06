@@ -16,5 +16,8 @@ with TemporaryDirectory() as folder:
 
     # 重新读文件，核对表头后的两行。
     restored = load_workbook(path, read_only=True)
-    print(restored["Summary"].max_row, restored["Summary"]["B3"].value)
+    print(
+        restored["Summary"].max_row,
+        restored["Summary"]["B3"].value,
+    )
     restored.close()

@@ -1,0 +1,15 @@
+\section{补充：项目元数据、锁文件与 uv}\label{rev:python:packaging}
+前文已经给出 pyproject.toml，本节进一步区分三类信息：build-system 声明构建后端及其依赖；project 按 PEP 621 声明名称、版本、运行依赖和解释器范围；tool 下的设置由各工具解释。声明“允许哪些版本”的范围，不等于已经固定每一项传递依赖的具体版本。
+
+下面是一套在新建练习项目中使用的 uv 命令，属于终端操作，不保存到 .py 脚本。运行前应按 uv 官方安装说明安装工具，并进入独立的练习目录。
+\begin{lstlisting}[language={},title={终端：创建与同步练习项目}]
+uv init --python 3.12 notes-lab
+cd notes-lab
+uv add requests
+uv lock
+uv sync --locked
+uv run --locked python -c "import requests; print(requests.__version__)"
+\end{lstlisting}
+pyproject.toml 是项目声明，uv.lock 是解析结果，.venv 是本地环境。把声明和锁文件共同纳入版本管理；修改声明后更新锁文件，在复现环境中使用 --locked 检查二者一致性。锁定版本仍需核对操作系统、Python 版本、私有源和原生库等条件，不能保证任意平台都存在可安装的同一 wheel。
+Poetry 也是项目与依赖管理方案，可按团队现有工具选择；同一项目应明确由哪个工具维护锁文件，避免混杂生成结果。开发应用的锁文件与发布给其他用户的库依赖范围用途不同，不要把本机环境逐行冻结后机械地当作库的兼容声明。
+元数据与命令语义参见 \href{https://packaging.python.org/en/latest/guides/writing-pyproject-toml/}{Python Packaging 官方指南}、\href{https://docs.astral.sh/uv/concepts/projects/sync/}{uv 锁定与同步文档}。
